@@ -3,7 +3,7 @@
 #include <Eigen/Eigen>
 
 
-class FingerInterface
+class Finger
 {
 public:
     typedef Eigen::Vector3d Vector;
