@@ -20,7 +20,7 @@ set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
 find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
 
 #search_for_eigen()
-find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+find_package (Eigen3 REQUIRED NO_MODULE)
 
 
 ######################################################
