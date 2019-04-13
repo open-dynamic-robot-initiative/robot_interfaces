@@ -14,13 +14,16 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
 
+
 ############################
 # Search for dependencies. #
 ############################
+set(CATKIN_PKGS ${CATKIN_PKGS}
+mpi_cmake_modules
+)
 find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
 
-#search_for_eigen()
-find_package (Eigen3 REQUIRED NO_MODULE)
+search_for_eigen()
 
 
 ######################################################
