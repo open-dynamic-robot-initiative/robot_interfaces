@@ -2,6 +2,8 @@
 
 #include <Eigen/Eigen>
 
+namespace robot_interfaces
+{
 
 class Finger
 {
@@ -19,3 +21,5 @@ public:
     virtual void pause_motors() = 0;
     virtual void wait_since_last_send(const double& time_s) = 0;
 };
+
+}
