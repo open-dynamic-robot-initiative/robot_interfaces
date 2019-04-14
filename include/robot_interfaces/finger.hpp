@@ -56,7 +56,7 @@ protected:
 
             // Velocity safety feature.
             if (!std::isnan(max_velocities_(i)) && std::fabs(
-                    get_measured_velocities()(i)) > max_velocities_(i))
+                        get_measured_velocities()(i)) > max_velocities_(i))
                 torque = 0;
 
             // Joint limits safety feature.
@@ -72,6 +72,62 @@ protected:
 
         return constrained_torques;
     }
+
+    void set_max_torques(const Vector& max_torques)
+    {
+        for(size_t i = 0; i < max_torques.size(); i++)
+        {
+            if (max_torques(i) < 0)
+                throw std::invalid_argument("the current limit must be "
+                                            "a positive number.");
+        }
+        max_torques_ = max_torques;
+    }
+    void set_max_velocities(const Vector& max_velocities)
+    {
+        for(size_t i = 0; i < max_velocities.size(); i++)
+        {
+            if (!std::isnan(max_velocities(i)) && max_velocities(i) < 0)
+                throw std::invalid_argument("the velocity limit must be "
+                                            "a positive number or NaN.");
+        }
+
+        max_velocities_ = max_velocities;
+    }
+    void set_angle_limits(const Vector& min_angles,
+                          const Vector& max_angles)
+    {
+        for(size_t i = 0; i < min_angles.size(); i++)
+        {
+            if (!std::isnan(min_angles(i)) && !std::isnan(max_angles(i)) && (
+                        min_angles(i) > max_angles(i) ||
+                        max_angles(i) - min_angles(i) > 2*M_PI))
+                throw std::invalid_argument("Invalid joint limits. Make sure "
+                                            "the interval denoted by the joint "
+                                            "limits is a valid one.");
+        }
+        min_angles_ = min_angles;
+        max_angles_ = max_angles;
+    }
+
+
+    Vector get_max_torques() const
+    {
+        return max_torques_;
+    }
+    Vector get_max_velocities_() const
+    {
+        return max_velocities_;
+    }
+    Vector get_min_angles_() const
+    {
+        return min_angles_;
+    }
+    Vector get_max_angles_() const
+    {
+        return max_angles_;
+    }
+
 
 
 private:
