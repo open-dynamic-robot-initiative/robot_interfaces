@@ -12,6 +12,16 @@ public:
 
     enum JointIndexing {base, center, tip, joint_count};
 
+
+    Finger()
+    {
+        max_torques_ = Vector::Ones() * 2.0 * 0.02 * 9.0;
+        max_velocities_ = Vector::Ones() * 2.0;
+        min_angles_ = std::numeric_limits<double>::quiet_NaN()*Vector::Ones();
+        max_angles_ = std::numeric_limits<double>::quiet_NaN()*Vector::Ones();
+
+    }
+
     virtual void constrain_and_apply_torques(const Vector& desired_torques)
     {
         constrained_torques_ = constrain_torques(desired_torques);
@@ -30,15 +40,47 @@ public:
 
 protected:
     virtual void apply_torques(const Vector& desired_torques) = 0;
+
+    /// do NOT touch this function unless you know what you are doing, it is
+    /// essential for running the robot safely!
     virtual Vector constrain_torques(const Vector& desired_torques)
     {
-        /// \todo: the safety checks should go here
-        return desired_torques;
+        Vector constrained_torques;
+
+        for(size_t i = 0; i < desired_torques.size(); i++)
+        {
+            double torque = desired_torques(i);
+
+            torque = std::min(torque, max_torques_(i));
+            torque = std::max(torque, -max_torques_(i));
+
+            // Velocity safety feature.
+            if (!std::isnan(max_velocities_(i)) && std::fabs(
+                    get_measured_velocities()(i)) > max_velocities_(i))
+                torque = 0;
+
+            // Joint limits safety feature.
+            if (!std::isnan(max_angles_(i))
+                    && get_measured_angles()(i) > max_angles_(i))
+                torque = -max_torques_(i);
+            if (!std::isnan(min_angles_(i))
+                    && get_measured_angles()(i) < min_angles_(i))
+                torque = max_torques_(i);
+
+            constrained_torques(i) = torque;
+        }
+
+        return constrained_torques;
     }
 
 
 private:
     Vector constrained_torques_;
+
+    Vector max_torques_;
+    Vector max_velocities_;
+    Vector min_angles_;
+    Vector max_angles_;
 };
 
 
