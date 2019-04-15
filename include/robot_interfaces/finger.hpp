@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <Eigen/Eigen>
 
 namespace robot_interfaces
@@ -59,12 +60,17 @@ protected:
                         get_measured_velocities()(i)) > max_velocities_(i))
                 torque = 0;
 
+
+            double magic_constant = 0.003;
+            double collision_velocity = 0.001;
             // Joint limits safety feature.
-            if (!std::isnan(max_angles_(i))
-                    && get_measured_angles()(i) > max_angles_(i))
+            if (!std::isnan(max_angles_(i)) && get_measured_velocities()(i) > collision_velocity &&
+                    magic_constant * pow(get_measured_velocities()(i), 2) >
+                    max_angles_(i) - get_measured_angles()(i))
                 torque = -max_torques_(i);
-            if (!std::isnan(min_angles_(i))
-                    && get_measured_angles()(i) < min_angles_(i))
+            if (!std::isnan(min_angles_(i)) && get_measured_velocities()(i) < collision_velocity &&
+                    magic_constant * pow(get_measured_velocities()(i), 2) >
+                    get_measured_angles()(i) - min_angles_(i))
                 torque = max_torques_(i);
 
             constrained_torques(i) = torque;
