@@ -54,6 +54,21 @@ catkin_package(
 ####################
 add_subdirectory(demos)
 
+
+
+#########################
+# manage the unit tests #
+#########################
+
+catkin_add_gtest(test_linear_dynamics
+  tests/main.cpp
+  tests/test_linear_dynamics.cpp
+)
+target_link_libraries(test_linear_dynamics
+  ${catkin_LIBRARIES}
+)
+
+
 ##########################
 # building documentation #
 ##########################
