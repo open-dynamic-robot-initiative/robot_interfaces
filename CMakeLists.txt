@@ -26,6 +26,14 @@ find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
 search_for_eigen()
 
 
+##set(Boost_USE_STATIC_LIBS OFF)
+##set(Boost_USE_MULTITHREADED ON)
+##set(Boost_USE_STATIC_RUNTIME OFF)
+#find_package(Boost 1.45.0 REQUIRED)
+
+#message(FATAL_ERROR ${Boost_INCLUDE_DIRS})
+
+
 ######################################################
 # define the include directory of all ${CATKIN_PKGS} #
 ######################################################
@@ -33,6 +41,7 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/include
     ${catkin_INCLUDE_DIRS}
     ${Eigen_INCLUDE_DIRS}
+#    ${Boost_INCLUDE_DIRS}
 )
 
 ########################################################

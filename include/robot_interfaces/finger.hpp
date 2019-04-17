@@ -147,117 +147,117 @@ protected:
                 torque = 0;
 
             // angle limit -----------------------------------------------------
-//            double angle = get_measured_angles()(i);
-//            double velocity = get_measured_velocities()(i);
+            //            double angle = get_measured_angles()(i);
+            //            double velocity = get_measured_velocities()(i);
 
-//            if (!std::isnan(max_angles_(i)) &&
-//                    velocity > max_collision_velocities_(i))
-//            {
-//                double distance_to_braking_zone =
-//                        compute_distance_to_braking_zone(
-//                            velocity,
-//                            max_angles_(i) - angle,
-//                            max_torques_(i),
-//                            inertias_(i),
-//                            max_collision_velocities_(i));
+            //            if (!std::isnan(max_angles_(i)) &&
+            //                    velocity > max_collision_velocities_(i))
+            //            {
+            //                double distance_to_braking_zone =
+            //                        compute_distance_to_braking_zone(
+            //                            velocity,
+            //                            max_angles_(i) - angle,
+            //                            max_torques_(i),
+            //                            inertias_(i),
+            //                            max_collision_velocities_(i));
 
-//                double safety_weight =
-//                        (delta - distance_to_braking_zone) / delta;
-//                safety_weight = clamp(safety_weight, 0, 1);
+            //                double safety_weight =
+            //                        (delta - distance_to_braking_zone) / delta;
+            //                safety_weight = clamp(safety_weight, 0, 1);
 
-//                torque = (1.0 - safety_weight) * torque
-//                        + safety_weight * (-max_torques_(i));
+            //                torque = (1.0 - safety_weight) * torque
+            //                        + safety_weight * (-max_torques_(i));
 
-//            }
-
-
-//            if (!std::isnan(max_angles_(i)) &&
-//                    velocity < -max_collision_velocities_(i))
-//            {
-//                double distance_to_braking_zone =
-//                        compute_distance_to_braking_zone(
-//                            -velocity,
-//                            max_angles_(i) - angle,
-//                            max_torques_(i),
-//                            inertias_(i),
-//                            max_collision_velocities_(i));
-
-//                double safety_weight =
-//                        (delta - distance_to_braking_zone) / delta;
-//                safety_weight = clamp(safety_weight, 0, 1);
-
-//                torque = (1.0 - safety_weight) * torque
-//                        + safety_weight * (-max_torques_(i));
-
-//            }
+            //            }
 
 
+            //            if (!std::isnan(max_angles_(i)) &&
+            //                    velocity < -max_collision_velocities_(i))
+            //            {
+            //                double distance_to_braking_zone =
+            //                        compute_distance_to_braking_zone(
+            //                            -velocity,
+            //                            max_angles_(i) - angle,
+            //                            max_torques_(i),
+            //                            inertias_(i),
+            //                            max_collision_velocities_(i));
 
+            //                double safety_weight =
+            //                        (delta - distance_to_braking_zone) / delta;
+            //                safety_weight = clamp(safety_weight, 0, 1);
 
+            //                torque = (1.0 - safety_weight) * torque
+            //                        + safety_weight * (-max_torques_(i));
 
-//            double velocity = get_measured_velocities()(i);
-//            double admissible_collision_velocity = max_collision_velocities_(i);
-//            double max_deceleration = max_torques_(i) / inertias_(i);
-
-//            double deceleration_distance =
-//                    (std::fabs(velocity) - admissible_collision_velocity) *
-//                    (std::fabs(velocity) + admissible_collision_velocity) /
-//                    (2 * max_deceleration);
-
-
-
-//            double distance_to_max_angle =
-//                    max_angles_(i) - get_measured_angles()(i);
-//            double distance_to_min_angle =
-//                    get_measured_angles()(i) - min_angles_(i);
-
-
-//            double delta = 0.00000001;
-
-
-//            double distance_to_braking_zone =
-//                    distance_to_max_angle - deceleration_distance;
-//            if (!std::isnan(max_angles_(i)) &&
-//                    velocity > admissible_collision_velocity
-//                    && distance_to_braking_zone < delta)
-//            {
-
-
-//                double safety_weight =
-//                        (delta - distance_to_braking_zone) / delta;
-//                safety_weight = clamp(safety_weight, 0, 1);
-
-//                torque = (1.0 - safety_weight) * torque
-//                        + safety_weight * (-max_torques_(i));
+            //            }
 
 
 
 
-//                std::cout << "upper limit" << std::endl;
-//                std::cout << "velocity: " << velocity << std::endl;
-//                std::cout << "admissible_collision_velocity: " << admissible_collision_velocity << std::endl;
-//                std::cout << "deceleration_distance: " << deceleration_distance << std::endl;
-//                std::cout << "distance_to_max_angle: " << distance_to_max_angle << std::endl;
+
+            //            double velocity = get_measured_velocities()(i);
+            //            double admissible_collision_velocity = max_collision_velocities_(i);
+            //            double max_deceleration = max_torques_(i) / inertias_(i);
+
+            //            double deceleration_distance =
+            //                    (std::fabs(velocity) - admissible_collision_velocity) *
+            //                    (std::fabs(velocity) + admissible_collision_velocity) /
+            //                    (2 * max_deceleration);
 
 
 
-//                //                torque = -max_torques_(i);
-//            }
-//            if (!std::isnan(min_angles_(i)) &&
-//                    velocity < -admissible_collision_velocity &&
-//                    deceleration_distance > distance_to_min_angle)
-//            {
-//                std::cout << "lower limit" << std::endl;
-//                std::cout << "velocity: " << velocity << std::endl;
-//                std::cout << "admissible_collision_velocity: " << admissible_collision_velocity << std::endl;
-//                std::cout << "deceleration_distance: " << deceleration_distance << std::endl;
-//                std::cout << "distance_to_min_angle: " << distance_to_min_angle << std::endl;
+            //            double distance_to_max_angle =
+            //                    max_angles_(i) - get_measured_angles()(i);
+            //            double distance_to_min_angle =
+            //                    get_measured_angles()(i) - min_angles_(i);
 
 
-//                torque = max_torques_(i);
-//            }
+            //            double delta = 0.00000001;
 
-//            constrained_torques(i) = torque;
+
+            //            double distance_to_braking_zone =
+            //                    distance_to_max_angle - deceleration_distance;
+            //            if (!std::isnan(max_angles_(i)) &&
+            //                    velocity > admissible_collision_velocity
+            //                    && distance_to_braking_zone < delta)
+            //            {
+
+
+            //                double safety_weight =
+            //                        (delta - distance_to_braking_zone) / delta;
+            //                safety_weight = clamp(safety_weight, 0, 1);
+
+            //                torque = (1.0 - safety_weight) * torque
+            //                        + safety_weight * (-max_torques_(i));
+
+
+
+
+            //                std::cout << "upper limit" << std::endl;
+            //                std::cout << "velocity: " << velocity << std::endl;
+            //                std::cout << "admissible_collision_velocity: " << admissible_collision_velocity << std::endl;
+            //                std::cout << "deceleration_distance: " << deceleration_distance << std::endl;
+            //                std::cout << "distance_to_max_angle: " << distance_to_max_angle << std::endl;
+
+
+
+            //                //                torque = -max_torques_(i);
+            //            }
+            //            if (!std::isnan(min_angles_(i)) &&
+            //                    velocity < -admissible_collision_velocity &&
+            //                    deceleration_distance > distance_to_min_angle)
+            //            {
+            //                std::cout << "lower limit" << std::endl;
+            //                std::cout << "velocity: " << velocity << std::endl;
+            //                std::cout << "admissible_collision_velocity: " << admissible_collision_velocity << std::endl;
+            //                std::cout << "deceleration_distance: " << deceleration_distance << std::endl;
+            //                std::cout << "distance_to_min_angle: " << distance_to_min_angle << std::endl;
+
+
+            //                torque = max_torques_(i);
+            //            }
+
+            //            constrained_torques(i) = torque;
         }
 
         return constrained_torques;
@@ -312,51 +312,51 @@ private:
         return std::max(lo, std::min(value, hi));
     }
 
-//    static double compute_acceleration_distance(
-//            const double& initial_velocity,
-//            const double& target_velocity,
-//            const double& force,
-//            const NonnegDouble& inertia)
-//    {
-//        if (std::signbit(target_velocity - initial_velocity) !=
-//                std::signbit(force))
-//        {
-//            return std::numeric_limits<double>::quiet_NaN();
-//        }
+    //    static double compute_acceleration_distance(
+    //            const double& initial_velocity,
+    //            const double& target_velocity,
+    //            const double& force,
+    //            const NonnegDouble& inertia)
+    //    {
+    //        if (std::signbit(target_velocity - initial_velocity) !=
+    //                std::signbit(force))
+    //        {
+    //            return std::numeric_limits<double>::quiet_NaN();
+    //        }
 
-//        double acceleration = force / inertia;
+    //        double acceleration = force / inertia;
 
-//        double acceleration_distance =
-//                (initial_velocity - target_velocity) *
-//                (initial_velocity + target_velocity) /
-//                (2 * acceleration);
+    //        double acceleration_distance =
+    //                (initial_velocity - target_velocity) *
+    //                (initial_velocity + target_velocity) /
+    //                (2 * acceleration);
 
-//        return acceleration_distance;
-//    }
-
-
+    //        return acceleration_distance;
+    //    }
 
 
 
-//    static double compute_braking_weight(
-//            const double& position,
-//            const double& velocity,
-//            const double& wall_position,
-//            )
-//    {
-//        if (max_collision_velocity > velocity)
-//            throw std::invalid_argument("we expect "
-//                                        "max_collision_velocity <= velocity.");
 
-//        double max_deceleration = max_braking_force / inertia;
 
-//        double deceleration_distance =
-//                (velocity - max_collision_velocity) *
-//                (velocity + max_collision_velocity) /
-//                (2 * max_deceleration);
+    //    static double compute_braking_weight(
+    //            const double& position,
+    //            const double& velocity,
+    //            const double& wall_position,
+    //            )
+    //    {
+    //        if (max_collision_velocity > velocity)
+    //            throw std::invalid_argument("we expect "
+    //                                        "max_collision_velocity <= velocity.");
 
-//        return deceleration_distance;
-//    }
+    //        double max_deceleration = max_braking_force / inertia;
+
+    //        double deceleration_distance =
+    //                (velocity - max_collision_velocity) *
+    //                (velocity + max_collision_velocity) /
+    //                (2 * max_deceleration);
+
+    //        return deceleration_distance;
+    //    }
 
 
 
@@ -374,11 +374,26 @@ private:
     std::array<Constraint, 3> state_constraints_;
 };
 
+template<typename Vector>
+void append_to_vector(Vector& vector,
+                      const double& element)
+{
+    vector.conservativeResize(vector.size() + 1);
+    vector[vector.size() - 1] = element;
+}
 
 
 class LinearDynamics
 {
 public:
+    typedef Eigen::Matrix<double, Eigen::Dynamic, 1, 0, 3> Vector;
+
+    LinearDynamics(Eigen::Vector4d parameters): LinearDynamics(parameters[0],
+                                                parameters[1],
+                                                parameters[2],
+                                                parameters[3]) { }
+
+
     LinearDynamics(double jerk,
                    double initial_acceleration,
                    double initial_velocity,
@@ -404,10 +419,11 @@ public:
     {
         return jerk_ * 0.5 * 1./3. * pow(t, 3) +
                 initial_acceleration_ * 0.5 * pow(t, 2) +
-                initial_velocity_ * t;
+                initial_velocity_ * t +
+                initial_position_;
     }
 
-    std::array<NonnegDouble, 2> find_t_given_velocity(double velocity)
+    Vector find_t_given_velocity(double velocity)
     {
         double a = jerk_ * 0.5;
         double b = initial_acceleration_;
@@ -415,29 +431,39 @@ public:
 
         double determinant = pow(b, 2) - 4 * a * c;
 
-        std::array<NonnegDouble, 2> real_solutions;
-        real_solutions[0] = std::numeric_limits<double>::quiet_NaN();
-        real_solutions[1] = std::numeric_limits<double>::quiet_NaN();
-        if(determinant == 0)
+        Vector solutions(0);
+        if(a == 0)
         {
-            real_solutions[0] = -b / 2 / a;
+            if(b != 0)
+            {
+                solutions.resize(1);
+                solutions[0] = - c / b;
+            }
+
         }
-        if(determinant > 0)
+        else if(determinant == 0)
+        {
+            solutions.resize(1);
+            solutions[0] = -b / 2 / a;
+        }
+        else if(determinant > 0)
         {
             double determinant_sqrt = std::sqrt(determinant);
-            real_solutions[0] = (-b + determinant_sqrt) / 2 / a;
-            real_solutions[1] = (-b - determinant_sqrt) / 2 / a;
+            solutions.resize(2);
+            solutions[0] = (-b + determinant_sqrt) / 2 / a;
+            solutions[1] = (-b - determinant_sqrt) / 2 / a;
         }
 
-        for(size_t i = 0; i < real_solutions.size(); i++)
+        Vector positive_solutions(0);
+        for(size_t i = 0; i < solutions.size(); i++)
         {
-            if(real_solutions[i] < 0)
+            if(solutions[i] >= 0)
             {
-                real_solutions[i] = std::numeric_limits<double>::quiet_NaN();
+                append_to_vector(positive_solutions, solutions[i]);
             }
         }
 
-        return real_solutions;
+        return positive_solutions;
     }
 
 protected:
@@ -453,6 +479,16 @@ protected:
 
 class LinearDynamicsWithAccelerationConstraint: public LinearDynamics
 {
+public:
+    typedef LinearDynamics::Vector Vector;
+
+    LinearDynamicsWithAccelerationConstraint(Eigen::Matrix<double, 5, 1> parameters):
+        LinearDynamicsWithAccelerationConstraint(parameters[0],
+        parameters[1],
+        parameters[2],
+        parameters[3],
+        parameters[4]) { }
+
     LinearDynamicsWithAccelerationConstraint(double jerk,
                                              double initial_acceleration,
                                              double initial_velocity,
@@ -466,9 +502,7 @@ class LinearDynamicsWithAccelerationConstraint: public LinearDynamics
         if(std::fabs(initial_acceleration) > abs_acceleration_limit)
             throw std::invalid_argument("expected "
                                         "std::fabs(initial_acceleration) > "
-                                        "acceleration_limit");
-
-
+                                        "abs_acceleration_limit");
 
         if(jerk_ > 0)
             acceleration_limit_ = abs_acceleration_limit;
@@ -510,42 +544,42 @@ class LinearDynamicsWithAccelerationConstraint: public LinearDynamics
         }
         else
         {
-            return LinearDynamics::get_position(t) +
+            return LinearDynamics::get_position(jerk_duration_) +
+                    LinearDynamics::get_velocity(jerk_duration_) * (t - jerk_duration_) +
                     acceleration_limit_ * 0.5 * pow(t - jerk_duration_, 2);
         }
     }
 
-    std::array<NonnegDouble, 2> find_t_given_velocity(double velocity)
+    Vector find_t_given_velocity(double velocity)
     {
-        auto solutions = LinearDynamics::find_t_given_velocity(velocity);
-        for(size_t i = 0; i < solutions.size(); i++)
+        Vector potential_solutions =
+                LinearDynamics::find_t_given_velocity(velocity);
+
+        Vector solutions(0);
+        for(size_t i = 0; i < potential_solutions.size(); i++)
         {
-            if(!isnan(solutions[i]) && solutions[i] > jerk_duration_)
-                solutions[i] = std::numeric_limits<double>::quiet_NaN();
+            if(potential_solutions[i] <= jerk_duration_)
+            {
+                append_to_vector(solutions, potential_solutions[i]);
+            }
         }
 
-        double other_solution = jerk_duration_
+        double potential_solution = jerk_duration_
                 + (velocity - LinearDynamics::get_velocity(jerk_duration_))
                 / acceleration_limit_;
-
-        if(other_solution > jerk_duration_)
+        if(potential_solution > jerk_duration_)
         {
-            size_t index = 0;
-            for(size_t i = 0; i < solutions.size(); i++)
-            {
-                if(isnan(solutions[i]))
-                    continue;
-                index++;
-            }
-            if(index == 2)
-            {
-                std::cout << "too many solutions, something went wrong!!!" << std::endl;
-                exit(-1);
-            }
-
-
-            solutions[index] = other_solution;
+            append_to_vector(solutions, potential_solution);
         }
+
+
+        if(solutions.size() > 2)
+        {
+            std::cout << "too many solutions, something went wrong!!!"
+                      << std::endl;
+            exit(-1);
+        }
+        return solutions;
     }
 
 
