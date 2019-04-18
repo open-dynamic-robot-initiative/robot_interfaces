@@ -615,22 +615,24 @@ public:
                              const double& max_position,
                              double& certificate_time) const
     {
-        if(jerk_ >= 0)
-        {
-            throw std::domain_error("not implemented for jerk >= 0");
-        }
-        if(initial_velocity_ < 0)
-        {
-            throw std::domain_error("not implemented for initial_velocity_ < 0");
-        }
-
         if(max_velocity == std::numeric_limits<double>::infinity() ||
                 max_position == std::numeric_limits<double>::infinity())
         {
             return false;
         }
+        if(jerk_ >= 0)
+        {
+            throw std::domain_error("not implemented for jerk >= 0");
+        }
 
         // find maximum achieved position --------------------------------------
+        if(initial_velocity_ > max_velocity &&
+                initial_position_ > max_position)
+        {
+            certificate_time = 0;
+            return true;
+        }
+
         Vector t_given_zero_velocity =
                 find_t_given_velocity(0);
         Vector position_given_zero_velocity =
@@ -694,16 +696,61 @@ public:
     }
 
 
-
-
-
-
-
-
 private:
     double acceleration_limit_;
     NonnegDouble jerk_duration_;
 };
+
+
+
+//double find_max_admissible_initial_acceleration(
+//        const double& initial_velocity,
+//        const double& initial_position,
+//        const double& max_velocity,
+//        const double& max_position,
+//        const NonnegDouble& abs_jerk_limit,
+//        const NonnegDouble& abs_acceleration_limit) const
+//{
+//    double jerk =
+//    LinearDynamicsWithAccelerationConstraint dynamics(jerk,
+//                                                      min_initial_acceleration,
+//                                                      initial_velocity,
+//                                                      initial_position,
+//                                                      abs_acceleration_limit);
+
+//    dynamics.set_initial_acceleration(min_initial_acceleration);
+//    if(dynamics.will_exceed_jointly(max_velocity, max_position))
+//    {
+//        /// \todo: is this the right thing to do here?
+//        return min_initial_acceleration;
+//    }
+
+//    dynamics.set_initial_acceleration(max_initial_acceleration);
+//    if(!dynamics.will_exceed_jointly(max_velocity, max_position))
+//    {
+//        /// \todo: is this the right thing to do here?
+//        return max_initial_acceleration;
+//    }
+
+//    double lower = min_initial_acceleration;
+//    double upper = max_initial_acceleration;
+
+//    for(size_t i = 0; i < 20; i++)
+//    {
+//        double middle = (lower + upper) / 2.0;
+
+//        dynamics.set_initial_acceleration(middle);
+//        if(dynamics.will_exceed_jointly(max_velocity, max_position))
+//        {
+//            upper = middle;
+//        }
+//        else
+//        {
+//            lower = middle;
+//        }
+//    }
+//    return lower;
+//}
 
 
 
