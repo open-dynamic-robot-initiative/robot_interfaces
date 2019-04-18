@@ -484,6 +484,18 @@ protected:
 class LinearDynamicsWithAccelerationConstraint: public LinearDynamics
 {
 public:
+
+    void print_parameters() const
+    {
+        std::cout << "jerk: " << jerk_ << std::endl
+                  << "initial_acceleration: " << initial_acceleration_ << std::endl
+                  << "initial_velocity: " << initial_velocity_ << std::endl
+                  << "initial_position: " << initial_position_ << std::endl
+                  << "abs_acceleration_limit: " << acceleration_limit_ << std::endl
+                  << "jerk_duration: " << jerk_duration_ << std::endl;
+
+    }
+
     typedef LinearDynamics::Vector Vector;
 
     LinearDynamicsWithAccelerationConstraint(Eigen::Matrix<double, 5, 1> parameters):
@@ -637,20 +649,23 @@ public:
                 find_t_given_velocity(0);
         Vector position_given_zero_velocity =
                 get_positions(t_given_zero_velocity);
-        if(t_given_zero_velocity.size() != 1)
+        if(t_given_zero_velocity.size() == 0)
         {
             std::cout << "something went horribly wrong " << std::endl;
+
+            print_parameters();
             exit(-1);
         }
 
-        double max_achieved_position = position_given_zero_velocity.maxCoeff();
+        Vector::Index max_index;
+        double max_achieved_position = position_given_zero_velocity.maxCoeff(&max_index);
         if(max_achieved_position < max_position)
         {
             return false;
         }
         if(max_velocity < 0)
         {
-            certificate_time = t_given_zero_velocity[0];
+            certificate_time = t_given_zero_velocity[max_index];
             return true;
         }
 
@@ -703,54 +718,62 @@ private:
 
 
 
-//double find_max_admissible_initial_acceleration(
-//        const double& initial_velocity,
-//        const double& initial_position,
-//        const double& max_velocity,
-//        const double& max_position,
-//        const NonnegDouble& abs_jerk_limit,
-//        const NonnegDouble& abs_acceleration_limit) const
-//{
-//    double jerk =
-//    LinearDynamicsWithAccelerationConstraint dynamics(jerk,
-//                                                      min_initial_acceleration,
-//                                                      initial_velocity,
-//                                                      initial_position,
-//                                                      abs_acceleration_limit);
+double find_max_admissible_initial_acceleration(
+        const double& initial_velocity,
+        const double& initial_position,
+        const double& max_velocity,
+        const double& max_position,
+        const NonnegDouble& abs_jerk_limit,
+        const NonnegDouble& abs_acceleration_limit)
+{
 
-//    dynamics.set_initial_acceleration(min_initial_acceleration);
-//    if(dynamics.will_exceed_jointly(max_velocity, max_position))
-//    {
-//        /// \todo: is this the right thing to do here?
-//        return min_initial_acceleration;
-//    }
+    std::cout << "-----------------fizzle: " << std::endl;
 
-//    dynamics.set_initial_acceleration(max_initial_acceleration);
-//    if(!dynamics.will_exceed_jointly(max_velocity, max_position))
-//    {
-//        /// \todo: is this the right thing to do here?
-//        return max_initial_acceleration;
-//    }
 
-//    double lower = min_initial_acceleration;
-//    double upper = max_initial_acceleration;
+    double lower = -abs_acceleration_limit;
+    double upper = abs_acceleration_limit;
 
-//    for(size_t i = 0; i < 20; i++)
-//    {
-//        double middle = (lower + upper) / 2.0;
 
-//        dynamics.set_initial_acceleration(middle);
-//        if(dynamics.will_exceed_jointly(max_velocity, max_position))
-//        {
-//            upper = middle;
-//        }
-//        else
-//        {
-//            lower = middle;
-//        }
-//    }
-//    return lower;
-//}
+    LinearDynamicsWithAccelerationConstraint dynamics(-abs_jerk_limit,
+                                                      lower,
+                                                      initial_velocity,
+                                                      initial_position,
+                                                      abs_acceleration_limit);
+
+    if(dynamics.will_exceed_jointly(max_velocity, max_position))
+    {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+
+    dynamics.set_initial_acceleration(upper);
+    if(!dynamics.will_exceed_jointly(max_velocity, max_position))
+    {
+        std::cout << "-----------------drizzle: " << std::endl;
+
+        return upper;
+    }
+
+    std::cout << "-----------------dizzle: " << std::endl;
+
+    for(size_t i = 0; i < 20; i++)
+    {
+        double middle = (lower + upper) / 2.0;
+        std::cout << "-----------------middle: " << std::endl;
+
+        std::cout << middle << std::endl;
+
+        dynamics.set_initial_acceleration(middle);
+        if(dynamics.will_exceed_jointly(max_velocity, max_position))
+        {
+            upper = middle;
+        }
+        else
+        {
+            lower = middle;
+        }
+    }
+    return lower;
+}
 
 
 

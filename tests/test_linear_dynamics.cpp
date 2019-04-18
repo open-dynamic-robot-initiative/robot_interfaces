@@ -499,3 +499,78 @@ TEST(linear_dynamics_with_acceleration_constraint,
 }
 
 
+
+TEST(find_max_admissible_initial_acceleration, basics)
+{
+    srand(0);
+
+    // initialize parameters randomly ------------------------------------------
+    double initial_velocity = 3.0;
+    double initial_position = 4.0;
+    NonnegDouble abs_jerk_limit = 1.0;
+    NonnegDouble abs_acceleration_limit = 3.0;
+
+    double initial_acceleration = 2.0;
+
+
+
+    // find some constraints which is just barely satisfied --------------------
+    LinearDynamicsWithAccelerationConstraint dynamics(-abs_jerk_limit,
+                                                      initial_acceleration,
+                                                      initial_velocity,
+                                                      initial_position,
+                                                      abs_acceleration_limit);
+    double max_t = 20.0;
+    if(dynamics.find_t_given_velocity(0).size() > 0)
+    {
+        max_t = dynamics.find_t_given_velocity(0).maxCoeff() * 2;
+    }
+
+    size_t n_iterations = 1000;
+    int T = rand() % n_iterations;
+    Eigen::Vector2d constraint;
+    constraint[0] = dynamics.get_velocity(T);
+    constraint[1] = dynamics.get_position(T);
+
+    Eigen::Vector2d position_constraint(-std::numeric_limits<double>::infinity(),
+                                        -std::numeric_limits<double>::infinity());
+    Eigen::Vector2d velocity_constraint(-std::numeric_limits<double>::infinity(),
+                                        -std::numeric_limits<double>::infinity());
+
+    for(size_t i = 0; i < n_iterations; i++)
+    {
+        double t = double(i) / n_iterations * max_t;
+        Eigen::Vector2d point;
+        point[0] = dynamics.get_velocity(t);
+        point[1] = dynamics.get_position(t);
+        if(point[0] > constraint[0] && point[1] > constraint[1])
+            constraint = point;
+        velocity_constraint[0] = std::max(velocity_constraint[0], point[0]);
+        position_constraint[1] = std::max(velocity_constraint[1], point[1]);
+    }
+
+    // test that we get the same initial acceleration --------------------------
+    for(auto& c : {constraint, position_constraint, velocity_constraint})
+    {
+        bool max_admissible_initial_acceleration =
+                find_max_admissible_initial_acceleration(
+                    initial_velocity,
+                    initial_position,
+                    c[0],
+                c[1],
+                abs_jerk_limit,
+                abs_acceleration_limit);
+
+//        if(!approx_equal(initial_acceleration,
+//                         max_admissible_initial_acceleration))
+        {
+            std::cout << " initial_acceleration " << initial_acceleration
+                      << " max_admissible_initial_acceleration "
+                      << max_admissible_initial_acceleration << std::endl;
+        }
+
+        ASSERT_TRUE(approx_equal(initial_acceleration, max_admissible_initial_acceleration));
+    }
+}
+
+
