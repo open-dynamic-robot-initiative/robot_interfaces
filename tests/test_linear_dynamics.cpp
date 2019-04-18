@@ -357,8 +357,75 @@ TEST(linear_dynamics_with_acceleration_constraint,
             EXPECT_TRUE(label == assigned_label);
         }
     }
+}
 
 
+TEST(linear_dynamics_with_acceleration_constraint,
+     will_deceed_jointly)
+{
+    LinearDynamicsWithAccelerationConstraint
+            dynamics(0.4, 2.6, -200.3, 7.2, 3);
+    double max_t = dynamics.find_t_given_velocity(0).maxCoeff() * 2;
+
+    std::vector<Eigen::Vector2d> trajectory;
+    size_t n_iterations = 1000;
+    for(size_t i = 0; i < n_iterations; i++)
+    {
+        double t = double(i) / n_iterations * max_t;
+
+        Eigen::Vector2d point;
+        point[0] = dynamics.get_velocity(t);
+        point[1] = dynamics.get_position(t);
+        trajectory.push_back(point);
+    }
+
+    for(auto& point : trajectory)
+    {
+        std::vector<Eigen::Vector2d> constraints;
+        constraints.push_back(point - Eigen::Vector2d(0.001, 0.001));
+        constraints.push_back(point + Eigen::Vector2d(epsilon, epsilon));
+
+        constraints.push_back(point + Eigen::Vector2d(epsilon, std::numeric_limits<double>::infinity()));
+        constraints.push_back(point + Eigen::Vector2d(epsilon, -std::numeric_limits<double>::infinity()));
+        constraints.push_back(point + Eigen::Vector2d(-0.001, std::numeric_limits<double>::infinity()));
+
+        constraints.push_back(point + Eigen::Vector2d(std::numeric_limits<double>::infinity(), epsilon));
+        constraints.push_back(point + Eigen::Vector2d(-std::numeric_limits<double>::infinity(), epsilon));
+        constraints.push_back(point + Eigen::Vector2d(std::numeric_limits<double>::infinity(), -0.001));
+
+        for(auto& constraint : constraints)
+        {
+
+            bool label = false;
+            for(auto& point : trajectory)
+            {
+                if(point[0] < constraint[0] && point[1] < constraint[1])
+                {
+                    //                    std::cout << "point: " << point.transpose() << std::endl;
+                    label = true;
+                    break;
+                }
+            }
+
+            double certificate_time;
+            bool assigned_label =
+                    dynamics.will_deceed_jointly(constraint[0], constraint[1],
+                    certificate_time);
+
+            if(label != assigned_label)
+            {
+                std::cout << "---------------------" << std::endl;
+                std::cout << "constraint: " << constraint.transpose() << std::endl;
+
+                std::cout << "label: " << label << "  assigned_label: " << assigned_label << std::endl;
+                std::cout << "certificate time: " << certificate_time
+                          << " certificate point: "
+                          << dynamics.get_velocity(certificate_time) << ", "
+                          << dynamics.get_position(certificate_time) << std::endl;
+            }
+            EXPECT_TRUE(label == assigned_label);
+        }
+    }
 }
 
 

@@ -670,6 +670,30 @@ public:
     }
 
 
+    bool will_deceed_jointly(const double& min_velocity,
+                             const double& min_position) const
+    {
+        double certificate_time;
+        return will_deceed_jointly(min_velocity, min_position, certificate_time);
+    }
+
+    bool will_deceed_jointly(const double& min_velocity,
+                             const double& min_position,
+                             double& certificate_time) const
+    {
+        LinearDynamicsWithAccelerationConstraint
+                flipped_dynamics(-jerk_,
+                                 -initial_acceleration_,
+                                 -initial_velocity_,
+                                 -initial_position_,
+                                 std::fabs(acceleration_limit_));
+
+        return flipped_dynamics.will_exceed_jointly(-min_velocity,
+                                                    -min_position,
+                                                    certificate_time);
+    }
+
+
 
 
 
