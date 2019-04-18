@@ -239,7 +239,7 @@ TEST(linear_dynamics_with_acceleration_constraint,
      test_find_t_given_velocity_basic_2)
 {
     LinearDynamicsWithAccelerationConstraint
-            dynamics_basic(1.0, -5.0, 3.0, 0.0, 10.0);
+            dynamics_basic(1.0, -5.0, 3.0, -10.0, 10.0);
 
     LinearDynamics::Vector solutions =
             dynamics_basic.find_t_given_velocity(-9);
@@ -251,21 +251,19 @@ TEST(linear_dynamics_with_acceleration_constraint,
 }
 
 
-//TEST(linear_dynamics_with_acceleration_constraint,
-//     test_find_t_given_velocity_basic_2)
-//{
-//    LinearDynamicsWithAccelerationConstraint
-//            dynamics_basic(1.0, -5.0, 3.0, 0.0, 10.0);
+TEST(linear_dynamics_with_acceleration_constraint,
+     test_find_t_given_velocity_basic_3)
+{
+    LinearDynamicsWithAccelerationConstraint
+            dynamics(1.0, -1.0, 3.0, -2.0, 2.0);
 
-//    LinearDynamics::Vector solutions =
-//            dynamics_basic.find_t_given_velocity(-9);
+    EXPECT_TRUE(approx_equal(dynamics.get_velocity(10.0), 18.5));
 
-//    EXPECT_TRUE(solutions.size() == 2);
-//    EXPECT_TRUE(contains(solutions, 4));
-//    EXPECT_TRUE(contains(solutions, 6));
-//    EXPECT_FALSE(contains(solutions, 7));
-//}
+    LinearDynamics::Vector solutions = dynamics.find_t_given_velocity(18.5);
 
+    EXPECT_TRUE(solutions.size() == 1);
+    EXPECT_TRUE(approx_equal(solutions[0], 10.0));
+}
 
 
 TEST(linear_dynamics_with_acceleration_constraint,
