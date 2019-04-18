@@ -27,7 +27,7 @@ public:
         value_ = value;
     }
 
-    operator double()
+    operator double() const
     {
         return value_;
     }
@@ -55,6 +55,10 @@ struct Constraint
     double max_angle;
     double max_velocity;
 };
+
+
+
+
 
 
 
@@ -404,18 +408,18 @@ public:
         initial_velocity_ = initial_velocity;
         initial_position_= initial_position;
     }
-    double get_acceleration(NonnegDouble t)
+    double get_acceleration(NonnegDouble t) const
     {
         return  jerk_ * t +
                 initial_acceleration_;
     }
-    double get_velocity(NonnegDouble t)
+    double get_velocity(NonnegDouble t) const
     {
         return jerk_ * 0.5 * pow(t,2) +
                 initial_acceleration_ * t +
                 initial_velocity_;
     }
-    double get_position(NonnegDouble t)
+    double get_position(NonnegDouble t) const
     {
         return jerk_ * 0.5 * 1./3. * pow(t, 3) +
                 initial_acceleration_ * 0.5 * pow(t, 2) +
@@ -423,7 +427,7 @@ public:
                 initial_position_;
     }
 
-    Vector find_t_given_velocity(double velocity)
+    Vector find_t_given_velocity(double velocity) const
     {
         double a = jerk_ * 0.5;
         double b = initial_acceleration_;
@@ -499,21 +503,27 @@ public:
                        initial_velocity,
                        initial_position)
     {
-        if(std::fabs(initial_acceleration) > abs_acceleration_limit)
-            throw std::invalid_argument("expected "
-                                        "std::fabs(initial_acceleration) > "
-                                        "abs_acceleration_limit");
-
         if(jerk_ > 0)
             acceleration_limit_ = abs_acceleration_limit;
         else
             acceleration_limit_ = -abs_acceleration_limit;
 
         jerk_duration_ =
-                (acceleration_limit_ - initial_acceleration_) / jerk_;
+                (acceleration_limit_ - initial_acceleration) / jerk;
+
+        set_initial_acceleration(initial_acceleration);
     }
 
-    double get_acceleration(NonnegDouble t)
+
+    void set_initial_acceleration(double initial_acceleration)
+    {
+        if(std::fabs(initial_acceleration) > std::fabs(acceleration_limit_))
+            throw std::invalid_argument("expected "
+                                        "std::fabs(initial_acceleration) > "
+                                        "abs_acceleration_limit");
+    }
+
+    double get_acceleration(NonnegDouble t) const
     {
         if(t < jerk_duration_)
         {
@@ -524,7 +534,7 @@ public:
             return acceleration_limit_;
         }
     }
-    double get_velocity(NonnegDouble t)
+    double get_velocity(NonnegDouble t) const
     {
         if(t < jerk_duration_)
         {
@@ -536,7 +546,7 @@ public:
                     acceleration_limit_ * (t - jerk_duration_);
         }
     }
-    double get_position(NonnegDouble t)
+    double get_position(NonnegDouble t) const
     {
         if(t < jerk_duration_)
         {
@@ -550,7 +560,18 @@ public:
         }
     }
 
-    Vector find_t_given_velocity(double velocity)
+    template<typename Array>
+    Array get_positions(const Array& times) const
+    {
+        Array positions(times.size());
+        for(size_t i = 0; i < times.size(); i++)
+        {
+            positions[i] = get_position(times[i]);
+        }
+        return positions;
+    }
+
+    Vector find_t_given_velocity(double velocity) const
     {
         Vector potential_solutions =
                 LinearDynamics::find_t_given_velocity(velocity);
@@ -581,6 +602,78 @@ public:
         }
         return solutions;
     }
+
+    bool will_exceed_jointly(const double& max_velocity,
+                             const double& max_position) const
+    {
+        double certificate_time;
+        return will_exceed_jointly(max_velocity, max_position, certificate_time);
+    }
+
+
+    bool will_exceed_jointly(const double& max_velocity,
+                             const double& max_position,
+                             double& certificate_time) const
+    {
+        if(jerk_ >= 0)
+        {
+            throw std::domain_error("not implemented for jerk >= 0");
+        }
+        if(initial_velocity_ < 0)
+        {
+            throw std::domain_error("not implemented for initial_velocity_ < 0");
+        }
+
+        if(max_velocity == std::numeric_limits<double>::infinity() ||
+                max_position == std::numeric_limits<double>::infinity())
+        {
+            return false;
+        }
+
+        // find maximum achieved position --------------------------------------
+        Vector t_given_zero_velocity =
+                find_t_given_velocity(0);
+        Vector position_given_zero_velocity =
+                get_positions(t_given_zero_velocity);
+        if(t_given_zero_velocity.size() != 1)
+        {
+            std::cout << "something went horribly wrong " << std::endl;
+            exit(-1);
+        }
+
+        double max_achieved_position = position_given_zero_velocity.maxCoeff();
+        if(max_achieved_position < max_position)
+        {
+            return false;
+        }
+        if(max_velocity < 0)
+        {
+            certificate_time = t_given_zero_velocity[0];
+            return true;
+        }
+
+        Vector t_given_max_velocity =
+                find_t_given_velocity(max_velocity);
+        Vector position_given_max_velocity =
+                get_positions(t_given_max_velocity);
+
+        for(size_t i = 0; i < position_given_max_velocity.size(); i++)
+        {
+            if(position_given_max_velocity[i] > max_position)
+            {
+                certificate_time = t_given_max_velocity[i];
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+
+
+
+
 
 
 private:
