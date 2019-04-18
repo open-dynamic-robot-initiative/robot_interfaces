@@ -146,7 +146,7 @@ TEST(linear_dynamics_with_acceleration_constraint, test_time_evolution)
     ASSERT_TRUE(approx_equal(numeric, exact));
 
     // make sure dynamics coincide
-    for(size_t t = 0; t < 100; t++)
+    for(size_t t = 0; t < 10000; t++)
     {
         double acceleration_b = dynamics.get_acceleration(jerk_duration);
         double velocity_b =
@@ -162,6 +162,11 @@ TEST(linear_dynamics_with_acceleration_constraint, test_time_evolution)
                                  constrained_dynamics_b.get_velocity(t)));
         EXPECT_TRUE(approx_equal(position_b,
                                  constrained_dynamics_b.get_position(t)));
+
+
+
+        EXPECT_TRUE(contains(constrained_dynamics.find_t_given_velocity(
+                                 constrained_dynamics.get_velocity(t)), t));
 
 
         if(t <= jerk_duration)
