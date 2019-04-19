@@ -387,10 +387,22 @@ void append_to_vector(Vector& vector,
 }
 
 
+template<typename Matrix>
+void append_rows_to_matrix(Matrix& matrix,
+                           const Matrix& rows)
+{
+    if(matrix.cols() != rows.cols())
+        throw std::invalid_argument("need to have same number of cols");
+
+    matrix.conservativeResize(matrix.rows() + rows.rows(), matrix.cols());
+    matrix.bottomRows(rows.rows()) = rows;
+}
+
+
 class LinearDynamics
 {
 public:
-    typedef Eigen::Matrix<double, Eigen::Dynamic, 1, 0, 3> Vector;
+    typedef Eigen::Matrix<double, Eigen::Dynamic, 1, 0, 10> Vector;
 
     LinearDynamics(Eigen::Vector4d parameters): LinearDynamics(parameters[0],
                                                 parameters[1],
@@ -478,6 +490,23 @@ protected:
 };
 
 
+bool approx_equal(double x, double y, double epsilon = 1e-10)
+{
+    return (std::fabs(x - y) < epsilon);
+}
+
+template<typename Vector>
+bool contains(Vector v, double x)
+{
+    for(size_t i = 0; i < v.size(); i++)
+    {
+        if(approx_equal(v[i], x))
+        {
+            return true;
+        }
+    }
+    return false;
+}
 
 
 
@@ -491,12 +520,16 @@ public:
                   << "initial_acceleration: " << initial_acceleration_ << std::endl
                   << "initial_velocity: " << initial_velocity_ << std::endl
                   << "initial_position: " << initial_position_ << std::endl
-                  << "abs_acceleration_limit: " << acceleration_limit_ << std::endl
+                  << "acceleration_limit: " << acceleration_limit_ << std::endl
                   << "jerk_duration: " << jerk_duration_ << std::endl;
 
     }
 
     typedef LinearDynamics::Vector Vector;
+
+    typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, 0, 10, 10>
+    Matrix;
+
 
     LinearDynamicsWithAccelerationConstraint(Eigen::Matrix<double, 5, 1> parameters):
         LinearDynamicsWithAccelerationConstraint(parameters[0],
@@ -520,9 +553,6 @@ public:
         else
             acceleration_limit_ = -abs_acceleration_limit;
 
-        jerk_duration_ =
-                (acceleration_limit_ - initial_acceleration) / jerk;
-
         set_initial_acceleration(initial_acceleration);
     }
 
@@ -533,6 +563,9 @@ public:
             throw std::invalid_argument("expected "
                                         "std::fabs(initial_acceleration) > "
                                         "abs_acceleration_limit");
+        initial_acceleration_ = initial_acceleration;
+        jerk_duration_ =
+                (acceleration_limit_ - initial_acceleration_) / jerk_;
     }
 
     double get_acceleration(NonnegDouble t) const
@@ -600,16 +633,27 @@ public:
         double potential_solution = jerk_duration_
                 + (velocity - LinearDynamics::get_velocity(jerk_duration_))
                 / acceleration_limit_;
-        if(potential_solution > jerk_duration_)
+        if(potential_solution > jerk_duration_ &&
+                !(contains(solutions, jerk_duration_) &&
+                  approx_equal(potential_solution, jerk_duration_)))
         {
             append_to_vector(solutions, potential_solution);
         }
+
 
 
         if(solutions.size() > 2)
         {
             std::cout << "too many solutions, something went wrong!!!"
                       << std::endl;
+            print_parameters();
+
+            std::cout << "potential_solutions[0]: " << potential_solutions[0] << std::endl;
+
+            std::cout << "potential_solutions size: " << potential_solutions.size() << " content: " << potential_solutions.transpose() << std::endl;
+
+
+            std::cout << "solutions size: " << solutions.size() << " content: " << solutions.transpose() << std::endl;
             exit(-1);
         }
         return solutions;
@@ -632,12 +676,27 @@ public:
         {
             return false;
         }
-        if(jerk_ >= 0)
+        if(jerk_ > 0)
         {
-            throw std::domain_error("not implemented for jerk >= 0");
+            certificate_time = std::numeric_limits<double>::infinity();
+            return true;
+        }
+        if(jerk_ == 0)
+        {
+            throw std::domain_error("not implemented for jerk == 0");
         }
 
         // find maximum achieved position --------------------------------------
+        ///\todo we could do this in a cleaner way with candidate points
+//        Matrix candidate_points(0, 0);
+//        Vector candidate_times(0);
+
+//        append_rows_to_matrix(candidate_points,
+//                              Eigen::Vector2d(initial_velocity_,
+//                                              initial_position_).transpose());
+//        append_to_vector(candidate_times, 0);
+
+
         if(initial_velocity_ > max_velocity &&
                 initial_position_ > max_position)
         {
@@ -645,28 +704,24 @@ public:
             return true;
         }
 
-        Vector t_given_zero_velocity =
-                find_t_given_velocity(0);
-        Vector position_given_zero_velocity =
-                get_positions(t_given_zero_velocity);
-        if(t_given_zero_velocity.size() == 0)
+        Vector t_given_zero_velocity = find_t_given_velocity(0);
+        if(t_given_zero_velocity.size() > 0)
         {
-            std::cout << "something went horribly wrong " << std::endl;
+            Vector position_given_zero_velocity =
+                    get_positions(t_given_zero_velocity);
 
-            print_parameters();
-            exit(-1);
-        }
-
-        Vector::Index max_index;
-        double max_achieved_position = position_given_zero_velocity.maxCoeff(&max_index);
-        if(max_achieved_position < max_position)
-        {
-            return false;
-        }
-        if(max_velocity < 0)
-        {
-            certificate_time = t_given_zero_velocity[max_index];
-            return true;
+            Vector::Index max_index;
+            double max_achieved_position =
+                    position_given_zero_velocity.maxCoeff(&max_index);
+            if(max_achieved_position < max_position)
+            {
+                return false;
+            }
+            if(max_velocity < 0)
+            {
+                certificate_time = t_given_zero_velocity[max_index];
+                return true;
+            }
         }
 
         Vector t_given_max_velocity =
@@ -718,7 +773,7 @@ private:
 
 
 
-double find_max_admissible_initial_acceleration(
+double find_max_admissible_acceleration(
         const double& initial_velocity,
         const double& initial_position,
         const double& max_velocity,
@@ -726,10 +781,6 @@ double find_max_admissible_initial_acceleration(
         const NonnegDouble& abs_jerk_limit,
         const NonnegDouble& abs_acceleration_limit)
 {
-
-    std::cout << "-----------------fizzle: " << std::endl;
-
-
     double lower = -abs_acceleration_limit;
     double upper = abs_acceleration_limit;
 
@@ -740,6 +791,7 @@ double find_max_admissible_initial_acceleration(
                                                       initial_position,
                                                       abs_acceleration_limit);
 
+
     if(dynamics.will_exceed_jointly(max_velocity, max_position))
     {
         return std::numeric_limits<double>::quiet_NaN();
@@ -748,19 +800,12 @@ double find_max_admissible_initial_acceleration(
     dynamics.set_initial_acceleration(upper);
     if(!dynamics.will_exceed_jointly(max_velocity, max_position))
     {
-        std::cout << "-----------------drizzle: " << std::endl;
-
         return upper;
     }
-
-    std::cout << "-----------------dizzle: " << std::endl;
 
     for(size_t i = 0; i < 20; i++)
     {
         double middle = (lower + upper) / 2.0;
-        std::cout << "-----------------middle: " << std::endl;
-
-        std::cout << middle << std::endl;
 
         dynamics.set_initial_acceleration(middle);
         if(dynamics.will_exceed_jointly(max_velocity, max_position))
