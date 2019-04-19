@@ -22,7 +22,7 @@ public:
 
     NonnegDouble(double value)
     {
-        if(!isnan(value) && value < 0.0)
+        if(!std::isnan(value) && value < 0.0)
             throw std::invalid_argument("expected nonnegative double");
         value_ = value;
     }
@@ -756,28 +756,29 @@ public:
     {
         max_torques_ = 2.0 * 0.02 * 9 * Vector(9.79, 1, 1);
 
-        safety_constraints_[table].min_velocity_ = -6.0;
+        safety_constraints_[table].min_velocity_ = -10.0;
         safety_constraints_[table].min_position_ = std::numeric_limits<double>::infinity();
-        safety_constraints_[table].max_velocity_ = 6.0;
+        safety_constraints_[table].max_velocity_ = 10.0;
         safety_constraints_[table].max_position_ = -std::numeric_limits<double>::infinity();
         safety_constraints_[table].max_torque_ = max_torques_[table];
-        safety_constraints_[table].inertia_ = 0.000001; //dummy
-        safety_constraints_[table].max_jerk_ = 10000.0; // dummy
-
-        safety_constraints_[base].min_velocity_ = -6.0;
-        safety_constraints_[base].min_position_ = std::numeric_limits<double>::infinity();
-        safety_constraints_[base].max_velocity_ = 6.0;
-        safety_constraints_[base].max_position_ = -std::numeric_limits<double>::infinity();
-        safety_constraints_[base].max_torque_ = max_torques_[base];
-        safety_constraints_[base].inertia_ = 0.000001; //dummy
+        safety_constraints_[table].inertia_ = 1.0; //dummy
         safety_constraints_[base].max_jerk_ = 10000.0; // dummy
 
-        safety_constraints_[tip].min_velocity_ = -6.0;
+        safety_constraints_[base].min_velocity_ = -10.0;
+        safety_constraints_[base].min_position_ = std::numeric_limits<double>::infinity();
+        safety_constraints_[base].max_velocity_ = 10.0;
+        safety_constraints_[base].max_position_ = -std::numeric_limits<double>::infinity();
+        safety_constraints_[base].max_torque_ = max_torques_[base];
+        safety_constraints_[base].inertia_ = 1.0; //dummy
+        safety_constraints_[base].max_jerk_ =  10000.0; // dummy
+
+
+        safety_constraints_[tip].min_velocity_ = -10.0;
         safety_constraints_[tip].min_position_ = std::numeric_limits<double>::infinity();
-        safety_constraints_[tip].max_velocity_ = 6.0;
+        safety_constraints_[tip].max_velocity_ = 10.0;
         safety_constraints_[tip].max_position_ = -std::numeric_limits<double>::infinity();
         safety_constraints_[tip].max_torque_ = max_torques_[tip];
-        safety_constraints_[tip].inertia_ = 0.000001; //dummy
+        safety_constraints_[tip].inertia_ = 1.0; //dummy
         safety_constraints_[tip].max_jerk_ = 10000.0; // dummy
     }
 
