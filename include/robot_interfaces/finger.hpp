@@ -516,13 +516,14 @@ public:
 
     void print_parameters() const
     {
+        std::cout << "-------------------------------------------" << std::endl;
         std::cout << "jerk: " << jerk_ << std::endl
                   << "initial_acceleration: " << initial_acceleration_ << std::endl
                   << "initial_velocity: " << initial_velocity_ << std::endl
                   << "initial_position: " << initial_position_ << std::endl
                   << "acceleration_limit: " << acceleration_limit_ << std::endl
                   << "jerk_duration: " << jerk_duration_ << std::endl;
-
+        std::cout << "-------------------------------------------" << std::endl;
     }
 
     typedef LinearDynamics::Vector Vector;
@@ -818,6 +819,24 @@ double find_max_admissible_acceleration(
         }
     }
     return lower;
+}
+
+
+
+double find_min_admissible_acceleration(
+        const double& initial_velocity,
+        const double& initial_position,
+        const double& min_velocity,
+        const double& min_position,
+        const NonnegDouble& abs_jerk_limit,
+        const NonnegDouble& abs_acceleration_limit)
+{
+       return - find_max_admissible_acceleration(-initial_velocity,
+                                               -initial_position,
+                                               -min_velocity,
+                                               -min_position,
+                                               abs_jerk_limit,
+                                               abs_acceleration_limit);
 }
 
 

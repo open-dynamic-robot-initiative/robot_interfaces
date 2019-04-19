@@ -486,7 +486,7 @@ double sample_uniformely(const double& min, const double& max)
     return min + double(rand()) / RAND_MAX * (max - min);
 }
 
-TEST(find_max_admissible_initial_acceleration, generated_trajectories)
+TEST(find_max_admissible_acceleration, generated_trajectories)
 {
     srand(0);
 
@@ -547,7 +547,7 @@ TEST(find_max_admissible_initial_acceleration, generated_trajectories)
 
 
             double max_admissible_initial_acceleration =
-                    find_max_admissible_initial_acceleration(
+                    find_max_admissible_acceleration(
                         initial_velocity,
                         initial_position,
                         c[0],
@@ -625,7 +625,7 @@ TEST(find_max_admissible_initial_acceleration, generated_trajectories)
 }
 
 
-TEST(find_max_admissible_initial_acceleration, random_points)
+TEST(find_max_admissible_acceleration, random_points)
 {
     srand(0);
 
@@ -643,7 +643,7 @@ TEST(find_max_admissible_initial_acceleration, random_points)
 
 
         double max_admissible_acceleration =
-                find_max_admissible_initial_acceleration(
+                find_max_admissible_acceleration(
                     initial_velocity,
                     initial_position,
                     max_velocity,
@@ -651,34 +651,92 @@ TEST(find_max_admissible_initial_acceleration, random_points)
                     abs_jerk_limit,
                     abs_acceleration_limit);
 
-            if(max_admissible_acceleration - 0.0001 >
-                    -abs_acceleration_limit)
-            {
-                LinearDynamicsWithAccelerationConstraint
-                        below_limit_dynamics(-abs_jerk_limit,
-                                             max_admissible_acceleration
-                                             - 0.0001,
-                                             initial_velocity,
-                                             initial_position,
-                                             abs_acceleration_limit);
-                ASSERT_TRUE(below_limit_dynamics.will_exceed_jointly(max_velocity, max_position)
+        if(std::fabs(max_admissible_acceleration - 0.0001) <=
+                abs_acceleration_limit)
+        {
+            LinearDynamicsWithAccelerationConstraint
+                    below_limit_dynamics(-abs_jerk_limit,
+                                         max_admissible_acceleration
+                                         - 0.0001,
+                                         initial_velocity,
+                                         initial_position,
+                                         abs_acceleration_limit);
+            ASSERT_TRUE(below_limit_dynamics.will_exceed_jointly(max_velocity, max_position)
                         == false);
-            }
-            if(max_admissible_acceleration + 0.0001 <
-                    abs_acceleration_limit)
-            {
-                LinearDynamicsWithAccelerationConstraint
-                        above_limit_dynamics(-abs_jerk_limit,
-                                             max_admissible_acceleration
-                                             + 0.0001,
-                                             initial_velocity,
-                                             initial_position,
-                                             abs_acceleration_limit);
-                ASSERT_TRUE(above_limit_dynamics.will_exceed_jointly(max_velocity, max_position)
+        }
+        if(std::fabs(max_admissible_acceleration + 0.0001) <=
+                abs_acceleration_limit)
+        {
+            LinearDynamicsWithAccelerationConstraint
+                    above_limit_dynamics(-abs_jerk_limit,
+                                         max_admissible_acceleration
+                                         + 0.0001,
+                                         initial_velocity,
+                                         initial_position,
+                                         abs_acceleration_limit);
+            ASSERT_TRUE(above_limit_dynamics.will_exceed_jointly(max_velocity, max_position)
                         == true);
-            }
         }
     }
+}
+
+
+TEST(find_min_admissible_acceleration, random_points)
+{
+    srand(0);
+
+    for(size_t unused = 0; unused < 10; unused++)
+    {
+        // initialize parameters randomly --------------------------------------
+        double initial_velocity = sample_uniformely(-20.0, 20.0);
+        double initial_position = sample_uniformely(-20.0, 20.0);
+
+        double min_velocity = sample_uniformely(-20.0, 20.0);
+        double min_position = sample_uniformely(-20.0, 20.0);
+
+        NonnegDouble abs_jerk_limit = sample_uniformely(epsilon, 20.0);
+        NonnegDouble abs_acceleration_limit = sample_uniformely(epsilon, 20.0);
+
+
+        double min_admissible_acceleration =
+                find_min_admissible_acceleration(
+                    initial_velocity,
+                    initial_position,
+                    min_velocity,
+                    min_position,
+                    abs_jerk_limit,
+                    abs_acceleration_limit);
+
+        if(std::fabs(min_admissible_acceleration - 0.0001) <=
+                abs_acceleration_limit)
+        {
+            LinearDynamicsWithAccelerationConstraint
+                    below_limit_dynamics(abs_jerk_limit,
+                                         min_admissible_acceleration
+                                         - 0.0001,
+                                         initial_velocity,
+                                         initial_position,
+                                         abs_acceleration_limit);
+            ASSERT_TRUE(below_limit_dynamics.will_deceed_jointly(min_velocity,
+                                                                 min_position)
+                        == true);
+        }
+        if(std::fabs(min_admissible_acceleration + 0.0001) <=
+                abs_acceleration_limit)
+        {
+            LinearDynamicsWithAccelerationConstraint
+                    above_limit_dynamics(abs_jerk_limit,
+                                         min_admissible_acceleration
+                                         + 0.0001,
+                                         initial_velocity,
+                                         initial_position,
+                                         abs_acceleration_limit);
+            ASSERT_TRUE(above_limit_dynamics.will_deceed_jointly(min_velocity,
+                                                                 min_position)
+                        == false);
+        }
+    }
+}
 
 
 
