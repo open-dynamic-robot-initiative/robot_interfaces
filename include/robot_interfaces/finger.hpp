@@ -37,24 +37,17 @@ private:
 };
 
 
-struct Constraint
+double clamp(const double& value, const double& limit_a, const double& limit_b)
 {
-    bool is_satisfied(const double& angle, const double& velocity)
-    {
-        if(angle < min_angle && velocity < min_velocity)
-            return false;
+    if(limit_b > limit_a)
+        return std::max(limit_a, std::min(value, limit_b));
 
-        if(angle > max_angle && velocity > max_velocity)
-            return false;
+    return std::max(limit_b, std::min(value, limit_a));
 
-        return true;
-    }
+}
 
-    double min_angle;
-    double min_velocity;
-    double max_angle;
-    double max_velocity;
-};
+
+
 
 template<typename Vector>
 void append_to_vector(Vector& vector,
@@ -473,7 +466,8 @@ double find_max_admissible_acceleration(
 
     if(dynamics.will_exceed_jointly(max_velocity, max_position))
     {
-        return std::numeric_limits<double>::quiet_NaN();
+        /// \todo: not quite sure what is the right thing to do here
+        return lower;
     }
 
     dynamics.set_initial_acceleration(upper);
@@ -520,6 +514,143 @@ double find_min_admissible_acceleration(
 
 
 
+struct Constraint
+{
+    bool is_satisfied(const double& angle, const double& velocity)
+    {
+        if(angle < min_angle && velocity < min_velocity)
+            return false;
+
+        if(angle > max_angle && velocity > max_velocity)
+            return false;
+
+        return true;
+    }
+
+    double min_angle;
+    double min_velocity;
+    double max_angle;
+    double max_velocity;
+};
+
+
+class SafetyConstraint
+{
+public:
+    SafetyConstraint()
+    {
+        min_velocity_ = -std::numeric_limits<double>::infinity();
+        min_position_ = -std::numeric_limits<double>::infinity();
+        max_velocity_ = std::numeric_limits<double>::infinity();
+        max_position_ = std::numeric_limits<double>::infinity();
+        max_torque_ = 1.0;
+        max_jerk_ = 1.0;
+        inertia_ = 1.0;
+    }
+
+    SafetyConstraint(double min_velocity,
+                     double min_position,
+                     double max_velocity,
+                     double max_position,
+                     NonnegDouble max_torque,
+                     NonnegDouble max_jerk,
+                     NonnegDouble inertia)
+    {
+        min_velocity_ = min_velocity;
+        min_position_ = min_position;
+        max_velocity_ = max_velocity;
+        max_position_ = max_position;
+        max_torque_ = max_torque;
+        max_jerk_ = max_jerk;
+        inertia_ = inertia;
+    }
+
+
+    double get_safe_torque(const double& torque,
+                           const double& velocity,
+                           const double& position)
+    {
+        double safe_torque = clamp(torque, -max_torque_, max_torque_);
+
+//        std::cout << "safe_torque: " << safe_torque << std::endl;
+
+
+        NonnegDouble max_achievable_acc = max_torque_ / inertia_;
+
+
+
+
+        double max_admissible_acc =
+                find_max_admissible_acceleration(velocity,
+                                                 position,
+                                                 max_velocity_,
+                                                 max_position_,
+                                                 max_jerk_,
+                                                 max_achievable_acc);
+        double max_admissible_torque = max_admissible_acc * inertia_;
+
+
+
+//        LinearDynamicsWithAccelerationConstraint
+//                test_dynamics(- max_jerk_,
+//                              max_achievable_acc,
+//                              velocity,
+//                              position,
+//                              max_achievable_acc);
+
+//        test_dynamics.print_parameters();
+//        std::cout << "will exceed: " << test_dynamics.will_exceed_jointly(max_velocity_, max_position_) << std::endl;
+//        std::cout << "max_admissible_acc: " << max_admissible_acc << std::endl;
+
+
+//        std::cout << "max_achievable_acc: " << max_achievable_acc << std::endl;
+//        std::cout << "max_admissible_acc: " << max_admissible_acc << std::endl;
+//        std::cout << "max_admissible_torque: " << max_admissible_torque << std::endl;
+
+
+
+        double min_admissible_acc =
+                find_min_admissible_acceleration(velocity,
+                                                 position,
+                                                 min_velocity_,
+                                                 min_position_,
+                                                 max_jerk_,
+                                                 max_achievable_acc);
+        double min_admissible_torque = min_admissible_acc * inertia_;
+
+//        std::cout << "min_admissible_acc: " << min_admissible_acc << std::endl;
+//        std::cout << "min_admissible_torque: " << min_admissible_torque << std::endl;
+
+
+
+        if(min_admissible_torque > max_admissible_torque)
+        {
+            std::cout << "min_admissible_torque > max_admissible_torque!!!!"
+                      << std::endl;
+            return 0;
+        }
+
+        safe_torque = clamp(safe_torque,
+                            min_admissible_torque, max_admissible_torque);
+
+
+        if(safe_torque > max_torque_ || safe_torque < -max_torque_)
+        {
+            std::cout << "something went horribly horribly wrong " << std::endl;
+            return 0;
+        }
+
+        return safe_torque;
+    }
+
+    double min_velocity_;
+    double min_position_;
+    double max_velocity_;
+    double max_position_;
+    NonnegDouble max_torque_;
+    NonnegDouble max_jerk_;
+    NonnegDouble inertia_;
+};
 
 
 
@@ -533,8 +664,44 @@ public:
 
     Finger()
     {
+        double max_torque = 2.0 * 0.02 * 9.0;
+        double max_jerk = 2 * max_torque / 0.01; // in 0.01 s from min to max
+
+        safety_constraints_[base].min_velocity_ = -6.0;
+        safety_constraints_[base].min_position_ = std::numeric_limits<double>::infinity();
+        safety_constraints_[base].max_velocity_ = 6.0;
+        safety_constraints_[base].max_position_ = -std::numeric_limits<double>::infinity();
+        safety_constraints_[base].max_torque_ = max_torque;
+        safety_constraints_[base].inertia_ = 0.004;
+        safety_constraints_[base].max_jerk_ = 2 * max_torque / safety_constraints_[base].inertia_ / 0.05;
+
+
+        safety_constraints_[center].min_velocity_ = -6.0;
+        safety_constraints_[center].min_position_ = std::numeric_limits<double>::infinity();
+        safety_constraints_[center].max_velocity_ = 6.0;
+        safety_constraints_[center].max_position_ = -std::numeric_limits<double>::infinity();
+        safety_constraints_[center].max_torque_ = max_torque;
+        safety_constraints_[center].inertia_ = 0.004;
+        safety_constraints_[center].max_jerk_ = 2 * max_torque / safety_constraints_[center].inertia_ / 0.05;
+
+
+        safety_constraints_[tip].min_velocity_ = -20.0;
+        safety_constraints_[tip].min_position_ = std::numeric_limits<double>::infinity();
+        safety_constraints_[tip].max_velocity_ = 20.0;
+        safety_constraints_[tip].max_position_ = -std::numeric_limits<double>::infinity();
+        safety_constraints_[tip].max_torque_ = max_torque;
+        safety_constraints_[tip].inertia_ = 0.001;
+        safety_constraints_[tip].max_jerk_ = 2 * max_torque / safety_constraints_[tip].inertia_ / 0.05;
+
+
+
+
+
+
         max_torques_ = Vector::Ones() * 2.0 * 0.02 * 9.0;
-        max_velocities_ = Vector::Ones() * 2.0;
+
+
+        //        max_velocities_ = Vector::Ones() * 2.0;
         inertias_ = Vector(0.004, 0.004, 0.001);
 
         state_constraints_[base].min_angle = std::numeric_limits<double>::infinity();
@@ -575,10 +742,10 @@ public:
     {
         return max_torques_;
     }
-    Vector get_max_velocities_() const
-    {
-        return max_velocities_;
-    }
+    //    Vector get_max_velocities_() const
+    //    {
+    //        return max_velocities_;
+    //    }
     //    Vector get_min_angles_() const
     //    {
     //        return min_angles_;
@@ -597,158 +764,47 @@ protected:
     /// essential for running the robot safely!
     virtual Vector constrain_torques(const Vector& desired_torques)
     {
-        Vector constrained_torques;
 
+        Vector velocities = get_measured_velocities();
+        Vector angles = get_measured_angles();
+
+        Vector constrained_torques;
         for(size_t i = 0; i < desired_torques.size(); i++)
         {
-            double torque = desired_torques(i);
-
-            // torque limit ----------------------------------------------------
-            torque = clamp(torque, -max_torques_(i), max_torques_(i));
-
-            // velocity limit --------------------------------------------------
-            if (!std::isnan(max_velocities_(i)) && std::fabs(
-                        get_measured_velocities()(i)) > max_velocities_(i))
-                torque = 0;
-
-            // angle limit -----------------------------------------------------
-            //            double angle = get_measured_angles()(i);
-            //            double velocity = get_measured_velocities()(i);
-
-            //            if (!std::isnan(max_angles_(i)) &&
-            //                    velocity > max_collision_velocities_(i))
-            //            {
-            //                double distance_to_braking_zone =
-            //                        compute_distance_to_braking_zone(
-            //                            velocity,
-            //                            max_angles_(i) - angle,
-            //                            max_torques_(i),
-            //                            inertias_(i),
-            //                            max_collision_velocities_(i));
-
-            //                double safety_weight =
-            //                        (delta - distance_to_braking_zone) / delta;
-            //                safety_weight = clamp(safety_weight, 0, 1);
-
-            //                torque = (1.0 - safety_weight) * torque
-            //                        + safety_weight * (-max_torques_(i));
-
-            //            }
-
-
-            //            if (!std::isnan(max_angles_(i)) &&
-            //                    velocity < -max_collision_velocities_(i))
-            //            {
-            //                double distance_to_braking_zone =
-            //                        compute_distance_to_braking_zone(
-            //                            -velocity,
-            //                            max_angles_(i) - angle,
-            //                            max_torques_(i),
-            //                            inertias_(i),
-            //                            max_collision_velocities_(i));
-
-            //                double safety_weight =
-            //                        (delta - distance_to_braking_zone) / delta;
-            //                safety_weight = clamp(safety_weight, 0, 1);
-
-            //                torque = (1.0 - safety_weight) * torque
-            //                        + safety_weight * (-max_torques_(i));
-
-            //            }
-
-
-
-
-
-            //            double velocity = get_measured_velocities()(i);
-            //            double admissible_collision_velocity = max_collision_velocities_(i);
-            //            double max_deceleration = max_torques_(i) / inertias_(i);
-
-            //            double deceleration_distance =
-            //                    (std::fabs(velocity) - admissible_collision_velocity) *
-            //                    (std::fabs(velocity) + admissible_collision_velocity) /
-            //                    (2 * max_deceleration);
-
-
-
-            //            double distance_to_max_angle =
-            //                    max_angles_(i) - get_measured_angles()(i);
-            //            double distance_to_min_angle =
-            //                    get_measured_angles()(i) - min_angles_(i);
-
-
-            //            double delta = 0.00000001;
-
-
-            //            double distance_to_braking_zone =
-            //                    distance_to_max_angle - deceleration_distance;
-            //            if (!std::isnan(max_angles_(i)) &&
-            //                    velocity > admissible_collision_velocity
-            //                    && distance_to_braking_zone < delta)
-            //            {
-
-
-            //                double safety_weight =
-            //                        (delta - distance_to_braking_zone) / delta;
-            //                safety_weight = clamp(safety_weight, 0, 1);
-
-            //                torque = (1.0 - safety_weight) * torque
-            //                        + safety_weight * (-max_torques_(i));
-
-
-
-
-            //                std::cout << "upper limit" << std::endl;
-            //                std::cout << "velocity: " << velocity << std::endl;
-            //                std::cout << "admissible_collision_velocity: " << admissible_collision_velocity << std::endl;
-            //                std::cout << "deceleration_distance: " << deceleration_distance << std::endl;
-            //                std::cout << "distance_to_max_angle: " << distance_to_max_angle << std::endl;
-
-
-
-            //                //                torque = -max_torques_(i);
-            //            }
-            //            if (!std::isnan(min_angles_(i)) &&
-            //                    velocity < -admissible_collision_velocity &&
-            //                    deceleration_distance > distance_to_min_angle)
-            //            {
-            //                std::cout << "lower limit" << std::endl;
-            //                std::cout << "velocity: " << velocity << std::endl;
-            //                std::cout << "admissible_collision_velocity: " << admissible_collision_velocity << std::endl;
-            //                std::cout << "deceleration_distance: " << deceleration_distance << std::endl;
-            //                std::cout << "distance_to_min_angle: " << distance_to_min_angle << std::endl;
-
-
-            //                torque = max_torques_(i);
-            //            }
-
-            //            constrained_torques(i) = torque;
+            constrained_torques[i] =
+                    safety_constraints_[i].get_safe_torque(desired_torques(i),
+                                                           velocities(i),
+                                                           angles(i));
         }
+
+
+//        std::cout << "desired_torques: " << desired_torques.transpose() << std::endl;
+//        std::cout << "constrained_torques: " << constrained_torques.transpose() << std::endl;
 
         return constrained_torques;
     }
 
-    void set_max_torques(const Vector& max_torques)
-    {
-        for(size_t i = 0; i < max_torques.size(); i++)
-        {
-            if (max_torques(i) < 0)
-                throw std::invalid_argument("the current limit must be "
-                                            "a positive number.");
-        }
-        max_torques_ = max_torques;
-    }
-    void set_max_velocities(const Vector& max_velocities)
-    {
-        for(size_t i = 0; i < max_velocities.size(); i++)
-        {
-            if (!std::isnan(max_velocities(i)) && max_velocities(i) < 0)
-                throw std::invalid_argument("the velocity limit must be "
-                                            "a positive number or NaN.");
-        }
+    //    void set_max_torques(const Vector& max_torques)
+    //    {
+    //        for(size_t i = 0; i < max_torques.size(); i++)
+    //        {
+    //            if (max_torques(i) < 0)
+    //                throw std::invalid_argument("the current limit must be "
+    //                                            "a positive number.");
+    //        }
+    //        max_torques_ = max_torques;
+    //    }
+    //    void set_max_velocities(const Vector& max_velocities)
+    //    {
+    //        for(size_t i = 0; i < max_velocities.size(); i++)
+    //        {
+    //            if (!std::isnan(max_velocities(i)) && max_velocities(i) < 0)
+    //                throw std::invalid_argument("the velocity limit must be "
+    //                                            "a positive number or NaN.");
+    //        }
 
-        max_velocities_ = max_velocities;
-    }
+    //        max_velocities_ = max_velocities;
+    //    }
     void set_angle_limits(const Vector& min_angles,
                           const Vector& max_angles)
     {
@@ -772,10 +828,7 @@ protected:
     }
 
 private:
-    static double clamp(const double& value, const double& lo, const double& hi)
-    {
-        return std::max(lo, std::min(value, hi));
-    }
+
 
     //    static double compute_acceleration_distance(
     //            const double& initial_velocity,
@@ -834,9 +887,11 @@ private:
     Vector max_torques_;
     Vector inertias_;
 
-    Vector max_velocities_; /// \todo: this should go away, it should be absorbed by the state constraints
+    //    Vector max_velocities_; /// \todo: this should go away, it should be absorbed by the state constraints
 
     std::array<Constraint, 3> state_constraints_;
+    std::array<SafetyConstraint, 3> safety_constraints_;
+
 };
 
 
