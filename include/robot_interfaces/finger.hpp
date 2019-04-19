@@ -664,60 +664,33 @@ public:
 
     Finger()
     {
-        double max_torque = 2.0 * 0.02 * 9.0;
-        double max_jerk = 2 * max_torque / 0.01; // in 0.01 s from min to max
+        max_torque_ = 2.0 * 0.02 * 9.0;
 
         safety_constraints_[base].min_velocity_ = -6.0;
         safety_constraints_[base].min_position_ = std::numeric_limits<double>::infinity();
         safety_constraints_[base].max_velocity_ = 6.0;
         safety_constraints_[base].max_position_ = -std::numeric_limits<double>::infinity();
-        safety_constraints_[base].max_torque_ = max_torque;
+        safety_constraints_[base].max_torque_ = max_torque_;
         safety_constraints_[base].inertia_ = 0.004;
-        safety_constraints_[base].max_jerk_ = 2 * max_torque / safety_constraints_[base].inertia_ / 0.05;
+        safety_constraints_[base].max_jerk_ = 2 * max_torque_ / safety_constraints_[base].inertia_ / 0.05;
 
 
         safety_constraints_[center].min_velocity_ = -6.0;
         safety_constraints_[center].min_position_ = std::numeric_limits<double>::infinity();
         safety_constraints_[center].max_velocity_ = 6.0;
         safety_constraints_[center].max_position_ = -std::numeric_limits<double>::infinity();
-        safety_constraints_[center].max_torque_ = max_torque;
+        safety_constraints_[center].max_torque_ = max_torque_;
         safety_constraints_[center].inertia_ = 0.004;
-        safety_constraints_[center].max_jerk_ = 2 * max_torque / safety_constraints_[center].inertia_ / 0.05;
+        safety_constraints_[center].max_jerk_ = 2 * max_torque_ / safety_constraints_[center].inertia_ / 0.05;
 
 
         safety_constraints_[tip].min_velocity_ = -20.0;
         safety_constraints_[tip].min_position_ = std::numeric_limits<double>::infinity();
         safety_constraints_[tip].max_velocity_ = 20.0;
         safety_constraints_[tip].max_position_ = -std::numeric_limits<double>::infinity();
-        safety_constraints_[tip].max_torque_ = max_torque;
+        safety_constraints_[tip].max_torque_ = max_torque_;
         safety_constraints_[tip].inertia_ = 0.001;
-        safety_constraints_[tip].max_jerk_ = 2 * max_torque / safety_constraints_[tip].inertia_ / 0.05;
-
-
-
-
-
-
-        max_torques_ = Vector::Ones() * 2.0 * 0.02 * 9.0;
-
-
-        //        max_velocities_ = Vector::Ones() * 2.0;
-        inertias_ = Vector(0.004, 0.004, 0.001);
-
-        state_constraints_[base].min_angle = std::numeric_limits<double>::infinity();
-        state_constraints_[base].max_angle = -std::numeric_limits<double>::infinity();
-        state_constraints_[base].min_velocity = -6.0;
-        state_constraints_[base].max_velocity = 6.0;
-
-        state_constraints_[center].min_angle = std::numeric_limits<double>::infinity();
-        state_constraints_[center].max_angle = -std::numeric_limits<double>::infinity();
-        state_constraints_[center].min_velocity = -6.0;
-        state_constraints_[center].max_velocity = 6.0;
-
-        state_constraints_[tip].min_angle = std::numeric_limits<double>::infinity();
-        state_constraints_[tip].max_angle = -std::numeric_limits<double>::infinity();
-        state_constraints_[tip].min_velocity = -20.0;
-        state_constraints_[tip].max_velocity = 20.0;
+        safety_constraints_[tip].max_jerk_ = 2 * max_torque_ / safety_constraints_[tip].inertia_ / 0.05;
     }
 
     virtual void constrain_and_apply_torques(const Vector& desired_torques)
@@ -736,26 +709,10 @@ public:
 
     virtual void wait_for_execution() const = 0; /// \todo: this can be implemented here
 
-
-
     Vector get_max_torques() const
     {
-        return max_torques_;
+        return max_torque_ * Vector::Ones();
     }
-    //    Vector get_max_velocities_() const
-    //    {
-    //        return max_velocities_;
-    //    }
-    //    Vector get_min_angles_() const
-    //    {
-    //        return min_angles_;
-    //    }
-    //    Vector get_max_angles_() const
-    //    {
-    //        return max_angles_;
-    //    }
-
-
 
 protected:
     virtual void apply_torques(const Vector& desired_torques) = 0;
@@ -776,122 +733,13 @@ protected:
                                                            velocities(i),
                                                            angles(i));
         }
-
-
-//        std::cout << "desired_torques: " << desired_torques.transpose() << std::endl;
-//        std::cout << "constrained_torques: " << constrained_torques.transpose() << std::endl;
-
         return constrained_torques;
     }
 
-    //    void set_max_torques(const Vector& max_torques)
-    //    {
-    //        for(size_t i = 0; i < max_torques.size(); i++)
-    //        {
-    //            if (max_torques(i) < 0)
-    //                throw std::invalid_argument("the current limit must be "
-    //                                            "a positive number.");
-    //        }
-    //        max_torques_ = max_torques;
-    //    }
-    //    void set_max_velocities(const Vector& max_velocities)
-    //    {
-    //        for(size_t i = 0; i < max_velocities.size(); i++)
-    //        {
-    //            if (!std::isnan(max_velocities(i)) && max_velocities(i) < 0)
-    //                throw std::invalid_argument("the velocity limit must be "
-    //                                            "a positive number or NaN.");
-    //        }
-
-    //        max_velocities_ = max_velocities;
-    //    }
-    void set_angle_limits(const Vector& min_angles,
-                          const Vector& max_angles)
-    {
-        for(size_t i = 0; i < min_angles.size(); i++)
-        {
-            if (!std::isnan(min_angles(i)) && !std::isnan(max_angles(i)) && (
-                        min_angles(i) > max_angles(i) ||
-                        max_angles(i) - min_angles(i) > 2*M_PI))
-                throw std::invalid_argument("Invalid joint limits. Make sure "
-                                            "the interval denoted by the joint "
-                                            "limits is a valid one.");
-        }
-
-
-
-        for(size_t i = 0; i < state_constraints_.size(); i++)
-        {
-            state_constraints_[i].min_angle = min_angles[i];
-            state_constraints_[i].max_angle = max_angles[i];
-        }
-    }
-
-private:
-
-
-    //    static double compute_acceleration_distance(
-    //            const double& initial_velocity,
-    //            const double& target_velocity,
-    //            const double& force,
-    //            const NonnegDouble& inertia)
-    //    {
-    //        if (std::signbit(target_velocity - initial_velocity) !=
-    //                std::signbit(force))
-    //        {
-    //            return std::numeric_limits<double>::quiet_NaN();
-    //        }
-
-    //        double acceleration = force / inertia;
-
-    //        double acceleration_distance =
-    //                (initial_velocity - target_velocity) *
-    //                (initial_velocity + target_velocity) /
-    //                (2 * acceleration);
-
-    //        return acceleration_distance;
-    //    }
-
-
-
-
-
-    //    static double compute_braking_weight(
-    //            const double& position,
-    //            const double& velocity,
-    //            const double& wall_position,
-    //            )
-    //    {
-    //        if (max_collision_velocity > velocity)
-    //            throw std::invalid_argument("we expect "
-    //                                        "max_collision_velocity <= velocity.");
-
-    //        double max_deceleration = max_braking_force / inertia;
-
-    //        double deceleration_distance =
-    //                (velocity - max_collision_velocity) *
-    //                (velocity + max_collision_velocity) /
-    //                (2 * max_deceleration);
-
-    //        return deceleration_distance;
-    //    }
-
-
-
-
-
-
 private:
     Vector constrained_torques_;
-
-    Vector max_torques_;
-    Vector inertias_;
-
-    //    Vector max_velocities_; /// \todo: this should go away, it should be absorbed by the state constraints
-
-    std::array<Constraint, 3> state_constraints_;
     std::array<SafetyConstraint, 3> safety_constraints_;
-
+    double max_torque_;
 };
 
 
