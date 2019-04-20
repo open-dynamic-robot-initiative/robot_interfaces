@@ -69,7 +69,7 @@ public:
     virtual Vector get_measured_angles() const = 0;
     virtual Vector get_measured_velocities() const = 0;
 
-    virtual void wait_for_execution() const = 0; /// \todo: this can be implemented here
+    virtual void wait_for_execution() const = 0;
 
     Vector get_max_torques() const
     {
@@ -79,11 +79,8 @@ public:
 protected:
     virtual void apply_torques(const Vector& desired_torques) = 0;
 
-    /// do NOT touch this function unless you know what you are doing, it is
-    /// essential for running the robot safely!
     virtual Vector constrain_torques(const Vector& desired_torques)
     {
-
         Vector velocities = get_measured_velocities();
         Vector angles = get_measured_angles();
 
@@ -124,7 +121,7 @@ public:
         safety_constraints_[table].max_position_ = -std::numeric_limits<double>::infinity();
         safety_constraints_[table].max_torque_ = max_torques_[table];
         safety_constraints_[table].inertia_ = 1.0; //dummy
-        safety_constraints_[base].max_jerk_ = 10000.0; // dummy
+        safety_constraints_[table].max_jerk_ = 10000.0; // dummy
 
         safety_constraints_[base].min_velocity_ = -10.0;
         safety_constraints_[base].min_position_ = std::numeric_limits<double>::infinity();
