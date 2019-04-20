@@ -21,6 +21,7 @@ set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
 set(CATKIN_PKGS ${CATKIN_PKGS}
 mpi_cmake_modules
 real_time_tools
+mpi_cpp_tools
 )
 find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
 
@@ -70,13 +71,7 @@ add_subdirectory(demos)
 # manage the unit tests #
 #########################
 
-catkin_add_gtest(test_linear_dynamics
-  tests/main.cpp
-  tests/test_linear_dynamics.cpp
-)
-target_link_libraries(test_linear_dynamics
-  ${catkin_LIBRARIES}
-)
+
 
 
 ##########################
