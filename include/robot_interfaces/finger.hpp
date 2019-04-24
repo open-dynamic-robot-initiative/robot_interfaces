@@ -115,9 +115,9 @@ public:
     {
         max_torques_ = 2.0 * 0.02 * 9 * Vector(9.79, 1, 1);
 
-        safety_constraints_[table].min_velocity_ = -3.0;
+        safety_constraints_[table].min_velocity_ = -0.3;
         safety_constraints_[table].min_position_ = std::numeric_limits<double>::infinity();
-        safety_constraints_[table].max_velocity_ = 3.0;
+        safety_constraints_[table].max_velocity_ = 0.3;
         safety_constraints_[table].max_position_ = -std::numeric_limits<double>::infinity();
         safety_constraints_[table].max_torque_ = max_torques_[table];
         safety_constraints_[table].inertia_ = 1.0; //dummy
