@@ -20,40 +20,9 @@ class Finger
 {
 public:
     typedef Eigen::Vector3d Vector;
-
     enum JointIndexing {base, center, tip, joint_count};
 
-
-    Finger()
-    {
-        max_torque_ = 2.0 * 0.02 * 9.0;
-
-        safety_constraints_[base].min_velocity_ = -6.0;
-        safety_constraints_[base].min_position_ = std::numeric_limits<double>::infinity();
-        safety_constraints_[base].max_velocity_ = 6.0;
-        safety_constraints_[base].max_position_ = -std::numeric_limits<double>::infinity();
-        safety_constraints_[base].max_torque_ = max_torque_;
-        safety_constraints_[base].inertia_ = 0.004;
-        safety_constraints_[base].max_jerk_ = 2 * max_torque_ / safety_constraints_[base].inertia_ / 0.05;
-
-
-        safety_constraints_[center].min_velocity_ = -6.0;
-        safety_constraints_[center].min_position_ = std::numeric_limits<double>::infinity();
-        safety_constraints_[center].max_velocity_ = 6.0;
-        safety_constraints_[center].max_position_ = -std::numeric_limits<double>::infinity();
-        safety_constraints_[center].max_torque_ = max_torque_;
-        safety_constraints_[center].inertia_ = 0.004;
-        safety_constraints_[center].max_jerk_ = 2 * max_torque_ / safety_constraints_[center].inertia_ / 0.05;
-
-
-        safety_constraints_[tip].min_velocity_ = -20.0;
-        safety_constraints_[tip].min_position_ = std::numeric_limits<double>::infinity();
-        safety_constraints_[tip].max_velocity_ = 20.0;
-        safety_constraints_[tip].max_position_ = -std::numeric_limits<double>::infinity();
-        safety_constraints_[tip].max_torque_ = max_torque_;
-        safety_constraints_[tip].inertia_ = 0.001;
-        safety_constraints_[tip].max_jerk_ = 2 * max_torque_ / safety_constraints_[tip].inertia_ / 0.05;
-    }
+    Finger() {  }
 
     virtual void constrain_and_apply_torques(const Vector& desired_torques)
     {
@@ -95,7 +64,7 @@ protected:
         return constrained_torques;
     }
 
-private:
+protected:
     Vector constrained_torques_;
     std::array<mct::SafetyConstraint, 3> safety_constraints_;
     double max_torque_;
