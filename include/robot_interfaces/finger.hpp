@@ -20,6 +20,7 @@ class Finger
 {
 public:
     typedef Eigen::Vector3d Vector;
+    typedef Eigen::Matrix<double, 7, 1> Position;
     enum JointIndexing {base, center, tip, joint_count};
 
     Finger() {  }
@@ -37,6 +38,7 @@ public:
     virtual Vector get_measured_torques() const = 0;
     virtual Vector get_measured_angles() const = 0;
     virtual Vector get_measured_velocities() const = 0;
+    virtual Position get_object_qpos() const = 0;
 
     virtual void wait_for_execution() const = 0;
 
