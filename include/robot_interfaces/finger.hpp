@@ -20,7 +20,17 @@ class Finger
 {
 public:
     typedef Eigen::Vector3d Vector;
-    typedef Eigen::Matrix<double, 7, 1> Position;
+
+    /**
+     * @brief structure desribing object position and orientation:
+     * https://english.stackexchange.com/questions/119883/word-for-position-and-orientation
+     */
+    struct Placement
+    {
+        Eigen::Vector3d pos;
+        Eigen::Vector4d quat;
+    };
+
     enum JointIndexing {base, center, tip, joint_count};
 
     Finger() {  }
@@ -38,7 +48,13 @@ public:
     virtual Vector get_measured_torques() const = 0;
     virtual Vector get_measured_angles() const = 0;
     virtual Vector get_measured_velocities() const = 0;
-    virtual Position get_object_qpos() const = 0;
+
+    /**
+     * @brief get_body_placement returns body placement for requested body
+     * 
+     * @param body name
+     */
+    virtual Placement get_body_placement(std::string) const = 0;
 
     virtual void wait_for_execution() const = 0;
 
