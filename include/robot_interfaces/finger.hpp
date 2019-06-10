@@ -20,16 +20,7 @@ class Finger
 {
 public:
     typedef Eigen::Vector3d Vector;
-
-    /**
-     * @brief structure desribing object position and orientation:
-     * https://english.stackexchange.com/questions/119883/word-for-position-and-orientation
-     */
-    struct Placement
-    {
-        Eigen::Vector3d pos;
-        Eigen::Vector4d quat;
-    };
+    typedef Eigen::Vector4d Quaternion;
 
     enum JointIndexing {base, center, tip, joint_count};
 
@@ -50,11 +41,18 @@ public:
     virtual Vector get_measured_velocities() const = 0;
 
     /**
-     * @brief get_body_placement returns body placement for requested body
-     * 
-     * @param body name
+     * @brief getter and setter for 3d Cartesian body position
      */
-    virtual Placement get_body_placement(std::string) const = 0;
+    virtual Vector get_body_pos(std::string) const = 0;
+    virtual void set_body_pos(std::string, const Vector&) = 0;
+
+    /**
+     * @brief getter and setter for quaternion body orientation
+     */
+    virtual Quaternion get_body_quat(std::string) const = 0;
+    virtual void set_body_quat(std::string, const Quaternion&) = 0;
+
+    virtual void reset_joints() = 0;
 
     virtual void wait_for_execution() const = 0;
 
