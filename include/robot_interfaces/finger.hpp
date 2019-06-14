@@ -186,27 +186,23 @@ template<typename Action, typename Observation> class Robot
 {
 public:
 
-    /**
-     * @brief this function will execute the action. in real-time mode this
-     * means simply that the action will be sent to the system. in
-     * non-real-time mode this means that the action will be simulated for
-     * one time step and then the simulation will be stopped.
-     *
-     * @param action to apply
-     */
-    virtual void constrain_and_apply_action(const Action& action) = 0;
+    struct Data
+    {
+        Action desired_action;
+        Action safe_action;
+        Observation observation;
+    };
 
     /**
-     * @brief this function only returns once the current action has been
-     * completely exectued. in real-time mode this means it will wait until
-     * one time step has elapsed since execute has been called.
-     * in non-real-time mode this means that it will wait until the simulator
-     * has ran the action for the lenth of one time step.
+     * @brief this function will 
+     * wait until the previous step is completed,
+     * store the latest observation in data,
+     * compute the safe_action based on the desired_action,
+     * send the safe_action to the robot,
+     * store both actions in data,
+     * return data
      */
-    virtual void wait_for_execution() const = 0;
-
-    virtual Observation get_observation() const = 0;
-
+    virtual Data step(Action desired_action) = 0;
 };
 
 
