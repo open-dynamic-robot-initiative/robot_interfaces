@@ -40,17 +40,16 @@ public:
     virtual Vector get_measured_angles() const = 0;
     virtual Vector get_measured_velocities() const = 0;
 
-    /**
-     * @brief getter and setter for 3d Cartesian body position
-     */
-    virtual Vector get_body_pos(std::string) const = 0;
-    virtual void set_body_pos(std::string, const Vector&) = 0;
+    // \todo: implement forward kinematics
+    virtual Vector get_tip_pos() const = 0;
 
-    /**
-     * @brief getter and setter for quaternion body orientation
-     */
-    virtual Quaternion get_body_quat(std::string) const = 0;
-    virtual void set_body_quat(std::string, const Quaternion&) = 0;
+    virtual Vector get_object_pos() const = 0;
+    virtual void set_object_pos(const Vector& pos) = 0;
+
+    virtual Quaternion get_object_quat() const = 0;
+
+    virtual Vector get_target_pos() const = 0;
+    virtual void set_target_pos(const Vector& pos) const = 0;
 
     virtual void reset_joints() = 0;
 
@@ -60,6 +59,9 @@ public:
     {
         return max_torque_ * Vector::Ones();
     }
+
+    // render frame - only for simulation
+    virtual void render() = 0;
 
 protected:
     virtual void apply_torques(const Vector& desired_torques) = 0;
