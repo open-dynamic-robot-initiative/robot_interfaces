@@ -61,7 +61,7 @@ public:
     }
 
     // render frame - only for simulation
-    virtual void render() = 0;
+    virtual unsigned char* render(std::string mode) = 0;
 
 protected:
     virtual void apply_torques(const Vector& desired_torques) = 0;
