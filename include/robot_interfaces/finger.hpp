@@ -34,22 +34,22 @@ public:
     typedef Eigen::Vector3d Action;
 
 
-//     struct Observation
-//     {
-//         Vector angle;
-//         Vector velocity;
-//         Vector torque;
-//     };
-//     struct Data
-//     {
-//         Action desired_action;
-//         Action safe_action;
-//         Observation observation;
-//     };
+    struct Observation
+    {
+        Vector angle;
+        Vector velocity;
+        Vector torque;
+    };
+    struct Data
+    {
+        Action desired_action;
+        Action safe_action;
+        Observation observation;
+    };
 
 
-//     NewFinger() 
-//     { }
+    NewFinger() 
+    { }
 
 //     /**
 //      * @brief this function will
@@ -73,22 +73,23 @@ public:
 //         return data;
 //     }
 
-// protected:
-//     // timing ------------------------------------------------------------------
-//     virtual bool is_realtime()
-//     {
-//         return true; /// TODO: this has to be implemented in the child class
-//     }
-//     virtual double step_duration_ms()
-//     {
-//         return 1.0; /// TODO: this has to be implemented in the child class
-//     }
+protected:
+    /// all the below should not be implemented here!!!!!!!!!!!
+    // timing ------------------------------------------------------------------
+    virtual bool is_realtime()
+    {
+        return true; /// TODO: this has to be implemented in the child class
+    }
+    virtual double step_duration_ms()
+    {
+        return 1.0; /// TODO: this has to be implemented in the child class
+    }
 
-//     // getting observations and setting controls -------------------------------
-//     virtual Observation get_latest_observation()
-//     {
-//         return Observation();
-//     }
+    // getting observations and setting controls -------------------------------
+    virtual Observation get_latest_observation()
+    {
+        return Observation();
+    }
 
 //     virtual void apply_action(Action action)
 //     {
@@ -102,10 +103,13 @@ public:
 //         return constrain_torques(desired_action); ///TODO: this is temporary
 //     }
 
-// private:
-//     std::shared_ptr<real_time_tools::ThreadsafeTimeseries<Vector>> desired_action_;
-//     std::shared_ptr<real_time_tools::ThreadsafeTimeseries<Action>> safe_action_;
-//     std::shared_ptr<real_time_tools::ThreadsafeTimeseries<Observation>> observation_;
+private:
+    template<typename Type> using Timeseries = 
+    std::shared_ptr<real_time_tools::ThreadsafeTimeseries<Type>>;
+
+    Timeseries<Vector> desired_action_;
+    Timeseries<Action> safe_action_;
+    Timeseries<Observation> observation_;
 
 //     void loop()
 //     {
@@ -132,6 +136,33 @@ public:
 //             exit(-1);
 //         }
 //     }
+
+/// TODO all the below has to go away
+public:
+    virtual Vector get_measured_torques() const = 0;
+    virtual Vector get_measured_angles() const = 0;
+    virtual Vector get_measured_velocities() const = 0;
+
+protected:
+    virtual void apply_torques(const Vector& desired_torques) = 0;
+
+    virtual Vector constrain_torques(const Vector& desired_torques)
+    {
+        Vector velocities = get_measured_velocities();
+        Vector angles = get_measured_angles();
+
+        Vector constrained_torques;
+        for(size_t i = 0; i < desired_torques.size(); i++)
+        {
+            constrained_torques[i] =
+                    safety_constraints_[i].get_safe_torque(desired_torques(i),
+                                                           velocities(i),
+                                                           angles(i));
+        }
+        return constrained_torques;
+    }
+
+    std::array<mct::SafetyConstraint, 3> safety_constraints_;
 
 
 
@@ -168,9 +199,7 @@ public:
     {
         return constrained_torques_;
     }
-    virtual Vector get_measured_torques() const = 0;
-    virtual Vector get_measured_angles() const = 0;
-    virtual Vector get_measured_velocities() const = 0;
+
 
     // \todo: implement forward kinematics
     virtual Vector get_tip_pos() const = 0;
@@ -203,27 +232,11 @@ protected:
     
 
 
-    virtual void apply_torques(const Vector& desired_torques) = 0;
 
-    virtual Vector constrain_torques(const Vector& desired_torques)
-    {
-        Vector velocities = get_measured_velocities();
-        Vector angles = get_measured_angles();
 
-        Vector constrained_torques;
-        for(size_t i = 0; i < desired_torques.size(); i++)
-        {
-            constrained_torques[i] =
-                    safety_constraints_[i].get_safe_torque(desired_torques(i),
-                                                           velocities(i),
-                                                           angles(i));
-        }
-        return constrained_torques;
-    }
 
 protected:
     Vector constrained_torques_;
-    std::array<mct::SafetyConstraint, 3> safety_constraints_;
     double max_torque_;
 };
 
