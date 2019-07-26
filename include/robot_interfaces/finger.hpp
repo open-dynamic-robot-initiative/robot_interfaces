@@ -74,34 +74,45 @@ public:
 //     }
 
 protected:
-    /// all the below should not be implemented here!!!!!!!!!!!
     // timing ------------------------------------------------------------------
-    virtual bool is_realtime()
+    virtual bool is_realtime()/// TODO: this has to be implemented in the child class
     {
-        return true; /// TODO: this has to be implemented in the child class
+        return true; 
     }
-    virtual double step_duration_ms()
+    virtual double step_duration_ms()/// TODO: this has to be implemented in the child class
     {
-        return 1.0; /// TODO: this has to be implemented in the child class
+        return 1.0; 
     }
 
-    // getting observations and setting controls -------------------------------
+public: /// we will probably make this private
     virtual Observation get_latest_observation()
     {
-        return Observation();
+        Observation observation;
+        observation.angle = get_measured_angles();
+        observation.velocity = get_measured_velocities();
+        observation.torque = get_measured_torques();
+        return observation;
     }
+    /// TODO the following three functions should go away and child class should
+    /// directly implement the function above.
+public:
+    virtual Vector get_measured_torques() const = 0;
+    virtual Vector get_measured_angles() const = 0;
+    virtual Vector get_measured_velocities() const = 0;
 
-//     virtual void apply_action(Action action)
-//     {
-//         apply_torques(action);
-//         real_time_tools::Timer::sleep_ms(1.0); /// TODO this is temporary
-//     }
+protected:
+    virtual void apply_action(const Action& action)
+    {
+        apply_torques(action);
+        real_time_tools::Timer::sleep_ms(1.0); /// TODO this is temporary
+    }
+    /// TODO the following function should go away and child class should
+    /// directly implement the function above.
+    virtual void apply_torques(const Vector& desired_torques) = 0;
 
 
-//     virtual Action constrain_action(Action desired_action)
-//     {
-//         return constrain_torques(desired_action); ///TODO: this is temporary
-//     }
+
+
 
 private:
     template<typename Type> using Timeseries = 
@@ -124,28 +135,30 @@ private:
 //         }
 //     }
 
-//     void check_timing(double delta_time_ms)
-//     {
-//         if(is_realtime() &&
-//                 (delta_time_ms > step_duration_ms() * 1.1 ||
-//                  delta_time_ms < step_duration_ms() * 0.9))
-//         {
-//             std::cout << "control loop did not run at expected rate "
-//                          "did you provide actions fast enough?"
-//                       << std::endl;
-//             exit(-1);
-//         }
-//     }
+    void check_timing(double delta_time_ms)
+    {
+        if(is_realtime() &&
+                (delta_time_ms > step_duration_ms() * 1.1 ||
+                 delta_time_ms < step_duration_ms() * 0.9))
+        {
+            std::cout << "control loop did not run at expected rate "
+                         "did you provide actions fast enough?"
+                      << std::endl;
+            exit(-1);
+        }
+    }
 
-/// TODO all the below has to go away
-public:
-    virtual Vector get_measured_torques() const = 0;
-    virtual Vector get_measured_angles() const = 0;
-    virtual Vector get_measured_velocities() const = 0;
+
 
 protected:
-    virtual void apply_torques(const Vector& desired_torques) = 0;
 
+
+    virtual Action constrain_action(const Action& desired_action)
+    {
+        return constrain_torques(desired_action); 
+    }
+    ///TODO: the function below should go away and we should directly 
+    /// implement the function above.
     virtual Vector constrain_torques(const Vector& desired_torques)
     {
         Vector velocities = get_measured_velocities();
