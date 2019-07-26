@@ -10,19 +10,147 @@
 #include "mpi_cpp_tools/dynamical_systems.hpp"
 
 
+#include "real_time_tools/threadsafe/threadsafe_timeseries.hpp"
+#include "real_time_tools/timer.hpp"
+
+
+
 
 
 namespace robot_interfaces
 {
 
 
-class Finger
+
+
+
+class NewFinger
 {
 public:
-    typedef Eigen::Vector3d Vector;
-    typedef Eigen::Vector4d Quaternion;
-
     enum JointIndexing {base, center, tip, joint_count};
+
+    typedef Eigen::Vector3d Vector;
+
+    typedef Eigen::Vector3d Action;
+
+
+//     struct Observation
+//     {
+//         Vector angle;
+//         Vector velocity;
+//         Vector torque;
+//     };
+//     struct Data
+//     {
+//         Action desired_action;
+//         Action safe_action;
+//         Observation observation;
+//     };
+
+
+//     NewFinger() 
+//     { }
+
+//     /**
+//      * @brief this function will
+//      * wait until the previous step is completed,
+//      * store the latest observation in data,
+//      * compute the safe_action based on the desired_action,
+//      * send the safe_action to the robot,
+//      * store both actions in data,
+//      * return data
+//      */
+//     virtual Data step(Action desired_action)
+//     {
+//         desired_action_->append(desired_action);
+//         long int t = desired_action_->newest_timeindex();
+
+//         Data data;
+//         data.desired_action = (*desired_action_)[t];
+//         data.safe_action =(*safe_action_)[t];
+//         data.observation = (*observation_)[t];
+
+//         return data;
+//     }
+
+// protected:
+//     // timing ------------------------------------------------------------------
+//     virtual bool is_realtime()
+//     {
+//         return true; /// TODO: this has to be implemented in the child class
+//     }
+//     virtual double step_duration_ms()
+//     {
+//         return 1.0; /// TODO: this has to be implemented in the child class
+//     }
+
+//     // getting observations and setting controls -------------------------------
+//     virtual Observation get_latest_observation()
+//     {
+//         return Observation();
+//     }
+
+//     virtual void apply_action(Action action)
+//     {
+//         apply_torques(action);
+//         real_time_tools::Timer::sleep_ms(1.0); /// TODO this is temporary
+//     }
+
+
+//     virtual Action constrain_action(Action desired_action)
+//     {
+//         return constrain_torques(desired_action); ///TODO: this is temporary
+//     }
+
+// private:
+//     std::shared_ptr<real_time_tools::ThreadsafeTimeseries<Vector>> desired_action_;
+//     std::shared_ptr<real_time_tools::ThreadsafeTimeseries<Action>> safe_action_;
+//     std::shared_ptr<real_time_tools::ThreadsafeTimeseries<Observation>> observation_;
+
+//     void loop()
+//     {
+//         for(long int t = 0; true; t++)
+//         {
+//             safe_action_->append(constrain_action((*desired_action_)[t]));
+//             observation_->append(get_latest_observation());
+//             apply_action((*safe_action_)[t]);
+
+//             check_timing(observation_->timestamp_ms(t) -
+//                          observation_->timestamp_ms(t-1));
+//         }
+//     }
+
+//     void check_timing(double delta_time_ms)
+//     {
+//         if(is_realtime() &&
+//                 (delta_time_ms > step_duration_ms() * 1.1 ||
+//                  delta_time_ms < step_duration_ms() * 0.9))
+//         {
+//             std::cout << "control loop did not run at expected rate "
+//                          "did you provide actions fast enough?"
+//                       << std::endl;
+//             exit(-1);
+//         }
+//     }
+
+
+
+
+};
+
+
+
+
+
+
+
+class Finger: public NewFinger
+{
+public:
+    //typedef Eigen::Vector3d Vector;
+    typedef Eigen::Vector4d Quaternion; // should go away
+
+    //enum JointIndexing {base, center, tip, joint_count};
 
     Finger() {  }
 
@@ -31,6 +159,10 @@ public:
         constrained_torques_ = constrain_torques(desired_torques);
         apply_torques(constrained_torques_);
     }
+
+
+
+
 
     virtual Vector get_constrained_torques() const
     {
@@ -64,6 +196,13 @@ public:
     virtual unsigned char* render(std::string mode) = 0;
 
 protected:
+
+
+
+
+    
+
+
     virtual void apply_torques(const Vector& desired_torques) = 0;
 
     virtual Vector constrain_torques(const Vector& desired_torques)
