@@ -12,6 +12,7 @@
 
 #include "real_time_tools/threadsafe/threadsafe_timeseries.hpp"
 #include "real_time_tools/timer.hpp"
+#include "real_time_tools/thread.hpp"
 
 
 
@@ -20,7 +21,29 @@
 namespace robot_interfaces
 {
 
+class Minimal
+{
+    public:
+    real_time_tools::RealTimeThread thread_;
 
+    Minimal()
+    {
+        thread_.create_realtime_thread(&Minimal::loop, this);
+    }
+
+    static THREAD_FUNCTION_RETURN_TYPE loop(void* instance_pointer)
+    {
+        ((Minimal*)(instance_pointer))->loop();
+        return THREAD_FUNCTION_RETURN_VALUE;
+    }
+    void loop()
+    {
+        while(true)
+        {
+
+        }
+    }
+};
 
 
 
@@ -49,7 +72,15 @@ public:
 
 
     NewFinger() 
-    { }
+    {
+        size_t history_length = 1000;
+        desired_action_ = std::make_shared<Timeseries<Action>>(history_length);
+        safe_action_ = std::make_shared<Timeseries<Action>>(history_length);
+        observation_ = std::make_shared<Timeseries<Observation>>(history_length);
+
+        // thread_.create_realtime_thread(&NewFinger::loop, this);
+        // std::cout << "done creating thread " << std::endl;
+    }
 
 //     /**
 //      * @brief this function will
@@ -116,26 +147,42 @@ protected:
 
 private:
     template<typename Type> using Timeseries = 
-    std::shared_ptr<real_time_tools::ThreadsafeTimeseries<Type>>;
+    real_time_tools::ThreadsafeTimeseries<Type>;
 
-    Timeseries<Vector> desired_action_;
-    Timeseries<Action> safe_action_;
-    Timeseries<Observation> observation_;
+    std::shared_ptr<Timeseries<Action>> desired_action_;
+    std::shared_ptr<Timeseries<Action>> safe_action_;
+    std::shared_ptr<Timeseries<Observation>> observation_;
 
-//     void loop()
-//     {
-//         for(long int t = 0; true; t++)
-//         {
-//             safe_action_->append(constrain_action((*desired_action_)[t]));
-//             observation_->append(get_latest_observation());
-//             apply_action((*safe_action_)[t]);
+    real_time_tools::RealTimeThread thread_;
 
-//             check_timing(observation_->timestamp_ms(t) -
-//                          observation_->timestamp_ms(t-1));
-//         }
-//     }
+    static THREAD_FUNCTION_RETURN_TYPE loop(void* instance_pointer)
+    {
+        ((NewFinger*)(instance_pointer))->loop();
+        return THREAD_FUNCTION_RETURN_VALUE;
+    }
+    void loop()
+    {
+        while(true)
+        {
 
-    void check_timing(double delta_time_ms)
+        }
+        // for(long int t = 0; true; t++)
+        // {
+        //     std::cout << "t: " << t << std::endl;
+        //     safe_action_->append(constrain_action((*desired_action_)[t]));
+        //     std::cout << "bla " << std::endl;
+        //     observation_->append(get_latest_observation());
+        //     apply_action((*safe_action_)[t]);
+
+        //     if(observation_->newest_timeindex() >= 1)
+        //     {
+        //         check_timing(observation_->timestamp_ms(t) -
+        //                      observation_->timestamp_ms(t-1));
+        //     }
+        // }
+    }
+
+    void check_timing(const double& delta_time_ms)
     {
         if(is_realtime() &&
                 (delta_time_ms > step_duration_ms() * 1.1 ||
