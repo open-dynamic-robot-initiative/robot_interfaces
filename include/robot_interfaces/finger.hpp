@@ -78,8 +78,8 @@ public:
         safe_action_ = std::make_shared<Timeseries<Action>>(history_length);
         observation_ = std::make_shared<Timeseries<Observation>>(history_length);
 
-        // thread_.create_realtime_thread(&NewFinger::loop, this);
-        // std::cout << "done creating thread " << std::endl;
+        thread_.create_realtime_thread(&NewFinger::loop, this);
+        std::cout << "done creating thread " << std::endl;
     }
 
 //     /**
@@ -164,6 +164,12 @@ private:
     {
         while(true)
         {
+            /// todo: without this somehow sending can frames sometimes fails
+            /// it seems that this thread interferes with other threads if it 
+            /// does not sleep in a while. this needs to be figured out and 
+            /// resolved properly.
+            real_time_tools::Timer::sleep_ms(1);
+
 
         }
         // for(long int t = 0; true; t++)
