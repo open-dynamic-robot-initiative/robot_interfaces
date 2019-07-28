@@ -9,21 +9,16 @@
 #include "mpi_cpp_tools/math.hpp"
 #include "mpi_cpp_tools/dynamical_systems.hpp"
 
-
 #include "real_time_tools/threadsafe/threadsafe_timeseries.hpp"
 #include "real_time_tools/timer.hpp"
 #include "real_time_tools/thread.hpp"
-
-
-
-
 
 namespace robot_interfaces
 {
 
 class Minimal
 {
-    public:
+public:
     real_time_tools::RealTimeThread thread_;
 
     Minimal()
@@ -31,31 +26,43 @@ class Minimal
         thread_.create_realtime_thread(&Minimal::loop, this);
     }
 
-    static THREAD_FUNCTION_RETURN_TYPE loop(void* instance_pointer)
+    static THREAD_FUNCTION_RETURN_TYPE loop(void *instance_pointer)
     {
-        ((Minimal*)(instance_pointer))->loop();
+        ((Minimal *)(instance_pointer))->loop();
         return THREAD_FUNCTION_RETURN_VALUE;
     }
     void loop()
     {
-        while(true)
+        while (true)
         {
-
         }
     }
 };
 
-
-
+// action_1 -> action_2 ...
+//         \   A
+//          \ /
+//           X
+//          / \
+//         /   V
+// observ_1 -> observ_2 ...
 class NewFinger
 {
 public:
-    enum JointIndexing {base, center, tip, joint_count};
+    enum JointIndexing
+    {
+        base,
+        center,
+        tip,
+        joint_count
+    };
+
+    template <typename Type>
+    using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
 
     typedef Eigen::Vector3d Vector;
 
     typedef Eigen::Vector3d Action;
-
 
     struct Observation
     {
@@ -70,9 +77,14 @@ public:
         Observation observation;
     };
 
-
-    NewFinger() 
+    /// TODO: remove default values!!!
+    NewFinger(const double &expected_step_duration_ms = 1.0,
+              const double &step_duration_tolerance_ratio = 1.5,
+              const bool &is_realtime = true) : expected_step_duration_ms_(expected_step_duration_ms),
+                                                step_duration_tolerance_ratio_(step_duration_tolerance_ratio),
+                                                is_realtime_(is_realtime)
     {
+
         size_t history_length = 1000;
         desired_action_ = std::make_shared<Timeseries<Action>>(history_length);
         safe_action_ = std::make_shared<Timeseries<Action>>(history_length);
@@ -82,37 +94,26 @@ public:
         std::cout << "done creating thread " << std::endl;
     }
 
-//     /**
-//      * @brief this function will
-//      * wait until the previous step is completed,
-//      * store the latest observation in data,
-//      * compute the safe_action based on the desired_action,
-//      * send the safe_action to the robot,
-//      * store both actions in data,
-//      * return data
-//      */
-//     virtual Data step(Action desired_action)
-//     {
-//         desired_action_->append(desired_action);
-//         long int t = desired_action_->newest_timeindex();
-
-//         Data data;
-//         data.desired_action = (*desired_action_)[t];
-//         data.safe_action =(*safe_action_)[t];
-//         data.observation = (*observation_)[t];
-
-//         return data;
-//     }
-
-protected:
-    // timing ------------------------------------------------------------------
-    virtual bool is_realtime()/// TODO: this has to be implemented in the child class
+    /**
+     * @brief this function will
+     * wait until the previous step is completed,
+     * store the latest observation in data,
+     * compute the safe_action based on the desired_action,
+     * send the safe_action to the robot,
+     * store both actions in data,
+     * return data
+     */
+    virtual Data step(Action desired_action)
     {
-        return true; 
-    }
-    virtual double step_duration_ms()/// TODO: this has to be implemented in the child class
-    {
-        return 1.0; 
+        desired_action_->append(desired_action);
+        long int t = desired_action_->newest_timeindex();
+
+        Data data;
+        data.desired_action = (*desired_action_)[t];
+        data.safe_action = (*safe_action_)[t];
+        data.observation = (*observation_)[t];
+
+        return data;
     }
 
 public: /// we will probably make this private
@@ -132,116 +133,99 @@ public:
     virtual Vector get_measured_velocities() const = 0;
 
 protected:
-    virtual void apply_action(const Action& action)
+    virtual void apply_action(const Action &action)
     {
         apply_torques(action);
         real_time_tools::Timer::sleep_ms(1.0); /// TODO this is temporary
     }
     /// TODO the following function should go away and child class should
     /// directly implement the function above.
-    virtual void apply_torques(const Vector& desired_torques) = 0;
-
-
-
-
+    virtual void apply_torques(const Vector &desired_torques) = 0;
 
 private:
-    template<typename Type> using Timeseries = 
-    real_time_tools::ThreadsafeTimeseries<Type>;
-
     std::shared_ptr<Timeseries<Action>> desired_action_;
     std::shared_ptr<Timeseries<Action>> safe_action_;
     std::shared_ptr<Timeseries<Observation>> observation_;
-
     real_time_tools::RealTimeThread thread_;
 
-    static THREAD_FUNCTION_RETURN_TYPE loop(void* instance_pointer)
+    double expected_step_duration_ms_;
+    double step_duration_tolerance_ratio_;
+    bool is_realtime_;
+
+    // control loop ------------------------------------------------------------
+    static THREAD_FUNCTION_RETURN_TYPE loop(void *instance_pointer)
     {
-        ((NewFinger*)(instance_pointer))->loop();
+        ((NewFinger *)(instance_pointer))->loop();
         return THREAD_FUNCTION_RETURN_VALUE;
     }
     void loop()
     {
-        while(true)
+        for (long int t = 0; true; t++)
         {
-            /// todo: without this somehow sending can frames sometimes fails
-            /// it seems that this thread interferes with other threads if it 
-            /// does not sleep in a while. this needs to be figured out and 
-            /// resolved properly.
-            real_time_tools::Timer::sleep_ms(1);
+            safe_action_->append(constrain_action((*desired_action_)[t]));
+            observation_->append(get_latest_observation());
+            apply_action((*safe_action_)[t]);
 
-
+            if (observation_->newest_timeindex() >= 1)
+            {
+                check_timing(observation_->timestamp_ms(t) -
+                             observation_->timestamp_ms(t - 1));
+            }
         }
-        // for(long int t = 0; true; t++)
-        // {
-        //     std::cout << "t: " << t << std::endl;
-        //     safe_action_->append(constrain_action((*desired_action_)[t]));
-        //     std::cout << "bla " << std::endl;
-        //     observation_->append(get_latest_observation());
-        //     apply_action((*safe_action_)[t]);
-
-        //     if(observation_->newest_timeindex() >= 1)
-        //     {
-        //         check_timing(observation_->timestamp_ms(t) -
-        //                      observation_->timestamp_ms(t-1));
-        //     }
-        // }
     }
 
-    void check_timing(const double& delta_time_ms)
+    // helper functions --------------------------------------------------------
+    void check_timing(const double &actual_step_duration_ms)
     {
-        if(is_realtime() &&
-                (delta_time_ms > step_duration_ms() * 1.1 ||
-                 delta_time_ms < step_duration_ms() * 0.9))
+        double max_step_duration_ms =
+            expected_step_duration_ms_ * step_duration_tolerance_ratio_;
+        double min_step_duration_ms =
+            expected_step_duration_ms_ / step_duration_tolerance_ratio_;
+
+        if (is_realtime_ &&
+            (actual_step_duration_ms > max_step_duration_ms ||
+             actual_step_duration_ms < min_step_duration_ms))
         {
-            std::cout << "control loop did not run at expected rate "
-                         "did you provide actions fast enough?"
-                      << std::endl;
-            exit(-1);
+            std::ostringstream oss;
+            oss << "control loop did not run at expected rate "
+                   "did you provide actions fast enough? "
+                << std::endl
+                << "expected step duration: "
+                << expected_step_duration_ms_ << std::endl
+                << "actual step duration: "
+                << actual_step_duration_ms << std::endl
+                << "tolearance ratio: "
+                << step_duration_tolerance_ratio_ << std::endl;
+            throw std::runtime_error(oss.str());
         }
     }
-
-
 
 protected:
-
-
-    virtual Action constrain_action(const Action& desired_action)
+    virtual Action constrain_action(const Action &desired_action)
     {
-        return constrain_torques(desired_action); 
+        return constrain_torques(desired_action);
     }
-    ///TODO: the function below should go away and we should directly 
+    ///TODO: the function below should go away and we should directly
     /// implement the function above.
-    virtual Vector constrain_torques(const Vector& desired_torques)
+    virtual Vector constrain_torques(const Vector &desired_torques)
     {
         Vector velocities = get_measured_velocities();
         Vector angles = get_measured_angles();
 
         Vector constrained_torques;
-        for(size_t i = 0; i < desired_torques.size(); i++)
+        for (size_t i = 0; i < desired_torques.size(); i++)
         {
             constrained_torques[i] =
-                    safety_constraints_[i].get_safe_torque(desired_torques(i),
-                                                           velocities(i),
-                                                           angles(i));
+                safety_constraints_[i].get_safe_torque(desired_torques(i),
+                                                       velocities(i),
+                                                       angles(i));
         }
         return constrained_torques;
     }
-
     std::array<mct::SafetyConstraint, 3> safety_constraints_;
-
-
-
-
 };
 
-
-
-
-
-
-
-class Finger: public NewFinger
+class Finger : public NewFinger
 {
 public:
     //typedef Eigen::Vector3d Vector;
@@ -249,34 +233,29 @@ public:
 
     //enum JointIndexing {base, center, tip, joint_count};
 
-    Finger() {  }
+    Finger() {}
 
-    virtual void constrain_and_apply_torques(const Vector& desired_torques)
+    virtual void constrain_and_apply_torques(const Vector &desired_torques)
     {
         constrained_torques_ = constrain_torques(desired_torques);
         apply_torques(constrained_torques_);
     }
-
-
-
-
 
     virtual Vector get_constrained_torques() const
     {
         return constrained_torques_;
     }
 
-
     // \todo: implement forward kinematics
     virtual Vector get_tip_pos() const = 0;
 
     virtual Vector get_object_pos() const = 0;
-    virtual void set_object_pos(const Vector& pos) = 0;
+    virtual void set_object_pos(const Vector &pos) = 0;
 
     virtual Quaternion get_object_quat() const = 0;
 
     virtual Vector get_target_pos() const = 0;
-    virtual void set_target_pos(const Vector& pos) const = 0;
+    virtual void set_target_pos(const Vector &pos) const = 0;
 
     virtual void reset_joints() = 0;
 
@@ -288,33 +267,26 @@ public:
     }
 
     // render frame - only for simulation
-    virtual unsigned char* render(std::string mode) = 0;
+    virtual unsigned char *render(std::string mode) = 0;
 
 protected:
-
-
-
-
-    
-
-
-
-
-
 protected:
     Vector constrained_torques_;
     double max_torque_;
 };
-
-
 
 class DisentanglementPlatform
 {
 public:
     typedef Eigen::Vector3d Vector;
 
-    enum JointIndexing {table, base, tip, joint_count};
-
+    enum JointIndexing
+    {
+        table,
+        base,
+        tip,
+        joint_count
+    };
 
     DisentanglementPlatform()
     {
@@ -325,7 +297,7 @@ public:
         safety_constraints_[table].max_velocity_ = 0.3;
         safety_constraints_[table].max_position_ = -std::numeric_limits<double>::infinity();
         safety_constraints_[table].max_torque_ = max_torques_[table];
-        safety_constraints_[table].inertia_ = 1.0; //dummy
+        safety_constraints_[table].inertia_ = 1.0;      //dummy
         safety_constraints_[table].max_jerk_ = 10000.0; // dummy
 
         safety_constraints_[base].min_velocity_ = -5.0;
@@ -333,20 +305,19 @@ public:
         safety_constraints_[base].max_velocity_ = 5.0;
         safety_constraints_[base].max_position_ = -std::numeric_limits<double>::infinity();
         safety_constraints_[base].max_torque_ = max_torques_[base];
-        safety_constraints_[base].inertia_ = 1.0; //dummy
-        safety_constraints_[base].max_jerk_ =  10000.0; // dummy
-
+        safety_constraints_[base].inertia_ = 1.0;      //dummy
+        safety_constraints_[base].max_jerk_ = 10000.0; // dummy
 
         safety_constraints_[tip].min_velocity_ = -5.0;
         safety_constraints_[tip].min_position_ = std::numeric_limits<double>::infinity();
         safety_constraints_[tip].max_velocity_ = 5.0;
         safety_constraints_[tip].max_position_ = -std::numeric_limits<double>::infinity();
         safety_constraints_[tip].max_torque_ = max_torques_[tip];
-        safety_constraints_[tip].inertia_ = 1.0; //dummy
+        safety_constraints_[tip].inertia_ = 1.0;      //dummy
         safety_constraints_[tip].max_jerk_ = 10000.0; // dummy
     }
 
-    virtual void constrain_and_apply_torques(const Vector& desired_torques)
+    virtual void constrain_and_apply_torques(const Vector &desired_torques)
     {
         constrained_torques_ = constrain_torques(desired_torques);
         apply_torques(constrained_torques_);
@@ -368,23 +339,23 @@ public:
     }
 
 protected:
-    virtual void apply_torques(const Vector& desired_torques) = 0;
+    virtual void apply_torques(const Vector &desired_torques) = 0;
 
     /// do NOT touch this function unless you know what you are doing, it is
     /// essential for running the robot safely!
-    virtual Vector constrain_torques(const Vector& desired_torques)
+    virtual Vector constrain_torques(const Vector &desired_torques)
     {
 
         Vector velocities = get_measured_velocities();
         Vector angles = get_measured_angles();
 
         Vector constrained_torques;
-        for(size_t i = 0; i < desired_torques.size(); i++)
+        for (size_t i = 0; i < desired_torques.size(); i++)
         {
             constrained_torques[i] =
-                    safety_constraints_[i].get_safe_torque(desired_torques(i),
-                                                           velocities(i),
-                                                           angles(i));
+                safety_constraints_[i].get_safe_torque(desired_torques(i),
+                                                       velocities(i),
+                                                       angles(i));
         }
         return constrained_torques;
     }
@@ -395,17 +366,10 @@ private:
     Vector max_torques_;
 };
 
-
-
-
-
-
-
-
-template<typename Action, typename Observation> class Robot
+template <typename Action, typename Observation>
+class Robot
 {
 public:
-
     struct Data
     {
         Action desired_action;
@@ -425,7 +389,4 @@ public:
     virtual Data step(Action desired_action) = 0;
 };
 
-
-
-
-}
+} // namespace robot_interfaces
