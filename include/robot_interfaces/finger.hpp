@@ -61,6 +61,7 @@ public:
     using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
 
     typedef Timeseries<int>::Index TimeIndex; // \TODO this is not quite clean because we should not have to specify a type here.
+    typedef Timeseries<int>::Timestamp TimeStamp;
 
     typedef Eigen::Vector3d Vector;
 
@@ -84,7 +85,8 @@ public:
               const double &step_duration_tolerance_ratio = 1.5,
               const bool &is_realtime = true) : expected_step_duration_ms_(expected_step_duration_ms),
                                                 step_duration_tolerance_ratio_(step_duration_tolerance_ratio),
-                                                is_realtime_(is_realtime)
+                                                is_realtime_(is_realtime),
+                                                is_paused_(false)
     {
 
         size_t history_length = 1000;
@@ -96,23 +98,33 @@ public:
         std::cout << "done creating thread " << std::endl;
     }
 
-    Observation get_observation(const TimeIndex& t)
+    Observation get_observation(const TimeIndex &t)
     {
         return (*observation_)[t];
     }
-    Action get_desired_action(const TimeIndex& t)
+    Action get_desired_action(const TimeIndex &t)
     {
         return (*desired_action_)[t];
     }
-    Action get_safe_action(const TimeIndex& t)
+    Action get_safe_action(const TimeIndex &t)
     {
         return (*safe_action_)[t];
     }
-
-    TimeIndex append_desired_action(const Action& desired_action)
+    TimeStamp get_time_stamp_ms(const TimeIndex &t)
     {
+        return observation_->timestamp_ms(t);
+    }
+
+    TimeIndex append_desired_action(const Action &desired_action)
+    {
+        is_paused_ = false;
         desired_action_->append(desired_action);
         return desired_action_->newest_timeindex();
+    }
+
+    void pause()
+    {
+        is_paused_ = true;
     }
 
     // /**
@@ -169,6 +181,8 @@ private:
     std::shared_ptr<Timeseries<Observation>> observation_;
     real_time_tools::RealTimeThread thread_;
 
+    bool is_paused_;
+
     double expected_step_duration_ms_;
     double step_duration_tolerance_ratio_;
     bool is_realtime_;
@@ -181,8 +195,15 @@ private:
     }
     void loop()
     {
+        // TODO: there is a slight problem here: this thread
+        // may start running before child class is created, and
+        // hence attempt to call nonexistant function.
         for (TimeIndex t = 0; true; t++)
         {
+            if(is_realtime_ && is_paused_)
+            {
+                desired_action_->append(Action::Zero());
+            }
             safe_action_->append(constrain_action((*desired_action_)[t]));
             observation_->append(get_latest_observation());
             apply_action((*safe_action_)[t]);
