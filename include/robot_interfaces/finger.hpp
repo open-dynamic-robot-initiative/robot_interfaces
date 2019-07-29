@@ -60,6 +60,8 @@ public:
     template <typename Type>
     using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
 
+    typedef Timeseries<int>::Index TimeIndex; // \TODO this is not quite clean because we should not have to specify a type here.
+
     typedef Eigen::Vector3d Vector;
 
     typedef Eigen::Vector3d Action;
@@ -94,27 +96,46 @@ public:
         std::cout << "done creating thread " << std::endl;
     }
 
-    /**
-     * @brief this function will
-     * wait until the previous step is completed,
-     * store the latest observation in data,
-     * compute the safe_action based on the desired_action,
-     * send the safe_action to the robot,
-     * store both actions in data,
-     * return data
-     */
-    virtual Data step(Action desired_action)
+    Observation get_observation(const TimeIndex& t)
+    {
+        return (*observation_)[t];
+    }
+    Action get_desired_action(const TimeIndex& t)
+    {
+        return (*desired_action_)[t];
+    }
+    Action get_safe_action(const TimeIndex& t)
+    {
+        return (*safe_action_)[t];
+    }
+
+    TimeIndex append_desired_action(const Action& desired_action)
     {
         desired_action_->append(desired_action);
-        long int t = desired_action_->newest_timeindex();
-
-        Data data;
-        data.desired_action = (*desired_action_)[t];
-        data.safe_action = (*safe_action_)[t];
-        data.observation = (*observation_)[t];
-
-        return data;
+        return desired_action_->newest_timeindex();
     }
+
+    // /**
+    //  * @brief this function will
+    //  * wait until the previous step is completed,
+    //  * store the latest observation in data,
+    //  * compute the safe_action based on the desired_action,
+    //  * send the safe_action to the robot,
+    //  * store both actions in data,
+    //  * return data
+    //  */
+    // virtual Data step(Action desired_action)
+    // {
+    //     desired_action_->append(desired_action);
+    //     TimeIndex t = desired_action_->newest_timeindex();
+
+    //     Data data;
+    //     data.desired_action = (*desired_action_)[t];
+    //     data.safe_action = (*safe_action_)[t];
+    //     data.observation = (*observation_)[t];
+
+    //     return data;
+    // }
 
 public: /// we will probably make this private
     virtual Observation get_latest_observation()
@@ -160,7 +181,7 @@ private:
     }
     void loop()
     {
-        for (long int t = 0; true; t++)
+        for (TimeIndex t = 0; true; t++)
         {
             safe_action_->append(constrain_action((*desired_action_)[t]));
             observation_->append(get_latest_observation());
