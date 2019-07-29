@@ -39,6 +39,16 @@ public:
     }
 };
 
+
+//         |------ t = 0 ------|------ t = 1 ------| 
+//         |----- action0 -----|----- action1 -----|
+//         o                   o                   o
+//         b                   b                   b
+//         s                   s                   s
+//         0                   1                   2
+
+
+
 // action_1 -> action_2 ...
 //         \   A
 //          \ /
@@ -73,16 +83,10 @@ public:
         Vector velocity;
         Vector torque;
     };
-    struct Data
-    {
-        Action desired_action;
-        Action safe_action;
-        Observation observation;
-    };
 
     /// TODO: remove default values!!!
     NewFinger(const double &expected_step_duration_ms = 1.0,
-              const double &step_duration_tolerance_ratio = 1.5,
+              const double &step_duration_tolerance_ratio = 2.0,
               const bool &is_realtime = true) : expected_step_duration_ms_(expected_step_duration_ms),
                                                 step_duration_tolerance_ratio_(step_duration_tolerance_ratio),
                                                 is_realtime_(is_realtime),
@@ -117,11 +121,22 @@ public:
 
     TimeIndex append_desired_action(const Action &desired_action)
     {
+        // TODO: we should make sure not so many actions are appended
+        // that we do not have enough history containing all actions to 
+        // be applied.
         is_paused_ = false;
         desired_action_->append(desired_action);
         return desired_action_->newest_timeindex();
     }
 
+    void wait_until_time_index(const TimeIndex &t)
+    {
+        observation_->timestamp_ms(t);
+    }
+    TimeIndex current_time_index()
+    {
+        return observation_->newest_timeindex();
+    }
     void pause()
     {
         is_paused_ = true;
