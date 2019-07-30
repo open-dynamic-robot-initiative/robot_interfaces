@@ -16,29 +16,6 @@
 namespace robot_interfaces
 {
 
-class Minimal
-{
-public:
-    real_time_tools::RealTimeThread thread_;
-
-    Minimal()
-    {
-        thread_.create_realtime_thread(&Minimal::loop, this);
-    }
-
-    static THREAD_FUNCTION_RETURN_TYPE loop(void *instance_pointer)
-    {
-        ((Minimal *)(instance_pointer))->loop();
-        return THREAD_FUNCTION_RETURN_VALUE;
-    }
-    void loop()
-    {
-        while (true)
-        {
-        }
-    }
-};
-
 // |------ t = 0 ------|------ t = 1 ------|
 // |----- action0 -----|----- action1 -----|
 // o                   o                   o
@@ -162,7 +139,7 @@ public:
     //     return data;
     // }
 
-public: /// we will probably make this private
+protected:
     virtual Observation get_latest_observation()
     {
         Observation observation;
