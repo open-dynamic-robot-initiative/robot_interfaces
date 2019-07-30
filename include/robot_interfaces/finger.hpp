@@ -39,15 +39,12 @@ public:
     }
 };
 
-
-//         |------ t = 0 ------|------ t = 1 ------| 
-//         |----- action0 -----|----- action1 -----|
-//         o                   o                   o
-//         b                   b                   b
-//         s                   s                   s
-//         0                   1                   2
-
-
+// |------ t = 0 ------|------ t = 1 ------|
+// |----- action0 -----|----- action1 -----|
+// o                   o                   o
+// b                   b                   b
+// s                   s                   s
+// 0                   1                   2
 
 // action_1 -> action_2 ...
 //         \   A
@@ -98,8 +95,8 @@ public:
         safe_action_ = std::make_shared<Timeseries<Action>>(history_length);
         observation_ = std::make_shared<Timeseries<Observation>>(history_length);
 
-        thread_.create_realtime_thread(&NewFinger::loop, this);
-        std::cout << "done creating thread " << std::endl;
+        thread_ = std::make_shared<real_time_tools::RealTimeThread>();
+        thread_->create_realtime_thread(&NewFinger::loop, this);
     }
 
     Observation get_observation(const TimeIndex &t)
@@ -122,7 +119,7 @@ public:
     TimeIndex append_desired_action(const Action &desired_action)
     {
         // TODO: we should make sure not so many actions are appended
-        // that we do not have enough history containing all actions to 
+        // that we do not have enough history containing all actions to
         // be applied.
         is_paused_ = false;
         desired_action_->append(desired_action);
@@ -140,6 +137,7 @@ public:
     void pause()
     {
         is_paused_ = true;
+        desired_action_->append(Action::Zero());
     }
 
     // /**
@@ -194,7 +192,7 @@ private:
     std::shared_ptr<Timeseries<Action>> desired_action_;
     std::shared_ptr<Timeseries<Action>> safe_action_;
     std::shared_ptr<Timeseries<Observation>> observation_;
-    real_time_tools::RealTimeThread thread_;
+    std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 
     bool is_paused_;
 
@@ -215,10 +213,13 @@ private:
         // hence attempt to call nonexistant function.
         for (TimeIndex t = 0; true; t++)
         {
-            if(is_realtime_ && is_paused_)
+            if (is_realtime_ && is_paused_ &&
+                (desired_action_->length() == 0 ||
+                 desired_action_->newest_timeindex() < t))
             {
                 desired_action_->append(Action::Zero());
             }
+
             safe_action_->append(constrain_action((*desired_action_)[t]));
             observation_->append(get_latest_observation());
             apply_action((*safe_action_)[t]);
