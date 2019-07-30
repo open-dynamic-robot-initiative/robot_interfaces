@@ -206,7 +206,6 @@ private:
 
             // safe_action_->append(constrain_action();
 
-
             apply_action((*safe_action_)[t]);
 
             if (t >= 1)
@@ -247,7 +246,9 @@ protected:
     virtual Action compute_safe_action(const Action &desired_action,
                                        const Observation &observation)
     {
-        Vector kd(0.04, 0.08, 0.02);
+        // Vector kd(0.04, 0.08, 0.02);
+
+        Vector kd(0.08, 0.08, 0.04);
         double max_torque = 0.36;
         Action safe_action = mct::clamp(desired_action,
                                         -max_torque, max_torque);
