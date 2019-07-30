@@ -270,11 +270,11 @@ protected:
     virtual Action compute_safe_action(const Action &desired_action,
                                        const Observation &observation)
     {
-        double kd = 0.06;
+        Vector kd(0.04, 0.08, 0.02);
         double max_torque = 0.36;
         Action safe_action = mct::clamp(desired_action,
                                         -max_torque, max_torque);
-        safe_action = safe_action - kd * observation.velocity;
+        safe_action = safe_action - kd.cwiseProduct(observation.velocity);
         safe_action = mct::clamp(safe_action,
                                  -max_torque, max_torque);
         return safe_action;
