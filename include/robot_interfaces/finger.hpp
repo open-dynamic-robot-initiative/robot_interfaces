@@ -220,11 +220,19 @@ private:
                 desired_action_->append(Action::Zero());
             }
 
-            safe_action_->append(constrain_action((*desired_action_)[t]));
-            observation_->append(get_latest_observation());
+            Action desired_action = (*desired_action_)[t];
+            Observation observation = get_latest_observation();
+            Action safe_action = compute_safe_action(desired_action,
+                                                     observation);
+            safe_action_->append(safe_action);
+            observation_->append(observation);
+
+            // safe_action_->append(constrain_action();
+
+
             apply_action((*safe_action_)[t]);
 
-            if (observation_->newest_timeindex() >= 1)
+            if (t >= 1)
             {
                 check_timing(observation_->timestamp_ms(t) -
                              observation_->timestamp_ms(t - 1));
@@ -259,6 +267,20 @@ private:
     }
 
 protected:
+    virtual Action compute_safe_action(const Action &desired_action,
+                                       const Observation &observation)
+    {
+        double kd = 0.06;
+        double max_torque = 0.36;
+        Action safe_action = mct::clamp(desired_action,
+                                        -max_torque, max_torque);
+        safe_action = safe_action - kd * observation.velocity;
+        safe_action = mct::clamp(safe_action,
+                                 -max_torque, max_torque);
+        return safe_action;
+    }
+
+    // all the below should go away!!
     virtual Action constrain_action(const Action &desired_action)
     {
         return constrain_torques(desired_action);
