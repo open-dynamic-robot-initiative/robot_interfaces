@@ -19,4 +19,7 @@
   <build_depend> mpi_cpp_tools </build_depend>
   <run_depend>   mpi_cpp_tools </run_depend>
 
+  <build_depend>pybind11_catkin</build_depend>
+  <run_depend>pybind11_catkin</run_depend>
+
 </package>

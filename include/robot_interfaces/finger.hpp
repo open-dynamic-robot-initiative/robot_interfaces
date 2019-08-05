@@ -187,10 +187,10 @@ private:
     bool is_realtime_;
 
     // control loop ------------------------------------------------------------
-    static THREAD_FUNCTION_RETURN_TYPE loop(void *instance_pointer)
+    static void* loop(void *instance_pointer)
     {
         ((NewFinger *)(instance_pointer))->loop();
-        return THREAD_FUNCTION_RETURN_VALUE;
+        return nullptr;
     }
     void loop()
     {

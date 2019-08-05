@@ -22,6 +22,8 @@ set(CATKIN_PKGS ${CATKIN_PKGS}
 mpi_cmake_modules
 real_time_tools
 mpi_cpp_tools
+pybind11_catkin
+
 )
 find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
 
@@ -72,6 +74,20 @@ add_subdirectory(demos)
 #########################
 
 
+###################
+# python bindings #
+###################
+
+set(py_finger_SRC_FILES 
+  srcpy/py_finger.cpp
+)
+
+pybind11_add_module(py_finger ${py_finger_SRC_FILES})
+target_link_libraries(py_finger PRIVATE ${catkin_LIBRARIES})
+
+set_target_properties(py_finger PROPERTIES
+         LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_PYTHON_DESTINATION})
+install(TARGETS py_finger DESTINATION ${CATKIN_GLOBAL_PYTHON_DESTINATION})
 
 
 ##########################
