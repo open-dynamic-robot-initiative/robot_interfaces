@@ -316,10 +316,10 @@ public:
     // \todo: implement forward kinematics
     virtual Vector get_tip_pos() const = 0;
 
-    virtual Vector get_object_pos() const = 0;
-    virtual void set_object_pos(const Vector &pos) = 0;
+    virtual Vector get_object_pos(std::string object_name) const = 0;
+    virtual void set_object_pos(const Vector &pos, std::string object_name) = 0;
 
-    virtual Quaternion get_object_quat() const = 0;
+    virtual Quaternion get_object_quat(std::string object_name) const = 0;
 
     virtual Vector get_target_pos() const = 0;
     virtual void set_target_pos(const Vector &pos) const = 0;
