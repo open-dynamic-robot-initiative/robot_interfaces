@@ -126,53 +126,11 @@ public:
         desired_action_->append(Action::Zero());
     }
 
-    // /**
-    //  * @brief this function will
-    //  * wait until the previous step is completed,
-    //  * store the latest observation in data,
-    //  * compute the safe_action based on the desired_action,
-    //  * send the safe_action to the robot,
-    //  * store both actions in data,
-    //  * return data
-    //  */
-    // virtual Data step(Action desired_action)
-    // {
-    //     desired_action_->append(desired_action);
-    //     TimeIndex t = desired_action_->newest_timeindex();
-
-    //     Data data;
-    //     data.desired_action = (*desired_action_)[t];
-    //     data.safe_action = (*safe_action_)[t];
-    //     data.observation = (*observation_)[t];
-
-    //     return data;
-    // }
+protected:
+    virtual Observation get_latest_observation() = 0;
 
 protected:
-    virtual Observation get_latest_observation()
-    {
-        Observation observation;
-        observation.angle = get_measured_angles();
-        observation.velocity = get_measured_velocities();
-        observation.torque = get_measured_torques();
-        return observation;
-    }
-    /// TODO the following three functions should go away and child class should
-    /// directly implement the function above.
-public:
-    virtual Vector get_measured_torques() const = 0;
-    virtual Vector get_measured_angles() const = 0;
-    virtual Vector get_measured_velocities() const = 0;
-
-protected:
-    virtual void apply_action(const Action &action)
-    {
-        apply_torques(action);
-        real_time_tools::Timer::sleep_ms(1.0); /// TODO this is temporary
-    }
-    /// TODO the following function should go away and child class should
-    /// directly implement the function above.
-    virtual void apply_torques(const Vector &desired_torques) = 0;
+    virtual void apply_action(const Action &action) = 0;
 
 private:
     std::shared_ptr<Timeseries<Action>> desired_action_;
@@ -223,6 +181,8 @@ private:
                              observation_->timestamp_ms(t - 1));
             }
         }
+
+        // TODO: we have to make sure this loop exits properly at destruction time!!
     }
 
     // helper functions --------------------------------------------------------
@@ -267,28 +227,7 @@ protected:
         return safe_action;
     }
 
-    // all the below should go away!!
-    virtual Action constrain_action(const Action &desired_action)
-    {
-        return constrain_torques(desired_action);
-    }
-    ///TODO: the function below should go away and we should directly
-    /// implement the function above.
-    virtual Vector constrain_torques(const Vector &desired_torques)
-    {
-        Vector velocities = get_measured_velocities();
-        Vector angles = get_measured_angles();
 
-        Vector constrained_torques;
-        for (size_t i = 0; i < desired_torques.size(); i++)
-        {
-            constrained_torques[i] =
-                safety_constraints_[i].get_safe_torque(desired_torques(i),
-                                                       velocities(i),
-                                                       angles(i));
-        }
-        return constrained_torques;
-    }
     std::array<mct::SafetyConstraint, 3> safety_constraints_;
 };
 
@@ -301,12 +240,6 @@ public:
     //enum JointIndexing {base, center, tip, joint_count};
 
     Finger() {}
-
-    virtual void constrain_and_apply_torques(const Vector &desired_torques)
-    {
-        constrained_torques_ = constrain_torques(desired_torques);
-        apply_torques(constrained_torques_);
-    }
 
     virtual Vector get_constrained_torques() const
     {
