@@ -226,9 +226,6 @@ protected:
                                  -max_torque, max_torque);
         return safe_action;
     }
-
-
-    std::array<mct::SafetyConstraint, 3> safety_constraints_;
 };
 
 class Finger : public NewFinger
