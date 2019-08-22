@@ -6,7 +6,6 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-
 #pragma once
 
 #include <cmath>
@@ -39,7 +38,7 @@ namespace robot_interfaces
 //          / \
 //         /   V
 // observ_1 -> observ_2 ...
-class NewFinger
+class Finger
 {
 public:
     enum JointIndexing
@@ -68,12 +67,12 @@ public:
     };
 
     /// TODO: remove default values!!!
-    NewFinger(const double &expected_step_duration_ms = 1.0,
-              const double &step_duration_tolerance_ratio = 2.0,
-              const bool &is_realtime = true) : expected_step_duration_ms_(expected_step_duration_ms),
-                                                step_duration_tolerance_ratio_(step_duration_tolerance_ratio),
-                                                is_realtime_(is_realtime),
-                                                is_paused_(false)
+    Finger(const double &expected_step_duration_ms = 1.0,
+           const double &step_duration_tolerance_ratio = 2.0,
+           const bool &is_realtime = true) : expected_step_duration_ms_(expected_step_duration_ms),
+                                             step_duration_tolerance_ratio_(step_duration_tolerance_ratio),
+                                             is_realtime_(is_realtime),
+                                             is_paused_(false)
     {
 
         size_t history_length = 1000;
@@ -82,7 +81,7 @@ public:
         observation_ = std::make_shared<Timeseries<Observation>>(history_length);
 
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
-        thread_->create_realtime_thread(&NewFinger::loop, this);
+        thread_->create_realtime_thread(&Finger::loop, this);
     }
 
     Observation get_observation(const TimeIndex &t)
@@ -145,9 +144,9 @@ private:
     bool is_realtime_;
 
     // control loop ------------------------------------------------------------
-    static void* loop(void *instance_pointer)
+    static void *loop(void *instance_pointer)
     {
-        ((NewFinger *)(instance_pointer))->loop();
+        ((Finger *)(instance_pointer))->loop();
         return nullptr;
     }
     void loop()
@@ -226,51 +225,14 @@ protected:
                                  -max_torque, max_torque);
         return safe_action;
     }
-};
+    // todo: this should go away
+    double max_torque_;
 
-class Finger : public NewFinger
-{
 public:
-    //typedef Eigen::Vector3d Vector;
-    typedef Eigen::Vector4d Quaternion; // should go away
-
-    //enum JointIndexing {base, center, tip, joint_count};
-
-    Finger() {}
-
-    virtual Vector get_constrained_torques() const
-    {
-        return constrained_torques_;
-    }
-
-    // \todo: implement forward kinematics
-    virtual Vector get_tip_pos() const = 0;
-
-    virtual Vector get_object_pos(std::string object_name) const = 0;
-    virtual void set_object_pos(const Vector &pos, std::string object_name) = 0;
-
-    virtual Quaternion get_object_quat(std::string object_name) const = 0;
-
-    virtual Vector get_target_pos() const = 0;
-    virtual void set_target_pos(const Vector &pos) const = 0;
-
-    virtual void reset_joints() = 0;
-
-    virtual void wait_for_execution() const = 0;
-
     Vector get_max_torques() const
     {
         return max_torque_ * Vector::Ones();
     }
-
-    // render frame - only for simulation
-    virtual unsigned char *render(std::string mode) = 0;
-
-protected:
-protected:
-    Vector constrained_torques_;
-    double max_torque_;
 };
-
 
 } // namespace robot_interfaces
