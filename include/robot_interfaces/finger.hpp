@@ -156,11 +156,20 @@ private:
         // hence attempt to call nonexistant function.
         for (TimeIndex t = 0; true; t++)
         {
-            if (is_realtime_ && is_paused_ &&
+            if (is_realtime_ &&
                 (desired_action_->length() == 0 ||
                  desired_action_->newest_timeindex() < t))
             {
-                desired_action_->append(Action::Zero());
+                if(is_paused_ || desired_action_->length() == 0)
+                {
+                    desired_action_->append(Action::Zero());
+                }
+                else
+                {
+                /// TODO: we should somehow log if a set has been missed
+                    desired_action_->append(desired_action_->newest_element());
+                }
+                
             }
 
             Action desired_action = (*desired_action_)[t];
