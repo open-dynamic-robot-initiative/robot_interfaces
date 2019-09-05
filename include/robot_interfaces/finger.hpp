@@ -72,7 +72,8 @@ public:
            const bool &is_realtime = true) : expected_step_duration_ms_(expected_step_duration_ms),
                                              step_duration_tolerance_ratio_(step_duration_tolerance_ratio),
                                              is_realtime_(is_realtime),
-                                             is_paused_(false)
+                                             is_paused_(false),
+                                             destructor_was_called_(false)
     {
 
         size_t history_length = 1000;
@@ -82,6 +83,13 @@ public:
 
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
         thread_->create_realtime_thread(&Finger::loop, this);
+    }
+
+    virtual ~Finger()
+    {
+        // std::cout << "desctructor called" << std::endl;
+        destructor_was_called_ = true;
+        thread_->join();
     }
 
     Observation get_observation(const TimeIndex &t)
@@ -130,14 +138,17 @@ protected:
 
 protected:
     virtual void apply_action(const Action &action) = 0;
+    bool destructor_was_called_;
+    std::shared_ptr<real_time_tools::RealTimeThread> thread_;
+
 
 private:
     std::shared_ptr<Timeseries<Action>> desired_action_;
     std::shared_ptr<Timeseries<Action>> safe_action_;
     std::shared_ptr<Timeseries<Observation>> observation_;
-    std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 
     bool is_paused_;
+
 
     double expected_step_duration_ms_;
     double step_duration_tolerance_ratio_;
@@ -156,6 +167,11 @@ private:
         // hence attempt to call nonexistant function.
         for (TimeIndex t = 0; true; t++)
         {
+            if (destructor_was_called_ == true)
+            {
+                return;
+            }
+
             if (is_realtime_ &&
                 (desired_action_->length() == 0 ||
                  desired_action_->newest_timeindex() < t))
