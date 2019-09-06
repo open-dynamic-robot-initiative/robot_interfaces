@@ -40,7 +40,8 @@ namespace robot_interfaces {
 
 template <typename Action, typename Observation> class Robot {
   /// todo: this should return the actually applied action
-  virtual void apply_action(const Action& desired_action) = 0;
+public:
+  virtual void apply_action(const Action &desired_action) = 0;
   virtual Observation get_latest_observation() = 0;
 };
 
@@ -150,10 +151,11 @@ public:
   };
 
   /// TODO: remove default values!!!
-  Finger(const double &expected_step_duration_ms = 1.0,
+  Finger(std::shared_ptr<Robot<Action, Observation>> robot,
+         const double &expected_step_duration_ms = 1.0,
          const double &step_duration_tolerance_ratio = 2.0,
          const bool &is_realtime = true)
-      : expected_step_duration_ms_(expected_step_duration_ms),
+      : robot_(robot), expected_step_duration_ms_(expected_step_duration_ms),
         step_duration_tolerance_ratio_(step_duration_tolerance_ratio),
         is_realtime_(is_realtime), is_paused_(false),
         destructor_was_called_(false) {
@@ -202,15 +204,20 @@ public:
   }
 
 protected:
-  virtual Observation get_latest_observation() = 0;
+  virtual Observation get_latest_observation() {
+    return robot_->get_latest_observation();
+  }
 
 protected:
-  virtual void apply_action(const Action &action) = 0;
+  virtual void apply_action(const Action &action) {
+    robot_->apply_action(action);
+  }
   bool destructor_was_called_;
   std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 
 private:
   RobotData<Action, Observation, Status> data_;
+  std::shared_ptr<Robot<Action, Observation>> robot_;
 
   bool is_paused_;
 
@@ -286,8 +293,10 @@ private:
   }
 
 protected:
+// todo: this function should go away
   virtual Action compute_applied_action(const Action &desired_action,
                                         const Observation &observation) {
+    return desired_action;
     // Vector kd(0.04, 0.08, 0.02);
 
     Vector kd(0.08, 0.08, 0.04);
