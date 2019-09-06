@@ -20,6 +20,7 @@
 #include "real_time_tools/thread.hpp"
 #include "real_time_tools/threadsafe/threadsafe_timeseries.hpp"
 #include "real_time_tools/timer.hpp"
+#include <real_time_tools/process_manager.hpp>
 
 namespace robot_interfaces {
 
@@ -94,6 +95,7 @@ public:
         expected_step_duration_ms_(expected_step_duration_ms),
         step_duration_tolerance_ratio_(step_duration_tolerance_ratio),
         is_realtime_(is_realtime) {
+
     thread_ = std::make_shared<real_time_tools::RealTimeThread>();
     thread_->create_realtime_thread(&RobotServer::loop, this);
   }
@@ -153,7 +155,7 @@ public:
   /// TODO: remove default values!!!
   Finger(std::shared_ptr<Robot<Action, Observation>> robot,
          const double &expected_step_duration_ms = 1.0,
-         const double &step_duration_tolerance_ratio = 2.0,
+         const double &step_duration_tolerance_ratio = 5.0,
          const bool &is_realtime = true)
       : robot_(robot), expected_step_duration_ms_(expected_step_duration_ms),
         step_duration_tolerance_ratio_(step_duration_tolerance_ratio),
@@ -231,10 +233,20 @@ private:
     return nullptr;
   }
   void loop() {
+    real_time_tools::set_cpu_dma_latency(0);
+
+    real_time_tools::Timer timer;
+
     // TODO: there is a slight problem here: this thread
     // may start running before child class is created, and
     // hence attempt to call nonexistant function.
     for (TimeIndex t = 0; true; t++) {
+
+        // todo: figure out latency stuff!! open /dev/cpu_dma_latency: Permission denied
+    //   if (t % 1000 == 0) {
+    //     timer.print_statistics();
+    //   }
+
       if (destructor_was_called_ == true) {
         return;
       }
@@ -258,7 +270,9 @@ private:
 
       // data_.applied_action->append(constrain_action();
 
+      timer.tic();
       apply_action((*data_.applied_action)[t]);
+      timer.tac();
 
       if (t >= 1) {
         check_timing(data_.observation->timestamp_ms(t) -
@@ -293,7 +307,7 @@ private:
   }
 
 protected:
-// todo: this function should go away
+  // todo: this function should go away
   virtual Action compute_applied_action(const Action &desired_action,
                                         const Observation &observation) {
     return desired_action;
