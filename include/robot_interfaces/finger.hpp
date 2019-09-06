@@ -39,8 +39,9 @@ namespace robot_interfaces {
 // observ_1 -> observ_2 ...
 
 template <typename Action, typename Observation> class Robot {
-  virtual Action apply_action(Action desired_action) = 0;
-  virtual Observation get_observation() = 0;
+  /// todo: this should return the actually applied action
+  virtual void apply_action(const Action& desired_action) = 0;
+  virtual Observation get_latest_observation() = 0;
 };
 
 template <typename Action, typename Observation, typename Status>
@@ -83,7 +84,7 @@ public:
     bool received_action;
   };
 
-  RobotServer(Robot<Action, Observation> robot,
+  RobotServer(std::shared_ptr<Robot<Action, Observation>> robot,
               RobotData<Action, Observation, Status> robot_data,
               const double &expected_step_duration_ms = 1.0,
               const double &step_duration_tolerance_ratio = 2.0,
@@ -102,7 +103,7 @@ public:
   }
 
 private:
-  Robot<Action, Observation> robot_;
+  std::shared_ptr<Robot<Action, Observation>> robot_;
   RobotData<Action, Observation, Status> robot_data_;
   bool destructor_was_called_;
 
@@ -144,9 +145,8 @@ public:
     Vector torque;
   };
 
-  struct Status
-  {
-      bool bla;
+  struct Status {
+    bool bla;
   };
 
   /// TODO: remove default values!!!
@@ -168,7 +168,9 @@ public:
     thread_->join();
   }
 
-  Observation get_observation(const TimeIndex &t) { return (*data_.observation)[t]; }
+  Observation get_observation(const TimeIndex &t) {
+    return (*data_.observation)[t];
+  }
   Action get_desired_action(const TimeIndex &t) {
     return (*data_.desired_action)[t];
   }
@@ -191,7 +193,9 @@ public:
   void wait_until_time_index(const TimeIndex &t) {
     data_.observation->timestamp_ms(t);
   }
-  TimeIndex current_time_index() { return data_.observation->newest_timeindex(); }
+  TimeIndex current_time_index() {
+    return data_.observation->newest_timeindex();
+  }
   void pause() {
     is_paused_ = true;
     data_.desired_action->append(Action::Zero());
@@ -206,8 +210,6 @@ protected:
   std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 
 private:
-
-
   RobotData<Action, Observation, Status> data_;
 
   bool is_paused_;
