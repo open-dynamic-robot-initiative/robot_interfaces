@@ -37,6 +37,91 @@ namespace robot_interfaces {
 //          / \
 //         /   V
 // observ_1 -> observ_2 ...
+
+template <typename Action, typename Observation> class Robot {
+  virtual Action apply_action(Action desired_action) = 0;
+  virtual Observation get_observation() = 0;
+};
+
+template <typename Action, typename Observation, typename Status>
+class RobotData {
+public:
+  template <typename Type>
+  using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
+  template <typename Type> using Ptr = std::shared_ptr<Type>;
+
+  RobotData(size_t history_length = 1000, bool use_shared_memory = false,
+            std::string shared_memory_address = "") {
+    if (use_shared_memory) {
+      std::cout << "shared memory robot data is not implemented yet"
+                << std::endl;
+      exit(-1);
+
+      // todo: here we should check if the shared memory at that
+      // address already exists, otherwise we create it.
+      // we will also have to update timeseries such as to handle serialization
+      // internally (it will simply assume that the templated class has a
+      // method called serialize() and from_serialized())
+    } else {
+      desired_action = std::make_shared<Timeseries<Action>>(history_length);
+      applied_action = std::make_shared<Timeseries<Action>>(history_length);
+      observation = std::make_shared<Timeseries<Observation>>(history_length);
+      status = std::make_shared<Timeseries<Status>>(history_length);
+    }
+  }
+
+public:
+  Ptr<Timeseries<Action>> desired_action;
+  Ptr<Timeseries<Action>> applied_action;
+  Ptr<Timeseries<Observation>> observation;
+  Ptr<Timeseries<Status>> status;
+};
+
+template <typename Action, typename Observation> class RobotServer {
+public:
+  struct Status {
+    bool received_action;
+  };
+
+  RobotServer(Robot<Action, Observation> robot,
+              RobotData<Action, Observation, Status> robot_data,
+              const double &expected_step_duration_ms = 1.0,
+              const double &step_duration_tolerance_ratio = 2.0,
+              const bool &is_realtime = true)
+      : robot_(robot), robot_data_(robot_data), destructor_was_called_(false),
+        expected_step_duration_ms_(expected_step_duration_ms),
+        step_duration_tolerance_ratio_(step_duration_tolerance_ratio),
+        is_realtime_(is_realtime) {
+    thread_ = std::make_shared<real_time_tools::RealTimeThread>();
+    thread_->create_realtime_thread(&RobotServer::loop, this);
+  }
+
+  virtual ~RobotServer() {
+    destructor_was_called_ = true;
+    thread_->join();
+  }
+
+private:
+  Robot<Action, Observation> robot_;
+  RobotData<Action, Observation, Status> robot_data_;
+  bool destructor_was_called_;
+
+  /// todo: i think we can parametrize this a bit more elegantly
+  double expected_step_duration_ms_;
+  double step_duration_tolerance_ratio_;
+  bool is_realtime_;
+
+  std::shared_ptr<real_time_tools::RealTimeThread> thread_;
+
+  // control loop ------------------------------------------------------------
+  static void *loop(void *instance_pointer) {
+    ((RobotServer *)(instance_pointer))->loop();
+    return nullptr;
+  }
+
+  void loop() {}
+};
+
 class Finger {
 public:
   enum JointIndexing { base, center, tip, joint_count };
@@ -70,7 +155,7 @@ public:
 
     size_t history_length = 1000;
     desired_action_ = std::make_shared<Timeseries<Action>>(history_length);
-    safe_action_ = std::make_shared<Timeseries<Action>>(history_length);
+    applied_action_ = std::make_shared<Timeseries<Action>>(history_length);
     observation_ = std::make_shared<Timeseries<Observation>>(history_length);
 
     thread_ = std::make_shared<real_time_tools::RealTimeThread>();
@@ -87,7 +172,9 @@ public:
   Action get_desired_action(const TimeIndex &t) {
     return (*desired_action_)[t];
   }
-  Action get_safe_action(const TimeIndex &t) { return (*safe_action_)[t]; }
+  Action get_applied_action(const TimeIndex &t) {
+    return (*applied_action_)[t];
+  }
   TimeStamp get_time_stamp_ms(const TimeIndex &t) {
     return observation_->timestamp_ms(t);
   }
@@ -120,7 +207,7 @@ protected:
 
 private:
   std::shared_ptr<Timeseries<Action>> desired_action_;
-  std::shared_ptr<Timeseries<Action>> safe_action_;
+  std::shared_ptr<Timeseries<Action>> applied_action_;
   std::shared_ptr<Timeseries<Observation>> observation_;
 
   bool is_paused_;
@@ -155,13 +242,14 @@ private:
 
       Action desired_action = (*desired_action_)[t];
       Observation observation = get_latest_observation();
-      Action safe_action = compute_safe_action(desired_action, observation);
-      safe_action_->append(safe_action);
+      Action applied_action =
+          compute_applied_action(desired_action, observation);
+      applied_action_->append(applied_action);
       observation_->append(observation);
 
-      // safe_action_->append(constrain_action();
+      // applied_action_->append(constrain_action();
 
-      apply_action((*safe_action_)[t]);
+      apply_action((*applied_action_)[t]);
 
       if (t >= 1) {
         check_timing(observation_->timestamp_ms(t) -
@@ -169,7 +257,8 @@ private:
       }
     }
 
-    // TODO: we have to make sure this loop exits properly at destruction time!!
+    // TODO: we have to make sure this loop exits properly at destruction
+    // time!!
   }
 
   // helper functions --------------------------------------------------------
@@ -195,16 +284,16 @@ private:
   }
 
 protected:
-  virtual Action compute_safe_action(const Action &desired_action,
-                                     const Observation &observation) {
+  virtual Action compute_applied_action(const Action &desired_action,
+                                        const Observation &observation) {
     // Vector kd(0.04, 0.08, 0.02);
 
     Vector kd(0.08, 0.08, 0.04);
     double max_torque = 0.36;
-    Action safe_action = mct::clamp(desired_action, -max_torque, max_torque);
-    safe_action = safe_action - kd.cwiseProduct(observation.velocity);
-    safe_action = mct::clamp(safe_action, -max_torque, max_torque);
-    return safe_action;
+    Action applied_action = mct::clamp(desired_action, -max_torque, max_torque);
+    applied_action = applied_action - kd.cwiseProduct(observation.velocity);
+    applied_action = mct::clamp(applied_action, -max_torque, max_torque);
+    return applied_action;
   }
   // todo: this should go away
   double max_torque_;
