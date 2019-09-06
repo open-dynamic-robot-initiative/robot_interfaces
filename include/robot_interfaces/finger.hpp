@@ -144,6 +144,11 @@ public:
     Vector torque;
   };
 
+  struct Status
+  {
+      bool bla;
+  };
+
   /// TODO: remove default values!!!
   Finger(const double &expected_step_duration_ms = 1.0,
          const double &step_duration_tolerance_ratio = 2.0,
@@ -152,11 +157,6 @@ public:
         step_duration_tolerance_ratio_(step_duration_tolerance_ratio),
         is_realtime_(is_realtime), is_paused_(false),
         destructor_was_called_(false) {
-
-    size_t history_length = 1000;
-    desired_action_ = std::make_shared<Timeseries<Action>>(history_length);
-    applied_action_ = std::make_shared<Timeseries<Action>>(history_length);
-    observation_ = std::make_shared<Timeseries<Observation>>(history_length);
 
     thread_ = std::make_shared<real_time_tools::RealTimeThread>();
     thread_->create_realtime_thread(&Finger::loop, this);
@@ -168,15 +168,15 @@ public:
     thread_->join();
   }
 
-  Observation get_observation(const TimeIndex &t) { return (*observation_)[t]; }
+  Observation get_observation(const TimeIndex &t) { return (*data_.observation)[t]; }
   Action get_desired_action(const TimeIndex &t) {
-    return (*desired_action_)[t];
+    return (*data_.desired_action)[t];
   }
   Action get_applied_action(const TimeIndex &t) {
-    return (*applied_action_)[t];
+    return (*data_.applied_action)[t];
   }
   TimeStamp get_time_stamp_ms(const TimeIndex &t) {
-    return observation_->timestamp_ms(t);
+    return data_.observation->timestamp_ms(t);
   }
 
   TimeIndex append_desired_action(const Action &desired_action) {
@@ -184,17 +184,17 @@ public:
     // that we do not have enough history containing all actions to
     // be applied.
     is_paused_ = false;
-    desired_action_->append(desired_action);
-    return desired_action_->newest_timeindex();
+    data_.desired_action->append(desired_action);
+    return data_.desired_action->newest_timeindex();
   }
 
   void wait_until_time_index(const TimeIndex &t) {
-    observation_->timestamp_ms(t);
+    data_.observation->timestamp_ms(t);
   }
-  TimeIndex current_time_index() { return observation_->newest_timeindex(); }
+  TimeIndex current_time_index() { return data_.observation->newest_timeindex(); }
   void pause() {
     is_paused_ = true;
-    desired_action_->append(Action::Zero());
+    data_.desired_action->append(Action::Zero());
   }
 
 protected:
@@ -206,9 +206,9 @@ protected:
   std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 
 private:
-  std::shared_ptr<Timeseries<Action>> desired_action_;
-  std::shared_ptr<Timeseries<Action>> applied_action_;
-  std::shared_ptr<Timeseries<Observation>> observation_;
+
+
+  RobotData<Action, Observation, Status> data_;
 
   bool is_paused_;
 
@@ -230,30 +230,30 @@ private:
         return;
       }
 
-      if (is_realtime_ && (desired_action_->length() == 0 ||
-                           desired_action_->newest_timeindex() < t)) {
-        if (is_paused_ || desired_action_->length() == 0) {
-          desired_action_->append(Action::Zero());
+      if (is_realtime_ && (data_.desired_action->length() == 0 ||
+                           data_.desired_action->newest_timeindex() < t)) {
+        if (is_paused_ || data_.desired_action->length() == 0) {
+          data_.desired_action->append(Action::Zero());
         } else {
           /// TODO: we should somehow log if a set has been missed
-          desired_action_->append(desired_action_->newest_element());
+          data_.desired_action->append(data_.desired_action->newest_element());
         }
       }
 
-      Action desired_action = (*desired_action_)[t];
+      Action desired_action = (*data_.desired_action)[t];
       Observation observation = get_latest_observation();
       Action applied_action =
           compute_applied_action(desired_action, observation);
-      applied_action_->append(applied_action);
-      observation_->append(observation);
+      data_.applied_action->append(applied_action);
+      data_.observation->append(observation);
 
-      // applied_action_->append(constrain_action();
+      // data_.applied_action->append(constrain_action();
 
-      apply_action((*applied_action_)[t]);
+      apply_action((*data_.applied_action)[t]);
 
       if (t >= 1) {
-        check_timing(observation_->timestamp_ms(t) -
-                     observation_->timestamp_ms(t - 1));
+        check_timing(data_.observation->timestamp_ms(t) -
+                     data_.observation->timestamp_ms(t - 1));
       }
     }
 
