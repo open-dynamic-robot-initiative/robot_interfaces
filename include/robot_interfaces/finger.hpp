@@ -90,11 +90,14 @@ public:
     bool received_action;
   };
 
+  typedef long unsigned
+      TimeIndex; // \TODO this should be defined based on timeseries
+
   RobotServer(std::shared_ptr<Robot<Action, Observation>> robot,
               RobotData<Action, Observation, Status> robot_data,
-              const double &expected_step_duration_ms = 1.0,
-              const double &step_duration_tolerance_ratio = 2.0,
-              const bool &is_realtime = true)
+              const double &expected_step_duration_ms,
+              const double &step_duration_tolerance_ratio,
+              const bool &is_realtime)
       : robot_(robot), robot_data_(robot_data), destructor_was_called_(false),
         expected_step_duration_ms_(expected_step_duration_ms),
         step_duration_tolerance_ratio_(step_duration_tolerance_ratio),
@@ -127,99 +130,6 @@ private:
     return nullptr;
   }
 
-  void loop() {}
-};
-
-class Finger {
-public:
-  enum JointIndexing { base, center, tip, joint_count };
-
-  template <typename Type>
-  using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
-
-  typedef Timeseries<int>::Index TimeIndex; // \TODO this is not quite clean
-                                            // because we should not have to
-                                            // specify a type here.
-  typedef Timeseries<int>::Timestamp TimeStamp;
-
-  typedef Eigen::Vector3d Vector;
-
-  typedef Eigen::Vector3d Action;
-
-  struct Observation {
-    Vector angle;
-    Vector velocity;
-    Vector torque;
-  };
-
-  struct Status {
-    bool bla;
-  };
-
-  /// TODO: remove default values!!!
-  Finger(std::shared_ptr<Robot<Action, Observation>> robot,
-         const double &expected_step_duration_ms = 1.0,
-         const double &step_duration_tolerance_ratio = 5.0,
-         const bool &is_realtime = true)
-      : robot_(robot), expected_step_duration_ms_(expected_step_duration_ms),
-        step_duration_tolerance_ratio_(step_duration_tolerance_ratio),
-        is_realtime_(is_realtime), destructor_was_called_(false) {
-
-    thread_ = std::make_shared<real_time_tools::RealTimeThread>();
-    thread_->create_realtime_thread(&Finger::loop, this);
-  }
-
-  virtual ~Finger() {
-    // std::cout << "desctructor called" << std::endl;
-    destructor_was_called_ = true;
-    thread_->join();
-  }
-
-  Observation get_observation(const TimeIndex &t) {
-    return (*data_.observation)[t];
-  }
-  Action get_desired_action(const TimeIndex &t) {
-    return (*data_.desired_action)[t];
-  }
-  Action get_applied_action(const TimeIndex &t) {
-    return (*data_.applied_action)[t];
-  }
-  TimeStamp get_time_stamp_ms(const TimeIndex &t) {
-    return data_.observation->timestamp_ms(t);
-  }
-
-  TimeIndex append_desired_action(const Action &desired_action) {
-    // TODO: we should make sure not so many actions are appended
-    // that we do not have enough history containing all actions to
-    // be applied.
-    data_.desired_action->append(desired_action);
-    return data_.desired_action->newest_timeindex();
-  }
-
-  void wait_until_time_index(const TimeIndex &t) {
-    data_.observation->timestamp_ms(t);
-  }
-  TimeIndex current_time_index() {
-    return data_.observation->newest_timeindex();
-  }
-
-protected:
-  bool destructor_was_called_;
-  std::shared_ptr<real_time_tools::RealTimeThread> thread_;
-
-private:
-  RobotData<Action, Observation, Status> data_;
-  std::shared_ptr<Robot<Action, Observation>> robot_;
-
-  double expected_step_duration_ms_;
-  double step_duration_tolerance_ratio_;
-  bool is_realtime_;
-
-  // control loop ------------------------------------------------------------
-  static void *loop(void *instance_pointer) {
-    ((Finger *)(instance_pointer))->loop();
-    return nullptr;
-  }
   void loop() {
     real_time_tools::set_cpu_dma_latency(0);
 
@@ -237,27 +147,29 @@ private:
         return;
       }
 
-      if (is_realtime_ && (data_.desired_action->length() == 0 ||
-                           data_.desired_action->newest_timeindex() < t)) {
-        if (data_.desired_action->length() == 0) {
-          data_.desired_action->append(Action::Zero());
+      if (is_realtime_ &&
+          (robot_data_.desired_action->length() == 0 ||
+           robot_data_.desired_action->newest_timeindex() < t)) {
+        if (robot_data_.desired_action->length() == 0) {
+          robot_data_.desired_action->append(Action::Zero());
         } else {
           /// TODO: we should somehow log if a set has been missed
-          data_.desired_action->append(data_.desired_action->newest_element());
+          robot_data_.desired_action->append(
+              robot_data_.desired_action->newest_element());
         }
       }
 
-      Action desired_action = (*data_.desired_action)[t];
-      data_.observation->append(robot_->get_latest_observation());
+      Action desired_action = (*robot_data_.desired_action)[t];
+      robot_data_.observation->append(robot_->get_latest_observation());
 
       timer.tic();
       Action applied_action = robot_->apply_action(desired_action);
       timer.tac();
-      data_.applied_action->append(applied_action);
+      robot_data_.applied_action->append(applied_action);
 
       if (t >= 1) {
-        check_timing(data_.observation->timestamp_ms(t) -
-                     data_.observation->timestamp_ms(t - 1));
+        check_timing(robot_data_.observation->timestamp_ms(t) -
+                     robot_data_.observation->timestamp_ms(t - 1));
       }
     }
   }
@@ -283,6 +195,74 @@ private:
       throw std::runtime_error(oss.str());
     }
   }
+};
+
+class Finger {
+public:
+  enum JointIndexing { base, center, tip, joint_count };
+
+  template <typename Type>
+  using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
+
+  typedef Timeseries<int>::Index TimeIndex; // \TODO this is not quite clean
+                                            // because we should not have to
+                                            // specify a type here.
+  typedef Timeseries<int>::Timestamp TimeStamp;
+
+  typedef Eigen::Vector3d Vector;
+
+  typedef Eigen::Vector3d Action;
+
+  struct Observation {
+    Vector angle;
+    Vector velocity;
+    Vector torque;
+  };
+
+  typedef RobotServer<Action, Observation>::Status Status;
+
+  /// TODO: remove default values!!!
+  Finger(std::shared_ptr<Robot<Action, Observation>> robot,
+         const double &expected_step_duration_ms = 1.0,
+         const double &step_duration_tolerance_ratio = 5.0,
+         const bool &is_realtime = true) {
+
+    robot_server_ = std::make_shared<RobotServer<Action, Observation>>(
+        robot, robot_data_, expected_step_duration_ms,
+        step_duration_tolerance_ratio, is_realtime);
+  }
+
+  Observation get_observation(const TimeIndex &t) {
+    return (*robot_data_.observation)[t];
+  }
+  Action get_desired_action(const TimeIndex &t) {
+    return (*robot_data_.desired_action)[t];
+  }
+  Action get_applied_action(const TimeIndex &t) {
+    return (*robot_data_.applied_action)[t];
+  }
+  TimeStamp get_time_stamp_ms(const TimeIndex &t) {
+    return robot_data_.observation->timestamp_ms(t);
+  }
+
+  TimeIndex append_desired_action(const Action &desired_action) {
+    // TODO: we should make sure not so many actions are appended
+    // that we do not have enough history containing all actions to
+    // be applied.
+    robot_data_.desired_action->append(desired_action);
+    return robot_data_.desired_action->newest_timeindex();
+  }
+
+  void wait_until_time_index(const TimeIndex &t) {
+    robot_data_.observation->timestamp_ms(t);
+  }
+  TimeIndex current_time_index() {
+    return robot_data_.observation->newest_timeindex();
+  }
+
+private:
+  RobotData<Action, Observation, Status> robot_data_;
+  std::shared_ptr<RobotServer<Action, Observation>> robot_server_;
 };
 
 } // namespace robot_interfaces
