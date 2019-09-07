@@ -193,16 +193,11 @@ public:
 
   template <typename Type>
   using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
-
-  typedef Timeseries<int>::Index TimeIndex; // \TODO this is not quite clean
-                                            // because we should not have to
-                                            // specify a type here.
+  typedef Timeseries<int>::Index TimeIndex;
   typedef Timeseries<int>::Timestamp TimeStamp;
 
   typedef Eigen::Vector3d Vector;
-
-  typedef Eigen::Vector3d Action;
-
+  typedef Vector Action;
   struct Observation {
     Vector angle;
     Vector velocity;
