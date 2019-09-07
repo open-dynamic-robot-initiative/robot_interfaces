@@ -206,14 +206,6 @@ public:
   }
 
 protected:
-  virtual Observation get_latest_observation() {
-    return robot_->get_latest_observation();
-  }
-
-protected:
-  virtual void apply_action(const Action &action) {
-    robot_->apply_action(action);
-  }
   bool destructor_was_called_;
   std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 
@@ -242,10 +234,11 @@ private:
     // hence attempt to call nonexistant function.
     for (TimeIndex t = 0; true; t++) {
 
-        // todo: figure out latency stuff!! open /dev/cpu_dma_latency: Permission denied
-    //   if (t % 1000 == 0) {
-    //     timer.print_statistics();
-    //   }
+      // todo: figure out latency stuff!! open /dev/cpu_dma_latency: Permission
+      // denied
+      //   if (t % 1000 == 0) {
+      //     timer.print_statistics();
+      //   }
 
       if (destructor_was_called_ == true) {
         return;
@@ -262,7 +255,7 @@ private:
       }
 
       Action desired_action = (*data_.desired_action)[t];
-      Observation observation = get_latest_observation();
+      Observation observation = robot_->get_latest_observation();
       Action applied_action =
           compute_applied_action(desired_action, observation);
       data_.applied_action->append(applied_action);
@@ -271,7 +264,7 @@ private:
       // data_.applied_action->append(constrain_action();
 
       timer.tic();
-      apply_action((*data_.applied_action)[t]);
+      robot_->apply_action((*data_.applied_action)[t]);
       timer.tac();
 
       if (t >= 1) {
@@ -311,14 +304,6 @@ protected:
   virtual Action compute_applied_action(const Action &desired_action,
                                         const Observation &observation) {
     return desired_action;
-    // Vector kd(0.04, 0.08, 0.02);
-
-    Vector kd(0.08, 0.08, 0.04);
-    double max_torque = 0.36;
-    Action applied_action = mct::clamp(desired_action, -max_torque, max_torque);
-    applied_action = applied_action - kd.cwiseProduct(observation.velocity);
-    applied_action = mct::clamp(applied_action, -max_torque, max_torque);
-    return applied_action;
   }
   // todo: this should go away
   double max_torque_;
