@@ -41,8 +41,9 @@ namespace robot_interfaces {
 
 template <typename Action, typename Observation> class Robot {
   /// todo: this should return the actually applied action
+  /// todo: we should probably have an initialize function here.
 public:
-  virtual void apply_action(const Action &desired_action) = 0;
+  virtual Action apply_action(const Action &desired_action) = 0;
   virtual Observation get_latest_observation() = 0;
 };
 
@@ -255,17 +256,12 @@ private:
       }
 
       Action desired_action = (*data_.desired_action)[t];
-      Observation observation = robot_->get_latest_observation();
-      Action applied_action =
-          compute_applied_action(desired_action, observation);
-      data_.applied_action->append(applied_action);
-      data_.observation->append(observation);
-
-      // data_.applied_action->append(constrain_action();
+      data_.observation->append(robot_->get_latest_observation());
 
       timer.tic();
-      robot_->apply_action((*data_.applied_action)[t]);
+      Action applied_action = robot_->apply_action(desired_action);
       timer.tac();
+      data_.applied_action->append(applied_action);
 
       if (t >= 1) {
         check_timing(data_.observation->timestamp_ms(t) -
@@ -298,18 +294,6 @@ private:
       throw std::runtime_error(oss.str());
     }
   }
-
-protected:
-  // todo: this function should go away
-  virtual Action compute_applied_action(const Action &desired_action,
-                                        const Observation &observation) {
-    return desired_action;
-  }
-  // todo: this should go away
-  double max_torque_;
-
-public:
-  Vector get_max_torques() const { return max_torque_ * Vector::Ones(); }
 };
 
 } // namespace robot_interfaces
