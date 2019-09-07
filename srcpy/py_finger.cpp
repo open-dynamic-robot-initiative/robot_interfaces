@@ -34,10 +34,10 @@ PYBIND11_MODULE(py_finger, m)
     pybind11::class_<Finger, std::shared_ptr<Finger>>(m, "Finger")
         .def("get_observation", &Finger::get_observation)
         .def("get_desired_action", &Finger::get_desired_action)
-        .def("get_safe_action", &Finger::get_applied_action)
+        .def("get_applied_action", &Finger::get_applied_action)
         .def("get_time_stamp_ms", &Finger::get_time_stamp_ms)
         .def("append_desired_action", &Finger::append_desired_action)
-        .def("wait_until_time_index", &Finger::wait_until_time_index)
-        .def("current_time_index", &Finger::current_time_index);
+        .def("wait_until_time_index", &Finger::wait_until_timeindex)
+        .def("get_current_time_index", &Finger::get_current_timeindex);
 
 }

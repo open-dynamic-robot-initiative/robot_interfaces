@@ -31,14 +31,6 @@ namespace robot_interfaces {
 // s                   s                   s
 // 0                   1                   2
 
-// action_1 -> action_2 ...
-//         \   A
-//          \ /
-//           X
-//          / \
-//         /   V
-// observ_1 -> observ_2 ...
-
 template <typename Action, typename Observation> class Robot {
   /// todo: this should return the actually applied action
   /// todo: we should probably have an initialize function here.
@@ -55,6 +47,9 @@ class RobotData {
 public:
   template <typename Type>
   using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
+  typedef Timeseries<int>::Index TimeIndex; // \TODO this is not quite clean
+                                            // because we should not have to
+                                            // specify a type here.
   template <typename Type> using Ptr = std::shared_ptr<Type>;
 
   RobotData(size_t history_length = 1000, bool use_shared_memory = false,
@@ -135,17 +130,14 @@ private:
 
     real_time_tools::Timer timer;
 
-    for (TimeIndex t = 0; true; t++) {
+    for (TimeIndex t = 0; !destructor_was_called_; t++) {
 
       // todo: figure out latency stuff!! open /dev/cpu_dma_latency: Permission
       // denied
       //   if (t % 1000 == 0) {
       //     timer.print_statistics();
       //   }
-
-      if (destructor_was_called_ == true) {
-        return;
-      }
+      robot_data_.observation->append(robot_->get_latest_observation());
 
       if (is_realtime_ &&
           (robot_data_.desired_action->length() == 0 ||
@@ -160,8 +152,6 @@ private:
       }
 
       Action desired_action = (*robot_data_.desired_action)[t];
-      robot_data_.observation->append(robot_->get_latest_observation());
-
       timer.tic();
       Action applied_action = robot_->apply_action(desired_action);
       timer.tac();
@@ -244,20 +234,27 @@ public:
   TimeStamp get_time_stamp_ms(const TimeIndex &t) {
     return robot_data_.observation->timestamp_ms(t);
   }
+  TimeIndex get_current_timeindex() {
+    return robot_data_.observation->newest_timeindex();
+  }
 
   TimeIndex append_desired_action(const Action &desired_action) {
-    // TODO: we should make sure not so many actions are appended
-    // that we do not have enough history containing all actions to
-    // be applied.
+    if (robot_data_.desired_action->length() ==
+            robot_data_.desired_action->max_length() &&
+        robot_data_.desired_action->oldest_timeindex() ==
+            get_current_timeindex()) {
+      std::cout << "you have been appending actions too fast, waiting for "
+                   "RobotServer to catch up with executing actions."
+                << std::endl;
+      wait_until_timeindex(robot_data_.desired_action->oldest_timeindex() + 1);
+    }
+
     robot_data_.desired_action->append(desired_action);
     return robot_data_.desired_action->newest_timeindex();
   }
 
-  void wait_until_time_index(const TimeIndex &t) {
+  void wait_until_timeindex(const TimeIndex &t) {
     robot_data_.observation->timestamp_ms(t);
-  }
-  TimeIndex current_time_index() {
-    return robot_data_.observation->newest_timeindex();
   }
 
 private:
