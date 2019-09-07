@@ -38,7 +38,6 @@ PYBIND11_MODULE(py_finger, m)
         .def("get_time_stamp_ms", &Finger::get_time_stamp_ms)
         .def("append_desired_action", &Finger::append_desired_action)
         .def("wait_until_time_index", &Finger::wait_until_time_index)
-        .def("current_time_index", &Finger::current_time_index)
-        .def("pause", &Finger::pause);
+        .def("current_time_index", &Finger::current_time_index);
 
 }

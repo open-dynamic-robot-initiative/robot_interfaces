@@ -43,6 +43,9 @@ template <typename Action, typename Observation> class Robot {
   /// todo: this should return the actually applied action
   /// todo: we should probably have an initialize function here.
 public:
+  // virtual void start() = 0;
+  // virtual void restart / initialize
+  // virtual void stop() = 0;
   virtual Action apply_action(const Action &desired_action) = 0;
   virtual Observation get_latest_observation() = 0;
 };
@@ -160,8 +163,7 @@ public:
          const bool &is_realtime = true)
       : robot_(robot), expected_step_duration_ms_(expected_step_duration_ms),
         step_duration_tolerance_ratio_(step_duration_tolerance_ratio),
-        is_realtime_(is_realtime), is_paused_(false),
-        destructor_was_called_(false) {
+        is_realtime_(is_realtime), destructor_was_called_(false) {
 
     thread_ = std::make_shared<real_time_tools::RealTimeThread>();
     thread_->create_realtime_thread(&Finger::loop, this);
@@ -190,7 +192,6 @@ public:
     // TODO: we should make sure not so many actions are appended
     // that we do not have enough history containing all actions to
     // be applied.
-    is_paused_ = false;
     data_.desired_action->append(desired_action);
     return data_.desired_action->newest_timeindex();
   }
@@ -201,10 +202,6 @@ public:
   TimeIndex current_time_index() {
     return data_.observation->newest_timeindex();
   }
-  void pause() {
-    is_paused_ = true;
-    data_.desired_action->append(Action::Zero());
-  }
 
 protected:
   bool destructor_was_called_;
@@ -213,8 +210,6 @@ protected:
 private:
   RobotData<Action, Observation, Status> data_;
   std::shared_ptr<Robot<Action, Observation>> robot_;
-
-  bool is_paused_;
 
   double expected_step_duration_ms_;
   double step_duration_tolerance_ratio_;
@@ -230,9 +225,6 @@ private:
 
     real_time_tools::Timer timer;
 
-    // TODO: there is a slight problem here: this thread
-    // may start running before child class is created, and
-    // hence attempt to call nonexistant function.
     for (TimeIndex t = 0; true; t++) {
 
       // todo: figure out latency stuff!! open /dev/cpu_dma_latency: Permission
@@ -247,7 +239,7 @@ private:
 
       if (is_realtime_ && (data_.desired_action->length() == 0 ||
                            data_.desired_action->newest_timeindex() < t)) {
-        if (is_paused_ || data_.desired_action->length() == 0) {
+        if (data_.desired_action->length() == 0) {
           data_.desired_action->append(Action::Zero());
         } else {
           /// TODO: we should somehow log if a set has been missed
@@ -268,9 +260,6 @@ private:
                      data_.observation->timestamp_ms(t - 1));
       }
     }
-
-    // TODO: we have to make sure this loop exits properly at destruction
-    // time!!
   }
 
   // helper functions --------------------------------------------------------
