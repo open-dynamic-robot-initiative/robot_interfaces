@@ -32,22 +32,97 @@ namespace robot_interfaces {
 // 0                   1                   2
 
 template <typename Action, typename Observation> class Robot {
+public:
+  Robot(const double &max_action_duration_s,
+        const double &max_inter_action_duration_s)
+      : max_action_duration_s_(max_action_duration_s),
+        max_inter_action_duration_s_(max_inter_action_duration_s),
+        is_shutdown_(false), action_start_logger_(1000),
+        action_end_logger_(1000) {
+    thread_ = std::make_shared<real_time_tools::RealTimeThread>();
+    thread_->create_realtime_thread(&Robot::loop, this);
+  }
+
+  ~Robot() {
+    shutdown_and_stop_thread();
+    thread_->join();
+  }
+
+  double get_max_inter_action_duration_s() {
+    return max_inter_action_duration_s_;
+  }
+
+  virtual Action
+  apply_action_and_check_timing(const Action &desired_action) final {
+    if (is_shutdown_) {
+      std::cout << "you tried to apply action, but robot has been shut down"
+                << std::endl;
+      return desired_action;
+    }
+    action_start_logger_.append(true);
+    Action applied_action = apply_action(desired_action);
+    action_end_logger_.append(true);
+    return applied_action;
+  }
+
+protected:
+  virtual Action apply_action(const Action &desired_action) = 0;
 
 public:
-  Robot(const double &max_control_rate_s)
-      : max_control_rate_s_(max_control_rate_s) {}
-  // make singleton?
-  // maybe we should somehow make sure inside of this class that the rate is
-  // satisfied
-  virtual void give_control() = 0;
-  virtual void take_control() = 0;
-  virtual Action apply_action(const Action &desired_action) = 0;
   virtual Observation get_latest_observation() = 0;
 
-  virtual double get_max_control_rate_s() final { return max_control_rate_s_; }
+protected:
+  virtual void shutdown_and_stop_thread() final {
+    if (!is_shutdown_) {
+      is_shutdown_ = true;
+      shutdown();
+    }
+  }
+  virtual void shutdown() = 0;
 
 private:
-  double max_control_rate_s_;
+  void loop() {
+    real_time_tools::set_cpu_dma_latency(0);
+
+    while (!is_shutdown_ && !action_start_logger_.wait_for_timeindex(0, 0.1)) {
+    }
+
+    for (size_t t = 0; !is_shutdown_; t++) {
+      bool action_has_ended_on_time =
+          action_end_logger_.wait_for_timeindex(t, max_action_duration_s_);
+      if (!action_has_ended_on_time) {
+        std::cout << "action did not end on time, shutting down." << std::endl;
+        exit(-1); // temp
+        shutdown_and_stop_thread();
+        return;
+      }
+
+      bool action_has_started_on_time = action_start_logger_.wait_for_timeindex(
+          t + 1, max_inter_action_duration_s_);
+      if (!action_has_started_on_time) {
+        std::cout << "action did not start on time, shutting down."
+                  << std::endl;
+        exit(-1); // temp
+        shutdown_and_stop_thread();
+        return;
+      }
+    }
+  }
+  static void *loop(void *instance_pointer) {
+    ((Robot *)(instance_pointer))->loop();
+    return nullptr;
+  }
+
+private:
+  double max_action_duration_s_;
+  double max_inter_action_duration_s_;
+
+  bool is_shutdown_; // todo: should be atomic
+
+  real_time_tools::ThreadsafeTimeseries<bool> action_start_logger_;
+  real_time_tools::ThreadsafeTimeseries<bool> action_end_logger_;
+
+  std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 };
 
 template <typename Action, typename Observation, typename Status>
@@ -92,20 +167,10 @@ public:
   struct Status {
     bool received_action;
   };
-
-  typedef long unsigned
-      TimeIndex; // \TODO this should be defined based on timeseries
-
+  // add parameter: n_max_repeat_of_same_action
   RobotServer(std::shared_ptr<Robot<Action, Observation>> robot,
-              RobotData<Action, Observation, Status> robot_data,
-              const double &expected_step_duration_ms,
-              const double &step_duration_tolerance_ratio,
-              const bool &is_realtime)
-      : robot_(robot), robot_data_(robot_data), destructor_was_called_(false),
-        expected_step_duration_ms_(expected_step_duration_ms),
-        step_duration_tolerance_ratio_(step_duration_tolerance_ratio),
-        is_realtime_(is_realtime) {
-
+              RobotData<Action, Observation, Status> robot_data)
+      : robot_(robot), robot_data_(robot_data), destructor_was_called_(false) {
     thread_ = std::make_shared<real_time_tools::RealTimeThread>();
     thread_->create_realtime_thread(&RobotServer::loop, this);
   }
@@ -118,12 +183,9 @@ public:
 private:
   std::shared_ptr<Robot<Action, Observation>> robot_;
   RobotData<Action, Observation, Status> robot_data_;
-  bool destructor_was_called_;
+  bool destructor_was_called_; // should be atomic
 
-  /// todo: i think we can parametrize this a bit more elegantly
-  double expected_step_duration_ms_;
-  double step_duration_tolerance_ratio_;
-  bool is_realtime_;
+  std::vector<real_time_tools::Timer> timers_;
 
   std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 
@@ -132,60 +194,59 @@ private:
     ((RobotServer *)(instance_pointer))->loop();
     return nullptr;
   }
-
   void loop() {
+
+    timers_.resize(10);
     real_time_tools::set_cpu_dma_latency(0);
 
-    real_time_tools::Timer timer;
+    while (!destructor_was_called_ &&
+           !robot_data_.desired_action->wait_for_timeindex(0, 0.1)) {
+    }
 
-    robot_data_.desired_action->wait_for_timeindex(0);
-    robot_->give_control();
-
-    for (TimeIndex t = 0; !destructor_was_called_; t++) {
+    for (long int t = 0; !destructor_was_called_; t++) {
 
       // todo: figure out latency stuff!! open /dev/cpu_dma_latency: Permission
       // denied
-      //   if (t % 1000 == 0) {
-      //     timer.print_statistics();
-      //   }
-      robot_data_.observation->append(robot_->get_latest_observation());
 
-      if (is_realtime_ && robot_data_.desired_action->newest_timeindex() < t) {
+      timers_[0].tac_tic();
+
+      timers_[6].tic();
+      Observation observation = robot_->get_latest_observation();
+      timers_[6].tac();
+
+      timers_[1].tic();
+      robot_data_.observation->append(observation); // todo: for some reason
+                                                    // this smetimes takes more
+                                                    // than 2 ms
+      timers_[1].tac();
+
+      timers_[2].tic();
+      if (std::isfinite(robot_->get_max_inter_action_duration_s()) &&
+          robot_data_.desired_action->newest_timeindex() < t) {
         /// TODO: we should somehow log if a set has been missed
         robot_data_.desired_action->append(
             robot_data_.desired_action->newest_element());
       }
+      timers_[2].tac();
 
+      timers_[3].tic();
       Action desired_action = (*robot_data_.desired_action)[t];
-      timer.tic();
-      Action applied_action = robot_->apply_action(desired_action);
-      timer.tac();
+      timers_[3].tac();
+      timers_[4].tic();
+      Action applied_action =
+          robot_->apply_action_and_check_timing(desired_action);
+      timers_[4].tac();
+      timers_[5].tic();
       robot_data_.applied_action->append(applied_action);
+      timers_[5].tac();
 
-      if (t >= 1) {
-        check_timing(robot_data_.observation->timestamp_ms(t) -
-                     robot_data_.observation->timestamp_ms(t - 1));
-      }
-    }
-  }
-
-  // helper functions --------------------------------------------------------
-  void check_timing(const double &actual_step_duration_ms) {
-    double max_step_duration_ms =
-        expected_step_duration_ms_ * step_duration_tolerance_ratio_;
-    double min_step_duration_ms =
-        expected_step_duration_ms_ / step_duration_tolerance_ratio_;
-
-    if (is_realtime_ && (actual_step_duration_ms > max_step_duration_ms ||
-                         actual_step_duration_ms < min_step_duration_ms)) {
-      std::ostringstream oss;
-      oss << "control loop did not run at expected rate." << std::endl
-          << "expected step duration: " << expected_step_duration_ms_
-          << std::endl
-          << "actual step duration: " << actual_step_duration_ms << std::endl
-          << "tolearance ratio: " << step_duration_tolerance_ratio_
-          << std::endl;
-      throw std::runtime_error(oss.str());
+      // if (t % 5000 == 0) {
+      //   for (size_t i = 0; i < 7; i++) {
+      //     std::cout << i << " --------------------------------------"
+      //               << std::endl;
+      //     timers_[i].print_statistics();
+      //   }
+      // }
     }
   }
 };
@@ -215,9 +276,8 @@ public:
          const double &step_duration_tolerance_ratio = 5.0,
          const bool &is_realtime = true) {
 
-    robot_server_ = std::make_shared<RobotServer<Action, Observation>>(
-        robot, robot_data_, expected_step_duration_ms,
-        step_duration_tolerance_ratio, is_realtime);
+    robot_server_ =
+        std::make_shared<RobotServer<Action, Observation>>(robot, robot_data_);
   }
 
   Observation get_observation(const TimeIndex &t) {
