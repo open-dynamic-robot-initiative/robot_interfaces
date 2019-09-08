@@ -32,14 +32,22 @@ namespace robot_interfaces {
 // 0                   1                   2
 
 template <typename Action, typename Observation> class Robot {
-  /// todo: this should return the actually applied action
-  /// todo: we should probably have an initialize function here.
+
 public:
-  // virtual void start() = 0;
-  // virtual void restart / initialize
-  // virtual void stop() = 0;
+  Robot(const double &max_control_rate_s)
+      : max_control_rate_s_(max_control_rate_s) {}
+  // make singleton?
+  // maybe we should somehow make sure inside of this class that the rate is
+  // satisfied
+  virtual void give_control() = 0;
+  virtual void take_control() = 0;
   virtual Action apply_action(const Action &desired_action) = 0;
   virtual Observation get_latest_observation() = 0;
+
+  virtual double get_max_control_rate_s() final { return max_control_rate_s_; }
+
+private:
+  double max_control_rate_s_;
 };
 
 template <typename Action, typename Observation, typename Status>
@@ -130,6 +138,9 @@ private:
 
     real_time_tools::Timer timer;
 
+    robot_data_.desired_action->wait_for_timeindex(0);
+    robot_->give_control();
+
     for (TimeIndex t = 0; !destructor_was_called_; t++) {
 
       // todo: figure out latency stuff!! open /dev/cpu_dma_latency: Permission
@@ -139,16 +150,10 @@ private:
       //   }
       robot_data_.observation->append(robot_->get_latest_observation());
 
-      if (is_realtime_ &&
-          (robot_data_.desired_action->length() == 0 ||
-           robot_data_.desired_action->newest_timeindex() < t)) {
-        if (robot_data_.desired_action->length() == 0) {
-          robot_data_.desired_action->append(Action::Zero());
-        } else {
-          /// TODO: we should somehow log if a set has been missed
-          robot_data_.desired_action->append(
-              robot_data_.desired_action->newest_element());
-        }
+      if (is_realtime_ && robot_data_.desired_action->newest_timeindex() < t) {
+        /// TODO: we should somehow log if a set has been missed
+        robot_data_.desired_action->append(
+            robot_data_.desired_action->newest_element());
       }
 
       Action desired_action = (*robot_data_.desired_action)[t];
@@ -174,9 +179,7 @@ private:
     if (is_realtime_ && (actual_step_duration_ms > max_step_duration_ms ||
                          actual_step_duration_ms < min_step_duration_ms)) {
       std::ostringstream oss;
-      oss << "control loop did not run at expected rate "
-             "did you provide actions fast enough? "
-          << std::endl
+      oss << "control loop did not run at expected rate." << std::endl
           << "expected step duration: " << expected_step_duration_ms_
           << std::endl
           << "actual step duration: " << actual_step_duration_ms << std::endl
