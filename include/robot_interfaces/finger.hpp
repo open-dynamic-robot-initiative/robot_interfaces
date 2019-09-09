@@ -316,35 +316,17 @@ private:
   }
 };
 
-class Finger {
+template <typename Action, typename Observation> class RobotClient {
 public:
-  enum JointIndexing { base, center, tip, joint_count };
-
   template <typename Type>
   using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
   typedef Timeseries<int>::Index TimeIndex;
   typedef Timeseries<int>::Timestamp TimeStamp;
 
-  typedef Eigen::Vector3d Vector;
-  typedef Vector Action;
-  struct Observation {
-    Vector angle;
-    Vector velocity;
-    Vector torque;
-  };
+  typedef typename RobotServer<Action, Observation>::Status Status;
 
-  typedef RobotServer<Action, Observation>::Status Status;
-
-  /// TODO: remove default values!!!
-  Finger(std::shared_ptr<Robot<Action, Observation>> robot,
-         const double &expected_step_duration_ms = 1.0,
-         const double &step_duration_tolerance_ratio = 5.0,
-         const bool &is_realtime = true) {
-
-    robot_server_ =
-        std::make_shared<RobotServer<Action, Observation>>(robot, robot_data_);
-    robot_server_->set_max_action_repetitiions(-1);
-  }
+  RobotClient(RobotData<Action, Observation, Status> robot_data)
+      : robot_data_(robot_data) {}
 
   Observation get_observation(const TimeIndex &t) {
     return (*robot_data_.observation)[t];
@@ -363,6 +345,9 @@ public:
   }
 
   TimeIndex append_desired_action(const Action &desired_action) {
+    // since the timeseries has a finite memory, we need to make sure that by
+    // appending new actions we do not forget about actions which have not been
+    // applied yet
     if (robot_data_.desired_action->length() ==
             robot_data_.desired_action->max_length() &&
         robot_data_.desired_action->oldest_timeindex() ==
@@ -383,7 +368,41 @@ public:
 
 private:
   RobotData<Action, Observation, Status> robot_data_;
+};
+
+namespace finger {
+typedef Eigen::Vector3d Vector;
+typedef Vector Action;
+struct Observation {
+  Vector angle;
+  Vector velocity;
+  Vector torque;
+};
+
+template <typename Type>
+using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
+typedef Timeseries<int>::Index TimeIndex;
+
+typedef RobotServer<Action, Observation>::Status Status;
+
+// todo: add Finger to finger namespace
+
+// todo: rename finger client
+class Finger : public RobotClient<Action, Observation> {
+public:
+  enum JointIndexing { base, center, tip, joint_count };
+
+  Finger(std::shared_ptr<Robot<Action, Observation>> robot,
+         RobotData<Action, Observation, Status> robot_data)
+      : RobotClient(robot_data) {
+    robot_server_ =
+        std::make_shared<RobotServer<Action, Observation>>(robot, robot_data);
+    robot_server_->set_max_action_repetitiions(-1);
+  }
+
+private:
   std::shared_ptr<RobotServer<Action, Observation>> robot_server_;
 };
+}
 
 } // namespace robot_interfaces

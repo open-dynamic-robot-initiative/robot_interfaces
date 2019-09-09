@@ -21,15 +21,15 @@
 
 #include <robot_interfaces/finger.hpp>
 
-using namespace robot_interfaces;
+using namespace robot_interfaces::finger;
 
 PYBIND11_MODULE(py_finger, m)
 {
 
-    pybind11::class_<Finger::Observation>(m, "Observation")
-        .def_readwrite("angle", &Finger::Observation::angle)
-        .def_readwrite("velocity", &Finger::Observation::velocity)
-        .def_readwrite("torque", &Finger::Observation::torque);
+    pybind11::class_<Observation>(m, "Observation")
+        .def_readwrite("angle", &Observation::angle)
+        .def_readwrite("velocity", &Observation::velocity)
+        .def_readwrite("torque", &Observation::torque);
 
     pybind11::class_<Finger, std::shared_ptr<Finger>>(m, "Finger")
         .def("get_observation", &Finger::get_observation)
