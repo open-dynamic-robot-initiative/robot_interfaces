@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <cmath>
 #include <math.h>
+#include <stdint.h>
 
 #include "mpi_cpp_tools/basic_tools.hpp"
 #include "mpi_cpp_tools/dynamical_systems.hpp"
@@ -52,11 +53,22 @@ public:
     return max_inter_action_duration_s_;
   }
 
+  /**
+   * @brief This function will apply the desired_action on the robot, while
+   * making sure that the timing is respected. Concretely, it makes sure that
+   * the execution of an action does not take more than max_action_duration_s_
+   * seconds and that the time interval between the termination of the previous
+   * action and the receival (through apply_action()) of the next action will
+   * not exceed max_inter_action_duration_s_ seconds. If these timing
+   * constraints are not satisfied, the robot will be shutdown, and no more
+   * actions from the outside will be accepted.
+   *
+   * @param desired_action
+   * @return Action
+   */
   virtual Action
   apply_action_and_check_timing(const Action &desired_action) final {
     if (is_shutdown_) {
-      std::cout << "you tried to apply action, but robot has been shut down"
-                << std::endl;
       return desired_action;
     }
     action_start_logger_.append(true);
@@ -66,9 +78,23 @@ public:
   }
 
 protected:
+  /**
+   * @brief this function must apply the desired_action immediately when it is
+   * called, and only return once the action has been executed completely. this
+   * way we can accommodate both simulators and real robots with this interface.
+   *
+   * @param desired_action: the action we want to apply
+   * @return the action that was actually applied (since due to safety reasons
+   * it might not be possible to apply the desired action)
+   */
   virtual Action apply_action(const Action &desired_action) = 0;
 
 public:
+  /**
+   * @brief The robot must immediately return the latest observation.
+   *
+   * @return Observation
+   */
   virtual Observation get_latest_observation() = 0;
 
 protected:
@@ -78,6 +104,11 @@ protected:
       shutdown();
     }
   }
+
+  /**
+   * @brief The Robot object takes control and shuts down the robot safely
+   *
+   */
   virtual void shutdown() = 0;
 
 private:
@@ -91,8 +122,9 @@ private:
       bool action_has_ended_on_time =
           action_end_logger_.wait_for_timeindex(t, max_action_duration_s_);
       if (!action_has_ended_on_time) {
-        std::cout << "action did not end on time, shutting down." << std::endl;
-        exit(-1); // temp
+        std::cout << "action did not end on time, shutting down. any further "
+                     "actions will be ignored."
+                  << std::endl;
         shutdown_and_stop_thread();
         return;
       }
@@ -100,9 +132,9 @@ private:
       bool action_has_started_on_time = action_start_logger_.wait_for_timeindex(
           t + 1, max_inter_action_duration_s_);
       if (!action_has_started_on_time) {
-        std::cout << "action did not start on time, shutting down."
+        std::cout << "action did not start on time, shutting down. any further "
+                     "actions will be ignored."
                   << std::endl;
-        exit(-1); // temp
         shutdown_and_stop_thread();
         return;
       }
@@ -165,12 +197,13 @@ public:
 template <typename Action, typename Observation> class RobotServer {
 public:
   struct Status {
-    bool received_action;
+    uint32_t action_repetitions;
   };
   // add parameter: n_max_repeat_of_same_action
   RobotServer(std::shared_ptr<Robot<Action, Observation>> robot,
               RobotData<Action, Observation, Status> robot_data)
-      : robot_(robot), robot_data_(robot_data), destructor_was_called_(false) {
+      : robot_(robot), robot_data_(robot_data), destructor_was_called_(false),
+        max_action_repetitions_(0) {
     thread_ = std::make_shared<real_time_tools::RealTimeThread>();
     thread_->create_realtime_thread(&RobotServer::loop, this);
   }
@@ -180,10 +213,17 @@ public:
     thread_->join();
   }
 
+  int get_max_action_repetitions() { return max_action_repetitions_; }
+
+  void set_max_action_repetitiions(const int &max_action_repetitions) {
+    max_action_repetitions_ = max_action_repetitions;
+  }
+
 private:
   std::shared_ptr<Robot<Action, Observation>> robot_;
   RobotData<Action, Observation, Status> robot_data_;
   bool destructor_was_called_; // should be atomic
+  int max_action_repetitions_;
 
   std::vector<real_time_tools::Timer> timers_;
 
@@ -194,11 +234,20 @@ private:
     ((RobotServer *)(instance_pointer))->loop();
     return nullptr;
   }
+
+  /**
+   * @brief This is the main loop. It will essentially iterate over
+   * robot_data_.desired_action and appy these actions to the robot, and it will
+   * read the applied_action and the observation from the robot and append them
+   * to the corresponding timeseries in robot_data_.
+   *
+   */
   void loop() {
 
     timers_.resize(10);
     real_time_tools::set_cpu_dma_latency(0);
 
+    // wait until first desired_action was received ----------------------------
     while (!destructor_was_called_ &&
            !robot_data_.desired_action->wait_for_timeindex(0, 0.1)) {
     }
@@ -211,6 +260,7 @@ private:
       timers_[0].tac_tic();
 
       timers_[6].tic();
+      // get latest observation from robot and append it to robot_data_ --------
       Observation observation = robot_->get_latest_observation();
       timers_[6].tac();
 
@@ -218,19 +268,34 @@ private:
       robot_data_.observation->append(observation); // todo: for some reason
                                                     // this smetimes takes more
                                                     // than 2 ms
+      // i think this may be due to a non-realtime thread blocking the
+      // timeseries. this is in fact an issue, we might have to duplicate all
+      // the timeseries and have a realtime thread writing back and forth
       timers_[1].tac();
 
       timers_[2].tic();
+      // if the robot has a finite max_inter_action_duration_s (not NAN or
+      // infinite, meaning it requires receiving actions in fixed time
+      // intervals), but robot_data_ has not received yet the next action to
+      // apply, we optionally repeat the previous action.
+      Status status = {0};
       if (std::isfinite(robot_->get_max_inter_action_duration_s()) &&
           robot_data_.desired_action->newest_timeindex() < t) {
-        /// TODO: we should somehow log if a set has been missed
-        robot_data_.desired_action->append(
-            robot_data_.desired_action->newest_element());
+        uint32_t action_repetitions =
+            robot_data_.status->newest_element().action_repetitions;
+
+        if (action_repetitions < max_action_repetitions_) {
+          robot_data_.desired_action->append(
+              robot_data_.desired_action->newest_element());
+          status.action_repetitions = action_repetitions + 1;
+        }
       }
+      robot_data_.status->append(status);
       timers_[2].tac();
 
       timers_[3].tic();
-      Action desired_action = (*robot_data_.desired_action)[t];
+      Action desired_action =
+          (*robot_data_.desired_action)[t]; // todo: this may wait forever
       timers_[3].tac();
       timers_[4].tic();
       Action applied_action =
@@ -278,6 +343,7 @@ public:
 
     robot_server_ =
         std::make_shared<RobotServer<Action, Observation>>(robot, robot_data_);
+    robot_server_->set_max_action_repetitiions(-1);
   }
 
   Observation get_observation(const TimeIndex &t) {
