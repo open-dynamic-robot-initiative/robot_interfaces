@@ -23,15 +23,52 @@
 #include "real_time_tools/timer.hpp"
 #include <real_time_tools/process_manager.hpp>
 
+
+
+/**
+ * @brief Here we define all the necessary classes
+ * for interaction with the robot. The main classes are:
+ * - Robot: takes care of getting observations and 
+ *          applying actions on the robot. Also makes 
+ *          sure that timing is satisfied and shuts down
+ *          otherwise.
+ * 
+ * - RobotData: A class containing all the inputs (actions)
+ *              and outputs (observations) of the robot.
+ *              It stores a histories of inputs and outputs,
+ *              which are synchronized.
+ * 
+ * - RobotServer: Takes care of communication between Robot
+ *                and RobotData. It applies actions and 
+ *                requests observations from the robot at 
+ *                the appropriate times.
+ * 
+ * - RobotClient: A wrapper around RobotData facilitating its
+ *                usage for the end-user.
+ * 
+ */
+
+
 namespace robot_interfaces {
 
-// |------ t = 0 ------|------ t = 1 ------|
-// |----- action0 -----|----- action1 -----|
-// o                   o                   o
-// b                   b                   b
-// s                   s                   s
-// 0                   1                   2
 
+
+ /**
+  * @brief This provides an interface to the robot used by the 
+  * subsequent classes. Any robot (be it real or simulation) has
+  * to derive from this class and implement the functions
+  * apply_action(), get_latest_observation() and shutdown().
+  * This Base class provides some timing logic around
+  * those three functions. It makes sure that after the first
+  * call of apply_action(), it is always called again after
+  * some specified time, otherwise the shutdown() method will
+  * be called. This Base class also makes sure that the 
+  * apply_action() function itself does not take more time
+  * than expected.
+  * 
+  * @tparam Action 
+  * @tparam Observation 
+  */
 template <typename Action, typename Observation> class Robot {
 public:
   Robot(const double &max_action_duration_s,
@@ -157,6 +194,35 @@ private:
   std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 };
 
+
+
+
+
+/**
+ * @brief This class contains all the input and output data of the 
+ * robot. This means the 
+ * - desired_action which was requested by the robot user, the
+ * - applied_action which was actually applied and may not be
+ *                  and may not be identical to desired_action
+ *                  for safety reasons, the
+ * - observation made by the robot, and the 
+ * - status which keeps track of some timing issues (may still change).
+ * See this graph to understand how they relate to each other precisely
+ * in terms of time:
+ * 
+ * |------ t = 0 ------|------ t = 1 ------|
+ * |----- action0 -----|----- action1 -----|
+ * o                   o                   o
+ * b                   b                   b
+ * s                   s                   s
+ * 0                   1                   2
+ * 
+ * 
+ * @tparam Action 
+ * @tparam Observation 
+ * @tparam Status 
+ */
+
 template <typename Action, typename Observation, typename Status>
 class RobotData {
 public:
@@ -194,6 +260,17 @@ public:
   Ptr<Timeseries<Status>> status;
 };
 
+
+/**
+ * @brief This class takes care of communicating between the
+ * Robot and the RobotData. At each time-step, it gets the
+ * observation from the Robot and writes it to RobotData,
+ * and it takes the the desired_action from RobotData and
+ * applies it on the Robot.
+ * 
+ * @tparam Action 
+ * @tparam Observation 
+ */
 template <typename Action, typename Observation> class RobotServer {
 public:
   struct Status {
@@ -316,6 +393,16 @@ private:
   }
 };
 
+
+/**
+ * @brief The robot client takes care of communication between the
+ * RobotData and the user. It is just a thin wrapper around 
+ * RobotData to facilitate interaction and also to make sure
+ * the user cannot use RobotData in incorrect ways.
+ * 
+ * @tparam Action 
+ * @tparam Observation 
+ */
 template <typename Action, typename Observation> class RobotClient {
 public:
   template <typename Type>
@@ -370,6 +457,13 @@ private:
   RobotData<Action, Observation, Status> robot_data_;
 };
 
+/**
+ * @brief The Finger class is an example of a robot. For an 
+ * actual use case please check blmc_robots/real_finger.hpp#L41
+ * and an example of the python interface in use 
+ * blmc_robots/demos/demo_real_finger.py.
+ * 
+ */
 namespace finger {
 typedef Eigen::Vector3d Vector;
 typedef Vector Action;
