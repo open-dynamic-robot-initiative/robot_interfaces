@@ -25,6 +25,12 @@ using namespace robot_interfaces::finger;
 
 PYBIND11_MODULE(py_finger, m)
 {
+    pybind11::class_<robot_interfaces::finger::Data,
+        robot_interfaces::finger::DataPtr>(m, "Data")
+            .def(pybind11::init<>());
+
+    pybind11::class_<robot_interfaces::finger::Server,
+        robot_interfaces::finger::ServerPtr>(m, "Server");
 
     pybind11::class_<Observation>(m, "Observation")
         .def_readwrite("angle", &Observation::angle)
@@ -32,6 +38,7 @@ PYBIND11_MODULE(py_finger, m)
         .def_readwrite("torque", &Observation::torque);
 
     pybind11::class_<Finger, std::shared_ptr<Finger>>(m, "Finger")
+        .def(pybind11::init<robot_interfaces::finger::DataPtr>())
         .def("get_observation", &Finger::get_observation)
         .def("get_desired_action", &Finger::get_desired_action)
         .def("get_applied_action", &Finger::get_applied_action)
