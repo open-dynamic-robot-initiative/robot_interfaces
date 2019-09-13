@@ -26,7 +26,7 @@
 /**
  * @brief Here we define all the necessary classes
  * for interaction with the robot. The main classes are:
- * - Robot: takes care of getting observations and
+ * - RobotDriver: takes care of getting observations and
  *          applying actions on the robot. Also makes
  *          sure that timing is satisfied and shuts down
  *          otherwise.
@@ -36,12 +36,12 @@
  *              It stores a histories of inputs and outputs,
  *              which are synchronized.
  *
- * - RobotServer: Takes care of communication between Robot
+ * - RobotBackend: Takes care of communication between RobotDriver
  *                and RobotData. It applies actions and
  *                requests observations from the robot at
  *                the appropriate times.
  *
- * - RobotClient: A wrapper around RobotData facilitating its
+ * - RobotFrontend: A wrapper around RobotData facilitating its
  *                usage for the end-user.
  *
  */
@@ -65,10 +65,10 @@ namespace robot_interfaces
  * @tparam Observation
  */
 template <typename Action, typename Observation>
-class Robot
+class RobotDriver
 {
 public:
-    Robot(const double &max_action_duration_s,
+    RobotDriver(const double &max_action_duration_s,
           const double &max_inter_action_duration_s)
         : max_action_duration_s_(max_action_duration_s),
           max_inter_action_duration_s_(max_inter_action_duration_s),
@@ -77,10 +77,10 @@ public:
           action_end_logger_(1000)
     {
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
-        thread_->create_realtime_thread(&Robot::loop, this);
+        thread_->create_realtime_thread(&RobotDriver::loop, this);
     }
 
-    ~Robot()
+    ~RobotDriver()
     {
         shutdown_and_stop_thread();
         thread_->join();
@@ -149,7 +149,7 @@ protected:
     }
 
     /**
-     * @brief The Robot object takes control and shuts down the robot safely
+     * @brief The RobotDriver object takes control and shuts down the robot safely
      *
      */
     virtual void shutdown() = 0;
@@ -195,7 +195,7 @@ private:
     }
     static void *loop(void *instance_pointer)
     {
-        ((Robot *)(instance_pointer))->loop();
+        ((RobotDriver *)(instance_pointer))->loop();
         return nullptr;
     }
 
@@ -285,16 +285,16 @@ public:
 
 /**
  * @brief This class takes care of communicating between the
- * Robot and the RobotData. At each time-step, it gets the
- * observation from the Robot and writes it to RobotData,
+ * RobotDriver and the RobotData. At each time-step, it gets the
+ * observation from the RobotDriver and writes it to RobotData,
  * and it takes the the desired_action from RobotData and
- * applies it on the Robot.
+ * applies it on the RobotDriver.
  *
  * @tparam Action
  * @tparam Observation
  */
 template <typename Action, typename Observation>
-class RobotServer
+class RobotBackend
 {
 public:
     struct Status
@@ -303,7 +303,7 @@ public:
     };
 
     // TODO add parameter: n_max_repeat_of_same_action
-    RobotServer(std::shared_ptr<Robot<Action, Observation>> robot,
+    RobotBackend(std::shared_ptr<RobotDriver<Action, Observation>> robot,
                 std::shared_ptr<RobotData<Action, Observation, Status>> robot_data)
         : robot_(robot),
           robot_data_(robot_data),
@@ -311,10 +311,10 @@ public:
           max_action_repetitions_(0)
     {
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
-        thread_->create_realtime_thread(&RobotServer::loop, this);
+        thread_->create_realtime_thread(&RobotBackend::loop, this);
     }
 
-    virtual ~RobotServer()
+    virtual ~RobotBackend()
     {
         destructor_was_called_ = true;
         thread_->join();
@@ -328,7 +328,7 @@ public:
     }
 
 private:
-    std::shared_ptr<Robot<Action, Observation>> robot_;
+    std::shared_ptr<RobotDriver<Action, Observation>> robot_;
     std::shared_ptr<RobotData<Action, Observation, Status>> robot_data_;
     bool destructor_was_called_;  // should be atomic
     int max_action_repetitions_;
@@ -340,7 +340,7 @@ private:
     // control loop ------------------------------------------------------------
     static void *loop(void *instance_pointer)
     {
-        ((RobotServer *)(instance_pointer))->loop();
+        ((RobotBackend *)(instance_pointer))->loop();
         return nullptr;
     }
 
@@ -440,7 +440,7 @@ private:
  * @tparam Observation
  */
 template <typename Action, typename Observation>
-class RobotClient
+class RobotFrontend
 {
 public:
     template <typename Type>
@@ -448,9 +448,9 @@ public:
     typedef Timeseries<int>::Index TimeIndex;
     typedef Timeseries<int>::Timestamp TimeStamp;
 
-    typedef typename RobotServer<Action, Observation>::Status Status;
+    typedef typename RobotBackend<Action, Observation>::Status Status;
 
-    RobotClient(std::shared_ptr<RobotData<Action, Observation, Status>> robot_data)
+    RobotFrontend(std::shared_ptr<RobotData<Action, Observation, Status>> robot_data)
         : robot_data_(robot_data)
     {
     }
@@ -488,7 +488,7 @@ public:
         {
             std::cout
                 << "you have been appending actions too fast, waiting for "
-                   "RobotServer to catch up with executing actions."
+                   "RobotBackend to catch up with executing actions."
                 << std::endl;
             wait_until_timeindex(
                 robot_data_->desired_action->oldest_timeindex() + 1);
@@ -532,17 +532,16 @@ using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
 
 typedef Timeseries<int>::Index TimeIndex;
 
-typedef RobotServer<Action, Observation> Server;
-typedef std::shared_ptr<Server> ServerPtr;
-typedef Server::Status Status;
+typedef RobotBackend<Action, Observation> Backend;
+typedef std::shared_ptr<Backend> BackendPtr;
+typedef Backend::Status Status;
 
 typedef RobotData<Action, Observation, Status> Data;
 typedef std::shared_ptr<Data> DataPtr;
 
 
-// TODO: rename finger client?
-typedef RobotClient<Action, Observation> Finger;
-typedef std::shared_ptr<Finger> FingerPtr;
+typedef RobotFrontend<Action, Observation> Frontend;
+typedef std::shared_ptr<Frontend> FrontendPtr;
 
 }  // namespace finger
 

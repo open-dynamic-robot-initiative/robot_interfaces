@@ -29,22 +29,22 @@ PYBIND11_MODULE(py_finger, m)
         robot_interfaces::finger::DataPtr>(m, "Data")
             .def(pybind11::init<>());
 
-    pybind11::class_<robot_interfaces::finger::Server,
-        robot_interfaces::finger::ServerPtr>(m, "Server");
+    pybind11::class_<robot_interfaces::finger::Backend,
+        robot_interfaces::finger::BackendPtr>(m, "Backend");
 
     pybind11::class_<Observation>(m, "Observation")
         .def_readwrite("angle", &Observation::angle)
         .def_readwrite("velocity", &Observation::velocity)
         .def_readwrite("torque", &Observation::torque);
 
-    pybind11::class_<Finger, std::shared_ptr<Finger>>(m, "Finger")
+    pybind11::class_<Frontend, FrontendPtr>(m, "Frontend")
         .def(pybind11::init<robot_interfaces::finger::DataPtr>())
-        .def("get_observation", &Finger::get_observation)
-        .def("get_desired_action", &Finger::get_desired_action)
-        .def("get_applied_action", &Finger::get_applied_action)
-        .def("get_time_stamp_ms", &Finger::get_time_stamp_ms)
-        .def("append_desired_action", &Finger::append_desired_action)
-        .def("wait_until_time_index", &Finger::wait_until_timeindex)
-        .def("get_current_time_index", &Finger::get_current_timeindex);
+        .def("get_observation", &Frontend::get_observation)
+        .def("get_desired_action", &Frontend::get_desired_action)
+        .def("get_applied_action", &Frontend::get_applied_action)
+        .def("get_time_stamp_ms", &Frontend::get_time_stamp_ms)
+        .def("append_desired_action", &Frontend::append_desired_action)
+        .def("wait_until_time_index", &Frontend::wait_until_timeindex)
+        .def("get_current_time_index", &Frontend::get_current_timeindex);
 
 }
