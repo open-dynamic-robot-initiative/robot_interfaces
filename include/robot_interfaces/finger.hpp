@@ -48,18 +48,18 @@
 
 namespace robot_interfaces
 {
+
 /**
- * @brief This provides an interface to the robot used by the
- * subsequent classes. Any robot (be it real or simulation) has
- * to derive from this class and implement the functions
+ * @brief Driver for interfacing the actual robot hardware or simulation.
+ *
+ * Interface to the robot used by the subsequent classes. Any robot (be it real
+ * or simulation) has to derive from this class and implement the functions
  * apply_action(), get_latest_observation() and shutdown().
- * This Base class provides some timing logic around
- * those three functions. It makes sure that after the first
- * call of apply_action(), it is always called again after
- * some specified time, otherwise the shutdown() method will
- * be called. This Base class also makes sure that the
- * apply_action() function itself does not take more time
- * than expected.
+ * This Base class provides some timing logic around those three functions. It
+ * makes sure that after the first call of apply_action(), it is always called
+ * again after some specified time, otherwise the shutdown() method will
+ * be called. This Base class also makes sure that the apply_action() function
+ * itself does not take more time than expected.
  *
  * @tparam Action
  * @tparam Observation
@@ -92,23 +92,28 @@ public:
     }
 
     /**
-     * @brief This function will apply the desired_action on the robot, while
-     * making sure that the timing is respected. Concretely, it makes sure that
-     * the execution of an action does not take more than max_action_duration_s_
-     * seconds and that the time interval between the termination of the
-     * previous action and the receival (through apply_action()) of the next
-     * action will not exceed max_inter_action_duration_s_ seconds. If these
-     * timing constraints are not satisfied, the robot will be shutdown, and no
-     * more actions from the outside will be accepted.
+     * @brief Apply desired action on the robot while making sure timing is
+     *        respected.
      *
-     * @param desired_action
-     * @return Action
+     * Concretely, it makes sure that the execution of an action does not take
+     * more than max_action_duration_s_ seconds and that the time interval
+     * between the termination of the previous action and the receival (through
+     * apply_action()) of the next action will not exceed
+     * max_inter_action_duration_s_ seconds. If these timing constraints are not
+     * satisfied, the robot will be shutdown, and no more actions from the
+     * outside will be accepted.
+     *
+     * @param desired_action  The desired action.
+     * @return  The action that is actually applied on the robot (may differ
+     *     from desired action due to safety limitations).
      */
     virtual Action apply_action_and_check_timing(
         const Action &desired_action) final
     {
         if (is_shutdown_)
         {
+            // FIXME I don't think it makes sense to return the desired action
+            // in case of shutdown.  Shouldn't it rather be s.th. like Zero()?
             return desired_action;
         }
         action_start_logger_.append(true);
@@ -119,26 +124,33 @@ public:
 
 protected:
     /**
-     * @brief this function must apply the desired_action immediately when it is
-     * called, and only return once the action has been executed completely.
-     * this way we can accommodate both simulators and real robots with this
-     * interface.
+     * @brief Apply action immediately and block until it is executed.
      *
-     * @param desired_action: the action we want to apply
-     * @return the action that was actually applied (since due to safety reasons
-     * it might not be possible to apply the desired action)
+     * This method must apply the desired_action immediately when it is called,
+     * and only return once the action has been executed completely.  This way
+     * we can accommodate both simulators and real robots with this interface.
+     *
+     * @param desired_action  The action we want to apply.
+     * @return  The action that was actually applied (since due to safety
+     *     reasons it might not be possible to apply the desired action).
      */
     virtual Action apply_action(const Action &desired_action) = 0;
 
 public:
     /**
-     * @brief The robot must immediately return the latest observation.
+     * @brief Return the latest observation immediately.
      *
      * @return Observation
      */
     virtual Observation get_latest_observation() = 0;
 
 protected:
+
+    /**
+     * @brief Shut down the robot safely.
+     *
+     * After shutdown, actions send by the user are ignored.
+     */
     virtual void shutdown_and_stop_thread() final
     {
         if (!is_shutdown_)
@@ -149,7 +161,7 @@ protected:
     }
 
     /**
-     * @brief The RobotDriver object takes control and shuts down the robot safely
+     * @brief Shut down the robot safely.
      *
      */
     virtual void shutdown() = 0;
@@ -211,15 +223,18 @@ private:
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 };
 
+
 /**
- * @brief This class contains all the input and output data of the
- * robot. This means the
- * - desired_action which was requested by the robot user, the
+ * @brief Contains all the input and output data of the robot.
+ *
+ * This means the
+ * - desired_action which was requested by the robot user
  * - applied_action which was actually applied and may not be
  *                  and may not be identical to desired_action
- *                  for safety reasons, the
- * - observation made by the robot, and the
+ *                  for safety reasons
+ * - observation made by the robot
  * - status which keeps track of some timing issues (may still change).
+ *
  * See this graph to understand how they relate to each other precisely
  * in terms of time:
  *
@@ -284,11 +299,11 @@ public:
 };
 
 /**
- * @brief This class takes care of communicating between the
- * RobotDriver and the RobotData. At each time-step, it gets the
- * observation from the RobotDriver and writes it to RobotData,
- * and it takes the the desired_action from RobotData and
- * applies it on the RobotDriver.
+ * @brief Communication link between RobotDriver and RobotData.
+ *
+ * At each time-step, it gets the observation from the RobotDriver and writes it
+ * to RobotData, and it takes the desired_action from RobotData and applies it
+ * on the RobotDriver.
  *
  * @tparam Action
  * @tparam Observation
@@ -345,10 +360,12 @@ private:
     }
 
     /**
-     * @brief This is the main loop. It will essentially iterate over
-     * robot_data_.desired_action and appy these actions to the robot, and it
-     * will read the applied_action and the observation from the robot and
-     * append them to the corresponding timeseries in robot_data_.
+     * @brief Main loop.
+     *
+     * It will essentially iterate over robot_data_.desired_action and apply
+     * these actions to the robot, and it will read the applied_action and the
+     * observation from the robot and append them to the corresponding
+     * timeseries in robot_data_.
      *
      */
     void loop()
@@ -431,9 +448,10 @@ private:
 };
 
 /**
- * @brief The robot client takes care of communication between the
- * RobotData and the user. It is just a thin wrapper around
- * RobotData to facilitate interaction and also to make sure
+ * @brief Communication link between RobotData and the user.
+ *
+ * Takes care of communication between the RobotData and the user. It is just a
+ * thin wrapper around RobotData to facilitate interaction and also to make sure
  * the user cannot use RobotData in incorrect ways.
  *
  * @tparam Action
@@ -507,15 +525,10 @@ private:
     std::shared_ptr<RobotData<Action, Observation, Status>> robot_data_;
 };
 
-/**
- * @brief The Finger class is an example of a robot. For an
- * actual use case please check blmc_robots/real_finger.hpp#L41
- * and an example of the python interface in use
- * blmc_robots/demos/demo_real_finger.py.
- *
- */
 namespace finger
 {
+
+// Typedefs for all the templated types to be used for the Finger robot.
 
 typedef Eigen::Vector3d Vector;
 
@@ -539,7 +552,7 @@ typedef Backend::Status Status;
 typedef RobotData<Action, Observation, Status> Data;
 typedef std::shared_ptr<Data> DataPtr;
 
-
+//! @brief Frontend for the Finger robot.
 typedef RobotFrontend<Action, Observation> Frontend;
 typedef std::shared_ptr<Frontend> FrontendPtr;
 
