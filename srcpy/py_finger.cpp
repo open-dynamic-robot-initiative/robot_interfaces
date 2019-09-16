@@ -21,30 +21,30 @@
 
 #include <robot_interfaces/finger.hpp>
 
-using namespace robot_interfaces::finger;
+using namespace robot_interfaces;
 
 PYBIND11_MODULE(py_finger, m)
 {
-    pybind11::class_<robot_interfaces::finger::Data,
-        robot_interfaces::finger::DataPtr>(m, "Data")
+    pybind11::class_<robot_interfaces::FingerTypes::Data,
+        robot_interfaces::FingerTypes::DataPtr>(m, "Data")
             .def(pybind11::init<>());
 
-    pybind11::class_<robot_interfaces::finger::Backend,
-        robot_interfaces::finger::BackendPtr>(m, "Backend");
+    pybind11::class_<robot_interfaces::FingerTypes::Backend,
+        robot_interfaces::FingerTypes::BackendPtr>(m, "Backend");
 
-    pybind11::class_<Observation>(m, "Observation")
-        .def_readwrite("angle", &Observation::angle)
-        .def_readwrite("velocity", &Observation::velocity)
-        .def_readwrite("torque", &Observation::torque);
+    pybind11::class_<FingerTypes::Observation>(m, "Observation")
+        .def_readwrite("angle", &FingerTypes::Observation::angle)
+        .def_readwrite("velocity", &FingerTypes::Observation::velocity)
+        .def_readwrite("torque", &FingerTypes::Observation::torque);
 
-    pybind11::class_<Frontend, FrontendPtr>(m, "Frontend")
-        .def(pybind11::init<robot_interfaces::finger::DataPtr>())
-        .def("get_observation", &Frontend::get_observation)
-        .def("get_desired_action", &Frontend::get_desired_action)
-        .def("get_applied_action", &Frontend::get_applied_action)
-        .def("get_time_stamp_ms", &Frontend::get_time_stamp_ms)
-        .def("append_desired_action", &Frontend::append_desired_action)
-        .def("wait_until_time_index", &Frontend::wait_until_timeindex)
-        .def("get_current_time_index", &Frontend::get_current_timeindex);
+    pybind11::class_<FingerTypes::Frontend, FingerTypes::FrontendPtr>(m, "Frontend")
+        .def(pybind11::init<robot_interfaces::FingerTypes::DataPtr>())
+        .def("get_observation", &FingerTypes::Frontend::get_observation)
+        .def("get_desired_action", &FingerTypes::Frontend::get_desired_action)
+        .def("get_applied_action", &FingerTypes::Frontend::get_applied_action)
+        .def("get_time_stamp_ms", &FingerTypes::Frontend::get_time_stamp_ms)
+        .def("append_desired_action", &FingerTypes::Frontend::append_desired_action)
+        .def("wait_until_time_index", &FingerTypes::Frontend::wait_until_timeindex)
+        .def("get_current_time_index", &FingerTypes::Frontend::get_current_timeindex);
 
 }
