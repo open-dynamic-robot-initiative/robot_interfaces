@@ -48,13 +48,10 @@
 
 namespace robot_interfaces
 {
-
 template <typename Type>
 using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
 
 typedef Timeseries<int>::Index TimeIndex;
-
-
 
 /**
  * @brief Driver for interfacing the actual robot hardware or simulation.
@@ -76,7 +73,7 @@ class RobotDriver
 {
 public:
     RobotDriver(const double &max_action_duration_s,
-          const double &max_inter_action_duration_s)
+                const double &max_inter_action_duration_s)
         : max_action_duration_s_(max_action_duration_s),
           max_inter_action_duration_s_(max_inter_action_duration_s),
           is_shutdown_(false),
@@ -154,7 +151,6 @@ public:
     virtual Observation get_latest_observation() = 0;
 
 protected:
-
     /**
      * @brief Shut down the robot safely.
      *
@@ -232,7 +228,6 @@ private:
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 };
 
-
 /**
  * @brief Contains all the input and output data of the robot.
  *
@@ -267,7 +262,8 @@ public:
     template <typename Type>
     using Ptr = std::shared_ptr<Type>;
 
-    RobotData(size_t history_length = 1000, bool use_shared_memory = false,
+    RobotData(size_t history_length = 1000,
+              bool use_shared_memory = false,
               std::string shared_memory_address = "")
     {
         if (use_shared_memory)
@@ -322,8 +318,9 @@ public:
     };
 
     // TODO add parameter: n_max_repeat_of_same_action
-    RobotBackend(std::shared_ptr<RobotDriver<Action, Observation>> robot,
-                std::shared_ptr<RobotData<Action, Observation, Status>> robot_data)
+    RobotBackend(
+        std::shared_ptr<RobotDriver<Action, Observation>> robot,
+        std::shared_ptr<RobotData<Action, Observation, Status>> robot_data)
         : robot_(robot),
           robot_data_(robot_data),
           destructor_was_called_(false),
@@ -339,8 +336,10 @@ public:
         thread_->join();
     }
 
-    int get_max_action_repetitions() { return max_action_repetitions_; }
-
+    int get_max_action_repetitions()
+    {
+        return max_action_repetitions_;
+    }
     void set_max_action_repetitions(const int &max_action_repetitions)
     {
         max_action_repetitions_ = max_action_repetitions;
@@ -473,7 +472,8 @@ public:
     typedef Timeseries<int>::Timestamp TimeStamp;
     typedef typename RobotBackend<Action, Observation>::Status Status;
 
-    RobotFrontend(std::shared_ptr<RobotData<Action, Observation, Status>> robot_data)
+    RobotFrontend(
+        std::shared_ptr<RobotData<Action, Observation, Status>> robot_data)
         : robot_data_(robot_data)
     {
     }
@@ -530,7 +530,6 @@ private:
     std::shared_ptr<RobotData<Action, Observation, Status>> robot_data_;
 };
 
-
 /**
  * @brief Collection of types for a generic N-joint BLMC robot.
  *
@@ -564,12 +563,11 @@ struct NJointRobotTypes
     typedef std::shared_ptr<Frontend> FrontendPtr;
 };
 
-
 /**
  * @brief Types for the Finger robot (basic 3-joint robot).
  */
 struct FingerTypes : public NJointRobotTypes<3>
-{};
-
+{
+};
 
 }  // namespace robot_interfaces
