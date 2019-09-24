@@ -129,6 +129,8 @@ public:
         return applied_action;
     }
 
+    virtual void calibrate() = 0;
+
 protected:
     /**
      * @brief Apply action immediately and block until it is executed.
@@ -342,6 +344,11 @@ public:
     void set_max_action_repetitions(const int &max_action_repetitions)
     {
         max_action_repetitions_ = max_action_repetitions;
+    }
+
+    void calibrate()
+    {
+        robot_->calibrate();
     }
 
 private:
