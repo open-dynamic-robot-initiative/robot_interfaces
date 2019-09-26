@@ -126,7 +126,7 @@ public:
         return applied_action;
     }
 
-    virtual void calibrate() = 0;
+    virtual void initialize() = 0;
 
 protected:
     /**
@@ -345,9 +345,9 @@ public:
         max_action_repetitions_ = max_action_repetitions;
     }
 
-    void calibrate()
+    void initialize()
     {
-        robot_->calibrate();
+        robot_->initialize();
     }
 
 private:

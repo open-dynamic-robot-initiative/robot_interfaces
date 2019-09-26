@@ -31,7 +31,7 @@ PYBIND11_MODULE(py_finger, m)
 
     pybind11::class_<robot_interfaces::FingerTypes::Backend,
         robot_interfaces::FingerTypes::BackendPtr>(m, "Backend")
-            .def("calibrate", &FingerTypes::Backend::calibrate);
+            .def("initialize", &FingerTypes::Backend::initialize);
 
     pybind11::class_<FingerTypes::Observation>(m, "Observation")
         .def_readwrite("angle", &FingerTypes::Observation::angle)
