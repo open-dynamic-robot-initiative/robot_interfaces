@@ -25,12 +25,15 @@ using namespace robot_interfaces::finger;
 
 PYBIND11_MODULE(py_finger, m)
 {
-    pybind11::class_<robot_interfaces::finger::Data,
-        robot_interfaces::finger::DataPtr>(m, "Data")
+
+  //pybind11::class_<robot_interfaces::finger::Data,
+  //    robot_interfaces::finger::DataPtr>(m, "Data");
+    pybind11::class_<Data, DataPtr>(m, "Data")
             .def(pybind11::init<>());
 
-    pybind11::class_<robot_interfaces::finger::Backend,
-        robot_interfaces::finger::BackendPtr>(m, "Backend");
+    //pybind11::class_<robot_interfaces::finger::Backend,
+    //    robot_interfaces::finger::BackendPtr>(m, "Backend");
+    pybind11::class_<Backend, BackendPtr>(m, "Backend");
 
     pybind11::class_<Observation>(m, "Observation")
         .def_readwrite("angle", &Observation::angle)

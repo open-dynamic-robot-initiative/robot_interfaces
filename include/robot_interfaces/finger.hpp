@@ -489,6 +489,7 @@ public:
     {
         return robot_data_->observation->timestamp_ms(t);
     }
+
     TimeIndex get_current_timeindex()
     {
         return robot_data_->observation->newest_timeindex();
