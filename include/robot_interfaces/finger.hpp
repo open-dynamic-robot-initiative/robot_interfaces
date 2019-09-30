@@ -72,63 +72,8 @@ template <typename Action, typename Observation>
 class RobotDriver
 {
 public:
-    RobotDriver(const double &max_action_duration_s,
-                const double &max_inter_action_duration_s)
-        : max_action_duration_s_(max_action_duration_s),
-          max_inter_action_duration_s_(max_inter_action_duration_s),
-          is_shutdown_(false),
-          action_start_logger_(1000),
-          action_end_logger_(1000)
-    {
-        thread_ = std::make_shared<real_time_tools::RealTimeThread>();
-        thread_->create_realtime_thread(&RobotDriver::loop, this);
-    }
-
-    ~RobotDriver()
-    {
-        shutdown_and_stop_thread();
-        thread_->join();
-    }
-
-    double get_max_inter_action_duration_s()
-    {
-        return max_inter_action_duration_s_;
-    }
-
-    /**
-     * @brief Apply desired action on the robot while making sure timing is
-     *        respected.
-     *
-     * Concretely, it makes sure that the execution of an action does not take
-     * more than max_action_duration_s_ seconds and that the time interval
-     * between the termination of the previous action and the receival (through
-     * apply_action()) of the next action will not exceed
-     * max_inter_action_duration_s_ seconds. If these timing constraints are not
-     * satisfied, the robot will be shutdown, and no more actions from the
-     * outside will be accepted.
-     *
-     * @param desired_action  The desired action.
-     * @return  The action that is actually applied on the robot (may differ
-     *     from desired action due to safety limitations).
-     */
-    virtual Action apply_action_and_check_timing(
-        const Action &desired_action) final
-    {
-        if (is_shutdown_)
-        {
-            // FIXME I don't think it makes sense to return the desired action
-            // in case of shutdown.  Shouldn't it rather be s.th. like Zero()?
-            return desired_action;
-        }
-        action_start_logger_.append(true);
-        Action applied_action = apply_action(desired_action);
-        action_end_logger_.append(true);
-        return applied_action;
-    }
-
     virtual void initialize() = 0;
 
-protected:
     /**
      * @brief Apply action immediately and block until it is executed.
      *
@@ -142,7 +87,6 @@ protected:
      */
     virtual Action apply_action(const Action &desired_action) = 0;
 
-public:
     /**
      * @brief Return the latest observation immediately.
      *
@@ -150,37 +94,159 @@ public:
      */
     virtual Observation get_latest_observation() = 0;
 
-protected:
     /**
      * @brief Shut down the robot safely.
-     *
-     * After shutdown, actions send by the user are ignored.
      */
-    virtual void shutdown_and_stop_thread() final
+    virtual void shutdown() = 0;
+};
+
+/**
+ * @brief Wrapper for RobotDriver that monitors timing.
+ *
+ * Takes a RobotDriver instance as input and forwards all method calls to it.  A
+ * background loop monitors timing of actions to ensure the following
+ * constraints:
+ *
+ *   1. The execution of an action does not take longer than
+ *      `max_action_duration_s_` seconds.
+ *   2. The time interval between termination of the previous action and
+ *      receival of the next one (through `apply_action()`) does not exceed
+ *      `max_inter_action_duration_s_`.
+ *
+ * If these timing constraints are not satisfied, the robot will be shutdown,
+ * and no more actions from the outside will be accepted.
+ *
+ * This wrapper also makes sure that the `shutdown()` method of the given
+ * RobotDriver is called when wrapper is destroyed, so the robot should always
+ * be left in a safe state.
+ *
+ * @tparam Action
+ * @tparam Observation
+ */
+template <typename Action, typename Observation>
+class MonitoredRobotDriver : public RobotDriver<Action, Observation>
+{
+public:
+    typedef std::shared_ptr<RobotDriver<Action, Observation>> RobotDriverPtr;
+
+    /**
+     * @brief Starts a thread for monitoring timing of action execution.
+     *
+     * @param robot_driver  The actual robot driver instance.
+     * @param max_action_duration_s  Maximum time allowed for an action to be
+     *     executed.
+     * @param max_inter_action_duration_s  Maximum time allowed between end of
+     *     the previous action and receival of the next one.
+     */
+    MonitoredRobotDriver(RobotDriverPtr robot_driver,
+                         const double max_action_duration_s,
+                         const double max_inter_action_duration_s)
+        : robot_driver_(robot_driver),
+          max_action_duration_s_(max_action_duration_s),
+          max_inter_action_duration_s_(max_inter_action_duration_s),
+          is_shutdown_(false),
+          action_start_logger_(1000),
+          action_end_logger_(1000)
     {
-        if (!is_shutdown_)
+        thread_ = std::make_shared<real_time_tools::RealTimeThread>();
+        thread_->create_realtime_thread(&MonitoredRobotDriver::loop, this);
+    }
+
+    /**
+     * @brief Shuts down the robot and stops the monitoring thread.
+     */
+    ~MonitoredRobotDriver()
+    {
+        shutdown();
+        thread_->join();
+    }
+
+    double get_max_inter_action_duration_s()
+    {
+        return max_inter_action_duration_s_;
+    }
+
+    /**
+     * @brief Apply desired action on the robot.
+     *
+     * If the robot is shut down, no more actions will be applied (the method
+     * will just ignore them silently.
+     *
+     * @param desired_action  The desired action.
+     * @return  The action that is actually applied on the robot (may differ
+     *     from desired action due to safety limitations).
+     */
+    virtual Action apply_action(const Action &desired_action) final
+    {
+        if (is_shutdown_)
         {
-            is_shutdown_ = true;
-            shutdown();
+            // FIXME I don't think it makes sense to return the desired action
+            // in case of shutdown.  Shouldn't it rather be s.th. like Zero()?
+            return desired_action;
         }
+        action_start_logger_.append(true);
+        Action applied_action = robot_driver_->apply_action(desired_action);
+        action_end_logger_.append(true);
+        return applied_action;
+    }
+
+    virtual void initialize()
+    {
+        robot_driver_->initialize();
+    }
+
+    virtual Observation get_latest_observation()
+    {
+        return robot_driver_->get_latest_observation();
     }
 
     /**
      * @brief Shut down the robot safely.
      *
+     * After shutdown, actions sent by the user are ignored.
      */
-    virtual void shutdown() = 0;
+    virtual void shutdown() final
+    {
+        if (!is_shutdown_)
+        {
+            is_shutdown_ = true;
+            robot_driver_->shutdown();
+        }
+    }
 
 private:
+    //! \brief The actual robot driver.
+    RobotDriverPtr robot_driver_;
+    //! \brief Max. time for executing an action.
+    double max_action_duration_s_;
+    //! \brief Max. idle time between actions.
+    double max_inter_action_duration_s_;
+
+    //! \brief Whether shutdown was initiated.
+    bool is_shutdown_;  // TODO: should be atomic
+
+    real_time_tools::ThreadsafeTimeseries<bool> action_start_logger_;
+    real_time_tools::ThreadsafeTimeseries<bool> action_end_logger_;
+
+    std::shared_ptr<real_time_tools::RealTimeThread> thread_;
+
+    /**
+     * @brief Monitor the timing of action execution.
+     *
+     * If one of the timing constrains is violated, the robot is immediately
+     * shut down.
+     */
     void loop()
     {
         real_time_tools::set_cpu_dma_latency(0);
 
+        // wait for the first data
         while (!is_shutdown_ &&
                !action_start_logger_.wait_for_timeindex(0, 0.1))
         {
         }
 
+        // loop until shutdown and monitor action timing
         for (size_t t = 0; !is_shutdown_; t++)
         {
             bool action_has_ended_on_time =
@@ -189,10 +255,10 @@ private:
             if (!action_has_ended_on_time)
             {
                 std::cout
-                    << "action did not end on time, shutting down. any further "
+                    << "Action did not end on time, shutting down. Any further "
                        "actions will be ignored."
                     << std::endl;
-                shutdown_and_stop_thread();
+                shutdown();
                 return;
             }
 
@@ -201,31 +267,20 @@ private:
                     t + 1, max_inter_action_duration_s_);
             if (!action_has_started_on_time)
             {
-                std::cout << "action did not start on time, shutting down. any "
-                             "further "
-                             "actions will be ignored."
+                std::cout << "Action did not start on time, shutting down. Any "
+                             "further actions will be ignored."
                           << std::endl;
-                shutdown_and_stop_thread();
+                shutdown();
                 return;
             }
         }
     }
+
     static void *loop(void *instance_pointer)
     {
-        ((RobotDriver *)(instance_pointer))->loop();
+        ((MonitoredRobotDriver *)(instance_pointer))->loop();
         return nullptr;
     }
-
-private:
-    double max_action_duration_s_;
-    double max_inter_action_duration_s_;
-
-    bool is_shutdown_;  // TODO: should be atomic
-
-    real_time_tools::ThreadsafeTimeseries<bool> action_start_logger_;
-    real_time_tools::ThreadsafeTimeseries<bool> action_end_logger_;
-
-    std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 };
 
 /**
@@ -318,10 +373,20 @@ public:
     };
 
     // TODO add parameter: n_max_repeat_of_same_action
+    /**
+     * @param robot_driver  Driver instance for the actual robot.  This is
+     *     internally wrapped in a MonitoredRobotDriver for increased safety.
+     * @param robot_data  Data is send to/retrieved from here.
+     * @param max_action_duration_s  See MonitoredRobotDriver.
+     * @param max_inter_action_duration_s  See MonitoredRobotDriver.
+     */
     RobotBackend(
-        std::shared_ptr<RobotDriver<Action, Observation>> robot,
-        std::shared_ptr<RobotData<Action, Observation, Status>> robot_data)
-        : robot_(robot),
+        std::shared_ptr<RobotDriver<Action, Observation>> robot_driver,
+        std::shared_ptr<RobotData<Action, Observation, Status>> robot_data,
+        const double max_action_duration_s,
+        const double max_inter_action_duration_s)
+        : robot_driver_(
+              robot_driver, max_action_duration_s, max_inter_action_duration_s),
           robot_data_(robot_data),
           destructor_was_called_(false),
           max_action_repetitions_(0)
@@ -347,11 +412,11 @@ public:
 
     void initialize()
     {
-        robot_->initialize();
+        robot_driver_.initialize();
     }
 
 private:
-    std::shared_ptr<RobotDriver<Action, Observation>> robot_;
+    MonitoredRobotDriver<Action, Observation> robot_driver_;
     std::shared_ptr<RobotData<Action, Observation, Status>> robot_data_;
     bool destructor_was_called_;  // should be atomic
     int max_action_repetitions_;
@@ -370,11 +435,9 @@ private:
     /**
      * @brief Main loop.
      *
-     * It will essentially iterate over robot_data_.desired_action and apply
-     * these actions to the robot, and it will read the applied_action and the
-     * observation from the robot and append them to the corresponding
-     * timeseries in robot_data_.
-     *
+     * Iterate over robot_data_.desired_action and apply these actions to the
+     * robot, and read the applied_action and the observation from the
+     * robot and append them to the corresponding timeseries in robot_data_.
      */
     void loop()
     {
@@ -398,7 +461,7 @@ private:
             timers_[6].tic();
             // get latest observation from robot and append it to robot_data_
             // --------
-            Observation observation = robot_->get_latest_observation();
+            Observation observation = robot_driver_.get_latest_observation();
             timers_[6].tac();
 
             timers_[1].tic();
@@ -416,7 +479,8 @@ private:
             // intervals), but robot_data_ has not received yet the next action
             // to apply, we optionally repeat the previous action.
             Status status = {0};
-            if (std::isfinite(robot_->get_max_inter_action_duration_s()) &&
+            if (std::isfinite(
+                    robot_driver_.get_max_inter_action_duration_s()) &&
                 robot_data_->desired_action->newest_timeindex() < t)
             {
                 uint32_t action_repetitions =
@@ -437,8 +501,7 @@ private:
             Action desired_action = (*robot_data_->desired_action)[t];
             timers_[3].tac();
             timers_[4].tic();
-            Action applied_action =
-                robot_->apply_action_and_check_timing(desired_action);
+            Action applied_action = robot_driver_.apply_action(desired_action);
             timers_[4].tac();
             timers_[5].tic();
             robot_data_->applied_action->append(applied_action);
