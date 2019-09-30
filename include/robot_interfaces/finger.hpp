@@ -48,6 +48,10 @@
 
 namespace robot_interfaces
 {
+template <typename Type>
+using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
+
+typedef Timeseries<int>::Index TimeIndex;
 
 /**
  * @brief Driver for interfacing the actual robot hardware or simulation.
@@ -69,7 +73,7 @@ class RobotDriver
 {
 public:
     RobotDriver(const double &max_action_duration_s,
-          const double &max_inter_action_duration_s)
+                const double &max_inter_action_duration_s)
         : max_action_duration_s_(max_action_duration_s),
           max_inter_action_duration_s_(max_inter_action_duration_s),
           is_shutdown_(false),
@@ -122,6 +126,8 @@ public:
         return applied_action;
     }
 
+    virtual void initialize() = 0;
+
 protected:
     /**
      * @brief Apply action immediately and block until it is executed.
@@ -145,7 +151,6 @@ public:
     virtual Observation get_latest_observation() = 0;
 
 protected:
-
     /**
      * @brief Shut down the robot safely.
      *
@@ -223,7 +228,6 @@ private:
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 };
 
-
 /**
  * @brief Contains all the input and output data of the robot.
  *
@@ -256,14 +260,10 @@ class RobotData
 {
 public:
     template <typename Type>
-    using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
-    // TODO this is not quite clean because we should not have to specify a type
-    // here.
-    typedef Timeseries<int>::Index TimeIndex;
-    template <typename Type>
     using Ptr = std::shared_ptr<Type>;
 
-    RobotData(size_t history_length = 1000, bool use_shared_memory = false,
+    RobotData(size_t history_length = 1000,
+              bool use_shared_memory = false,
               std::string shared_memory_address = "")
     {
         if (use_shared_memory)
@@ -318,8 +318,9 @@ public:
     };
 
     // TODO add parameter: n_max_repeat_of_same_action
-    RobotBackend(std::shared_ptr<RobotDriver<Action, Observation>> robot,
-                std::shared_ptr<RobotData<Action, Observation, Status>> robot_data)
+    RobotBackend(
+        std::shared_ptr<RobotDriver<Action, Observation>> robot,
+        std::shared_ptr<RobotData<Action, Observation, Status>> robot_data)
         : robot_(robot),
           robot_data_(robot_data),
           destructor_was_called_(false),
@@ -335,11 +336,18 @@ public:
         thread_->join();
     }
 
-    int get_max_action_repetitions() { return max_action_repetitions_; }
-
+    int get_max_action_repetitions()
+    {
+        return max_action_repetitions_;
+    }
     void set_max_action_repetitions(const int &max_action_repetitions)
     {
         max_action_repetitions_ = max_action_repetitions;
+    }
+
+    void initialize()
+    {
+        robot_->initialize();
     }
 
 private:
@@ -461,14 +469,11 @@ template <typename Action, typename Observation>
 class RobotFrontend
 {
 public:
-    template <typename Type>
-    using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
-    typedef Timeseries<int>::Index TimeIndex;
     typedef Timeseries<int>::Timestamp TimeStamp;
-
     typedef typename RobotBackend<Action, Observation>::Status Status;
 
-    RobotFrontend(std::shared_ptr<RobotData<Action, Observation, Status>> robot_data)
+    RobotFrontend(
+        std::shared_ptr<RobotData<Action, Observation, Status>> robot_data)
         : robot_data_(robot_data)
     {
     }
@@ -525,38 +530,44 @@ private:
     std::shared_ptr<RobotData<Action, Observation, Status>> robot_data_;
 };
 
-namespace finger
+/**
+ * @brief Collection of types for a generic N-joint BLMC robot.
+ *
+ * Defines all the types needed to set up an interface to a generic N-joint BLMC
+ * robot that expects as Action a simple vector of N torque commands and
+ * provides N observations containing measured joint angle, velocity and torque.
+ *
+ * @tparam N Number of joints
+ */
+template <size_t N>
+struct NJointRobotTypes
 {
+    typedef Eigen::Matrix<double, N, 1> Vector;
 
-// Typedefs for all the templated types to be used for the Finger robot.
+    typedef Vector Action;
+    struct Observation
+    {
+        Vector angle;
+        Vector velocity;
+        Vector torque;
+    };
 
-typedef Eigen::Vector3d Vector;
+    typedef RobotBackend<Action, Observation> Backend;
+    typedef std::shared_ptr<Backend> BackendPtr;
+    typedef typename Backend::Status Status;
 
-typedef Vector Action;
-struct Observation
-{
-    Vector angle;
-    Vector velocity;
-    Vector torque;
+    typedef RobotData<Action, Observation, Status> Data;
+    typedef std::shared_ptr<Data> DataPtr;
+
+    typedef RobotFrontend<Action, Observation> Frontend;
+    typedef std::shared_ptr<Frontend> FrontendPtr;
 };
 
-template <typename Type>
-using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
-
-typedef Timeseries<int>::Index TimeIndex;
-
-typedef RobotBackend<Action, Observation> Backend;
-typedef std::shared_ptr<Backend> BackendPtr;
-typedef Backend::Status Status;
-
-typedef RobotData<Action, Observation, Status> Data;
-typedef std::shared_ptr<Data> DataPtr;
-
-//! @brief Frontend for the Finger robot.
-typedef RobotFrontend<Action, Observation> Frontend;
-typedef std::shared_ptr<Frontend> FrontendPtr;
-
-}  // namespace finger
-
+/**
+ * @brief Types for the Finger robot (basic 3-joint robot).
+ */
+struct FingerTypes : public NJointRobotTypes<3>
+{
+};
 
 }  // namespace robot_interfaces
