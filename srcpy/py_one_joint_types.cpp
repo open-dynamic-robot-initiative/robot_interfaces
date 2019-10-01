@@ -19,50 +19,26 @@
 #include <pybind11/stl_bind.h>
 #include <pybind11/pybind11.h>
 
-#include <robot_interfaces/finger.hpp>
+#include <robot_interfaces/n_joint_robot_types.hpp>
 
 using namespace robot_interfaces;
 
-PYBIND11_MODULE(py_finger, m)
+PYBIND11_MODULE(py_one_joint_types, m)
 {
-    pybind11::class_<robot_interfaces::FingerTypes::Data,
-        robot_interfaces::FingerTypes::DataPtr>(m, "Data")
-            .def(pybind11::init<>());
-
-    pybind11::class_<robot_interfaces::FingerTypes::Backend,
-        robot_interfaces::FingerTypes::BackendPtr>(m, "Backend")
-            .def("initialize", &FingerTypes::Backend::initialize);
-
-    pybind11::class_<FingerTypes::Observation>(m, "Observation")
-        .def_readwrite("angle", &FingerTypes::Observation::angle)
-        .def_readwrite("velocity", &FingerTypes::Observation::velocity)
-        .def_readwrite("torque", &FingerTypes::Observation::torque);
-
-    pybind11::class_<FingerTypes::Frontend, FingerTypes::FrontendPtr>(m, "Frontend")
-        .def(pybind11::init<robot_interfaces::FingerTypes::DataPtr>())
-        .def("get_observation", &FingerTypes::Frontend::get_observation)
-        .def("get_desired_action", &FingerTypes::Frontend::get_desired_action)
-        .def("get_applied_action", &FingerTypes::Frontend::get_applied_action)
-        .def("get_time_stamp_ms", &FingerTypes::Frontend::get_time_stamp_ms)
-        .def("append_desired_action", &FingerTypes::Frontend::append_desired_action)
-        .def("wait_until_time_index", &FingerTypes::Frontend::wait_until_timeindex)
-        .def("get_current_time_index", &FingerTypes::Frontend::get_current_timeindex);
-
-
     pybind11::class_<robot_interfaces::NJointRobotTypes<1>::Data,
-        robot_interfaces::NJointRobotTypes<1>::DataPtr>(m, "OJData")
+        robot_interfaces::NJointRobotTypes<1>::DataPtr>(m, "Data")
             .def(pybind11::init<>());
 
     pybind11::class_<robot_interfaces::NJointRobotTypes<1>::Backend,
-        robot_interfaces::NJointRobotTypes<1>::BackendPtr>(m, "OJBackend")
+        robot_interfaces::NJointRobotTypes<1>::BackendPtr>(m, "Backend")
             .def("initialize", &robot_interfaces::NJointRobotTypes<1>::Backend::initialize);
 
-    pybind11::class_<NJointRobotTypes<1>::Observation>(m, "OJObservation")
+    pybind11::class_<NJointRobotTypes<1>::Observation>(m, "Observation")
         .def_readwrite("angle", &NJointRobotTypes<1>::Observation::angle)
         .def_readwrite("velocity", &NJointRobotTypes<1>::Observation::velocity)
         .def_readwrite("torque", &NJointRobotTypes<1>::Observation::torque);
 
-    pybind11::class_<NJointRobotTypes<1>::Frontend, NJointRobotTypes<1>::FrontendPtr>(m, "OJFrontend")
+    pybind11::class_<NJointRobotTypes<1>::Frontend, NJointRobotTypes<1>::FrontendPtr>(m, "Frontend")
         .def(pybind11::init<robot_interfaces::NJointRobotTypes<1>::DataPtr>())
         .def("get_observation", &NJointRobotTypes<1>::Frontend::get_observation)
         .def("get_desired_action", &NJointRobotTypes<1>::Frontend::get_desired_action)
@@ -71,5 +47,5 @@ PYBIND11_MODULE(py_finger, m)
         .def("append_desired_action", &NJointRobotTypes<1>::Frontend::append_desired_action)
         .def("wait_until_time_index", &NJointRobotTypes<1>::Frontend::wait_until_timeindex)
         .def("get_current_time_index", &NJointRobotTypes<1>::Frontend::get_current_timeindex);
-
 }
+
