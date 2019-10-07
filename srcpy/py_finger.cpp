@@ -16,23 +16,18 @@
  */
 
 #include <pybind11/eigen.h>
-#include <pybind11/stl_bind.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl_bind.h>
 
 #include <robot_interfaces/finger.hpp>
+#include <robot_interfaces/finger_logger.hpp>
 
 using namespace robot_interfaces::finger;
 
 PYBIND11_MODULE(py_finger, m)
 {
+    pybind11::class_<Data, DataPtr>(m, "Data").def(pybind11::init<>());
 
-  //pybind11::class_<robot_interfaces::finger::Data,
-  //    robot_interfaces::finger::DataPtr>(m, "Data");
-    pybind11::class_<Data, DataPtr>(m, "Data")
-            .def(pybind11::init<>());
-
-    //pybind11::class_<robot_interfaces::finger::Backend,
-    //    robot_interfaces::finger::BackendPtr>(m, "Backend");
     pybind11::class_<Backend, BackendPtr>(m, "Backend");
 
     pybind11::class_<Observation>(m, "Observation")
@@ -50,4 +45,7 @@ PYBIND11_MODULE(py_finger, m)
         .def("wait_until_time_index", &Frontend::wait_until_timeindex)
         .def("get_current_time_index", &Frontend::get_current_timeindex);
 
+    pybind11::class_<robot_interfaces::FingerLogger>(m, "FingerLogger")
+        .def(pybind11::init<DataPtr, int, std::string>())
+        .def("run", &robot_interfaces::FingerLogger::run);
 }
