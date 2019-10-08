@@ -19,11 +19,11 @@
 #include <pybind11/stl_bind.h>
 #include <pybind11/pybind11.h>
 
-#include <robot_interfaces/finger.hpp>
+#include <robot_interfaces/finger_types.hpp>
 
 using namespace robot_interfaces;
 
-PYBIND11_MODULE(py_finger, m)
+PYBIND11_MODULE(py_finger_types, m)
 {
     pybind11::class_<robot_interfaces::FingerTypes::Data,
         robot_interfaces::FingerTypes::DataPtr>(m, "Data")
@@ -47,5 +47,4 @@ PYBIND11_MODULE(py_finger, m)
         .def("append_desired_action", &FingerTypes::Frontend::append_desired_action)
         .def("wait_until_time_index", &FingerTypes::Frontend::wait_until_timeindex)
         .def("get_current_time_index", &FingerTypes::Frontend::get_current_timeindex);
-
 }
