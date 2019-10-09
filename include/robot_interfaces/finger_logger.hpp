@@ -22,14 +22,16 @@
 #include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
 #include <real_time_tools/timer.hpp>
 
+#include <robot_interfaces/finger_types.hpp>
+
 namespace robot_interfaces
 {
 class FingerLogger
 {
 public:
-    typedef finger::Action Action;
-    typedef finger::Observation Observation;
-    typedef finger::Status Status;
+    typedef FingerTypes::Action Action;
+    typedef FingerTypes::Observation Observation;
+    typedef FingerTypes::Status Status;
 
     int block_size_;
     long int index_;

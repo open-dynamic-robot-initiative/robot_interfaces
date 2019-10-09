@@ -20,6 +20,7 @@
 #include <pybind11/pybind11.h>
 
 #include <robot_interfaces/finger_types.hpp>
+#include <robot_interfaces/finger_logger.hpp>
 
 using namespace robot_interfaces;
 
@@ -49,6 +50,6 @@ PYBIND11_MODULE(py_finger_types, m)
         .def("get_current_time_index", &FingerTypes::Frontend::get_current_timeindex);
 
     pybind11::class_<robot_interfaces::FingerLogger>(m, "FingerLogger")
-        .def(pybind11::init<DataPtr, int, std::string>())
+        .def(pybind11::init<FingerTypes::DataPtr, int, std::string>())
         .def("run", &robot_interfaces::FingerLogger::run);
 }
