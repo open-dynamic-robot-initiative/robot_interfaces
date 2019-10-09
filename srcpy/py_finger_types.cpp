@@ -20,17 +20,18 @@
 #include <pybind11/pybind11.h>
 
 #include <robot_interfaces/finger_types.hpp>
+#include <robot_interfaces/finger_logger.hpp>
 
 using namespace robot_interfaces;
 
 PYBIND11_MODULE(py_finger_types, m)
 {
-    pybind11::class_<robot_interfaces::FingerTypes::Data,
-        robot_interfaces::FingerTypes::DataPtr>(m, "Data")
+    pybind11::class_<FingerTypes::Data,
+        FingerTypes::DataPtr>(m, "Data")
             .def(pybind11::init<>());
 
-    pybind11::class_<robot_interfaces::FingerTypes::Backend,
-        robot_interfaces::FingerTypes::BackendPtr>(m, "Backend")
+    pybind11::class_<FingerTypes::Backend,
+        FingerTypes::BackendPtr>(m, "Backend")
             .def("initialize", &FingerTypes::Backend::initialize);
 
     pybind11::class_<FingerTypes::Observation>(m, "Observation")
@@ -47,4 +48,8 @@ PYBIND11_MODULE(py_finger_types, m)
         .def("append_desired_action", &FingerTypes::Frontend::append_desired_action)
         .def("wait_until_time_index", &FingerTypes::Frontend::wait_until_timeindex)
         .def("get_current_time_index", &FingerTypes::Frontend::get_current_timeindex);
+
+    pybind11::class_<robot_interfaces::FingerLogger>(m, "FingerLogger")
+        .def(pybind11::init<FingerTypes::DataPtr, int, std::string>())
+        .def("run", &robot_interfaces::FingerLogger::run);
 }
