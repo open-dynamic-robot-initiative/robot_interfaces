@@ -154,10 +154,12 @@ public:
                             << observation.torque[0] << " , "
                             << observation.torque[1] << " , "
                             << observation.torque[2] << " , "
-                            << applied_action[0] << " , " << applied_action[1]
-                            << " , " << applied_action[2] << " , "
-                            << desired_action[0] << " , " << desired_action[1]
-                            << " , " << desired_action[2] << " , "
+                            << applied_action.torque[0] << " , "
+                            << applied_action.torque[1] << " , "
+                            << applied_action.torque[2] << " , "
+                            << desired_action.torque[0] << " , "
+                            << desired_action.torque[1] << " , "
+                            << desired_action.torque[2] << " , "
                             << status.action_repetitions << std::endl;
                     }
 
