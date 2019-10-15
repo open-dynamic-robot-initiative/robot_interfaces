@@ -71,11 +71,11 @@ public:
         thread_->join();
     }
 
-    int get_max_action_repetitions()
+    uint32_t get_max_action_repetitions()
     {
         return max_action_repetitions_;
     }
-    void set_max_action_repetitions(const int &max_action_repetitions)
+    void set_max_action_repetitions(const uint32_t &max_action_repetitions)
     {
         max_action_repetitions_ = max_action_repetitions;
     }
@@ -89,7 +89,7 @@ private:
     MonitoredRobotDriver<Action, Observation> robot_driver_;
     std::shared_ptr<RobotData<Action, Observation, Status>> robot_data_;
     bool destructor_was_called_;  // should be atomic
-    int max_action_repetitions_;
+    uint32_t max_action_repetitions_;
 
     std::vector<real_time_tools::Timer> timers_;
 

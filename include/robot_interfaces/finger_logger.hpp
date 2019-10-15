@@ -48,10 +48,10 @@ public:
                      robot_data,
                  int block_size,
                  std::string filename)
-        : logger_data_(robot_data),
-          block_size_(block_size),
-          output_file_name_(filename),
-          destructor_was_called_(false)
+        : block_size_(block_size),
+          destructor_was_called_(false),
+          logger_data_(robot_data),
+          output_file_name_(filename)
     {
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
     }
@@ -126,7 +126,9 @@ public:
             {
                 output_file_.open(output_file_name_, std::ios_base::app);
 
+#ifdef VERBOSE
                 auto t1 = std::chrono::high_resolution_clock::now();
+#endif
 
                 for (long int j = index_; j < index_ + block_size_; j++)
                 {
@@ -177,14 +179,14 @@ public:
 #endif
                 }
 
+// to print the time taken for one block of data to be logged.
+#ifdef VERBOSE
                 auto t2 = std::chrono::high_resolution_clock::now();
                 auto duration =
                     std::chrono::duration_cast<std::chrono::microseconds>(t2 -
                                                                           t1)
                         .count();
 
-// to print the time taken for one block of data to be logged.
-#ifdef VERBOSE
                 std::cout << "Time taken for one block of data to be logged: "
                           << duration << std::endl;
 #endif
