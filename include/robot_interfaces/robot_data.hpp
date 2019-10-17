@@ -55,6 +55,7 @@ public:
 
     RobotData(size_t history_length = 1000,
               bool use_shared_memory = false,
+              // suppress unused warning (will be used in the future)
               __attribute__((unused)) std::string shared_memory_address = "")
     {
         if (use_shared_memory)
