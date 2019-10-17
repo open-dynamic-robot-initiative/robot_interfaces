@@ -34,13 +34,27 @@ PYBIND11_MODULE(py_finger_types, m)
         FingerTypes::BackendPtr>(m, "Backend")
             .def("initialize", &FingerTypes::Backend::initialize);
 
+    pybind11::class_<FingerTypes::Action>(m, "Action")
+        .def_readwrite("torque", &FingerTypes::Action::torque)
+        .def_readwrite("position", &FingerTypes::Action::position)
+        .def_readwrite("position_kp", &FingerTypes::Action::position_kp)
+        .def_readwrite("position_kd", &FingerTypes::Action::position_kd)
+        .def(pybind11::init<FingerTypes::Vector,
+                            FingerTypes::Vector,
+                            FingerTypes::Vector,
+                            FingerTypes::Vector>(),
+             pybind11::arg("torque") = FingerTypes::Vector::Zero(),
+             pybind11::arg("position") = FingerTypes::Action::None(),
+             pybind11::arg("position_kp") = FingerTypes::Action::None(),
+             pybind11::arg("position_kd") = FingerTypes::Action::None());
+
     pybind11::class_<FingerTypes::Observation>(m, "Observation")
-        .def_readwrite("angle", &FingerTypes::Observation::angle)
+        .def_readwrite("position", &FingerTypes::Observation::position)
         .def_readwrite("velocity", &FingerTypes::Observation::velocity)
         .def_readwrite("torque", &FingerTypes::Observation::torque);
 
     pybind11::class_<FingerTypes::Frontend, FingerTypes::FrontendPtr>(m, "Frontend")
-        .def(pybind11::init<robot_interfaces::FingerTypes::DataPtr>())
+        .def(pybind11::init<FingerTypes::DataPtr>())
         .def("get_observation", &FingerTypes::Frontend::get_observation)
         .def("get_desired_action", &FingerTypes::Frontend::get_desired_action)
         .def("get_applied_action", &FingerTypes::Frontend::get_applied_action)

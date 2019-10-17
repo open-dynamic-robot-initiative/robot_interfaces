@@ -33,8 +33,23 @@ PYBIND11_MODULE(py_one_joint_types, m)
         robot_interfaces::NJointRobotTypes<1>::BackendPtr>(m, "Backend")
             .def("initialize", &robot_interfaces::NJointRobotTypes<1>::Backend::initialize);
 
+    pybind11::class_<NJointRobotTypes<1>::Action>(m, "Action")
+        .def_readwrite("torque", &NJointRobotTypes<1>::Action::torque)
+        .def_readwrite("position", &NJointRobotTypes<1>::Action::position)
+        .def_readwrite("position_kp", &NJointRobotTypes<1>::Action::position_kp)
+        .def_readwrite("position_kd", &NJointRobotTypes<1>::Action::position_kd)
+        .def(
+            pybind11::init<NJointRobotTypes<1>::Vector,
+                           NJointRobotTypes<1>::Vector,
+                           NJointRobotTypes<1>::Vector,
+                           NJointRobotTypes<1>::Vector>(),
+            pybind11::arg("torque") = NJointRobotTypes<1>::Vector::Zero(),
+            pybind11::arg("position") = NJointRobotTypes<1>::Action::None(),
+            pybind11::arg("position_kp") = NJointRobotTypes<1>::Action::None(),
+            pybind11::arg("position_kd") = NJointRobotTypes<1>::Action::None());
+
     pybind11::class_<NJointRobotTypes<1>::Observation>(m, "Observation")
-        .def_readwrite("angle", &NJointRobotTypes<1>::Observation::angle)
+        .def_readwrite("position", &NJointRobotTypes<1>::Observation::position)
         .def_readwrite("velocity", &NJointRobotTypes<1>::Observation::velocity)
         .def_readwrite("torque", &NJointRobotTypes<1>::Observation::torque);
 

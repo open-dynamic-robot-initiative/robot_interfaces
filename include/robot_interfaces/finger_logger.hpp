@@ -48,10 +48,10 @@ public:
                      robot_data,
                  int block_size,
                  std::string filename)
-        : logger_data_(robot_data),
-          block_size_(block_size),
-          output_file_name_(filename),
-          destructor_was_called_(false)
+        : block_size_(block_size),
+          destructor_was_called_(false),
+          logger_data_(robot_data),
+          output_file_name_(filename)
     {
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
     }
@@ -77,11 +77,11 @@ public:
                      << ","
                      << "(Current Index)"
                      << ","
-                     << " {O} Angle J1 "
+                     << " {O} Position J1 "
                      << ","
-                     << " {O} Angle J2 "
+                     << " {O} Position J2 "
                      << ","
-                     << " {O} Angle J3 "
+                     << " {O} Position J3 "
                      << ","
                      << " {O} Velocity J1 "
                      << ","
@@ -126,7 +126,9 @@ public:
             {
                 output_file_.open(output_file_name_, std::ios_base::app);
 
+#ifdef VERBOSE
                 auto t1 = std::chrono::high_resolution_clock::now();
+#endif
 
                 for (long int j = index_; j < index_ + block_size_; j++)
                 {
@@ -143,19 +145,21 @@ public:
                         output_file_
                             << std::fixed
                             << logger_data_->observation->timestamp_s(j)
-                            << " , " << j << " , " << observation.angle[0]
-                            << " , " << observation.angle[1] << " , "
-                            << observation.angle[2] << " , "
+                            << " , " << j << " , " << observation.position[0]
+                            << " , " << observation.position[1] << " , "
+                            << observation.position[2] << " , "
                             << observation.velocity[0] << " , "
                             << observation.velocity[1] << " , "
                             << observation.velocity[2] << " , "
                             << observation.torque[0] << " , "
                             << observation.torque[1] << " , "
                             << observation.torque[2] << " , "
-                            << applied_action[0] << " , " << applied_action[1]
-                            << " , " << applied_action[2] << " , "
-                            << desired_action[0] << " , " << desired_action[1]
-                            << " , " << desired_action[2] << " , "
+                            << applied_action.torque[0] << " , "
+                            << applied_action.torque[1] << " , "
+                            << applied_action.torque[2] << " , "
+                            << desired_action.torque[0] << " , "
+                            << desired_action.torque[1] << " , "
+                            << desired_action.torque[2] << " , "
                             << status.action_repetitions << std::endl;
                     }
 
@@ -177,14 +181,14 @@ public:
 #endif
                 }
 
+// to print the time taken for one block of data to be logged.
+#ifdef VERBOSE
                 auto t2 = std::chrono::high_resolution_clock::now();
                 auto duration =
                     std::chrono::duration_cast<std::chrono::microseconds>(t2 -
                                                                           t1)
                         .count();
 
-// to print the time taken for one block of data to be logged.
-#ifdef VERBOSE
                 std::cout << "Time taken for one block of data to be logged: "
                           << duration << std::endl;
 #endif
