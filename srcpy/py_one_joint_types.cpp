@@ -49,7 +49,7 @@ PYBIND11_MODULE(py_one_joint_types, m)
             pybind11::arg("position_kd") = NJointRobotTypes<1>::Action::None());
 
     pybind11::class_<NJointRobotTypes<1>::Observation>(m, "Observation")
-        .def_readwrite("angle", &NJointRobotTypes<1>::Observation::angle)
+        .def_readwrite("position", &NJointRobotTypes<1>::Observation::position)
         .def_readwrite("velocity", &NJointRobotTypes<1>::Observation::velocity)
         .def_readwrite("torque", &NJointRobotTypes<1>::Observation::torque);
 
