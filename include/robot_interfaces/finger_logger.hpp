@@ -77,11 +77,11 @@ public:
                      << ","
                      << "(Current Index)"
                      << ","
-                     << " {O} Angle J1 "
+                     << " {O} Position J1 "
                      << ","
-                     << " {O} Angle J2 "
+                     << " {O} Position J2 "
                      << ","
-                     << " {O} Angle J3 "
+                     << " {O} Position J3 "
                      << ","
                      << " {O} Velocity J1 "
                      << ","
@@ -145,9 +145,9 @@ public:
                         output_file_
                             << std::fixed
                             << logger_data_->observation->timestamp_s(j)
-                            << " , " << j << " , " << observation.angle[0]
-                            << " , " << observation.angle[1] << " , "
-                            << observation.angle[2] << " , "
+                            << " , " << j << " , " << observation.position[0]
+                            << " , " << observation.position[1] << " , "
+                            << observation.position[2] << " , "
                             << observation.velocity[0] << " , "
                             << observation.velocity[1] << " , "
                             << observation.velocity[2] << " , "

@@ -163,7 +163,7 @@ struct NJointRobotTypes
 
     struct Observation
     {
-        Vector angle;
+        Vector position;
         Vector velocity;
         Vector torque;
     };

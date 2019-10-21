@@ -49,7 +49,7 @@ PYBIND11_MODULE(py_finger_types, m)
              pybind11::arg("position_kd") = FingerTypes::Action::None());
 
     pybind11::class_<FingerTypes::Observation>(m, "Observation")
-        .def_readwrite("angle", &FingerTypes::Observation::angle)
+        .def_readwrite("position", &FingerTypes::Observation::position)
         .def_readwrite("velocity", &FingerTypes::Observation::velocity)
         .def_readwrite("torque", &FingerTypes::Observation::torque);
 
