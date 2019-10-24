@@ -23,6 +23,13 @@
 
 namespace robot_interfaces
 {
+
+    struct Status
+    {
+        uint32_t action_repetitions;
+    };
+
+  
 /**
  * @brief Communication link between RobotDriver and RobotData.
  *
@@ -37,10 +44,6 @@ template <typename Action, typename Observation>
 class RobotBackend
 {
 public:
-    struct Status
-    {
-        uint32_t action_repetitions;
-    };
 
     // TODO add parameter: n_max_repeat_of_same_action
     /**

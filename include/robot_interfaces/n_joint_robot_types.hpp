@@ -170,7 +170,6 @@ struct NJointRobotTypes
 
     typedef RobotBackend<Action, Observation> Backend;
     typedef std::shared_ptr<Backend> BackendPtr;
-    typedef typename Backend::Status Status;
 
     typedef RobotData<Action, Observation, Status> Data;
     typedef std::shared_ptr<Data> DataPtr;

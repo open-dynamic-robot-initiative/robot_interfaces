@@ -31,7 +31,6 @@ class FingerLogger
 public:
     typedef FingerTypes::Action Action;
     typedef FingerTypes::Observation Observation;
-    typedef FingerTypes::Status Status;
 
     int block_size_;
     long int index_;
