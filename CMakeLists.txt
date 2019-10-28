@@ -83,6 +83,7 @@ add_subdirectory(demos)
 # python bindings #
 ###################
 
+# finger #
 set(py_finger_types_SRC_FILES
   srcpy/py_finger_types.cpp
 )
@@ -92,6 +93,7 @@ set_target_properties(py_finger_types PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
 install(TARGETS py_finger_types DESTINATION ${CATKIN_PACKAGE_PYTHON_DESTINATION})
 
+# one joint #
 set(py_one_joint_types_SRC_FILES
   srcpy/py_one_joint_types.cpp
 )
@@ -101,6 +103,15 @@ set_target_properties(py_one_joint_types PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
 install(TARGETS py_one_joint_types DESTINATION ${CATKIN_PACKAGE_PYTHON_DESTINATION})
 
+# two joint #
+set(py_two_joint_types_SRC_FILES
+  srcpy/py_two_joint_types.cpp
+)
+pybind11_add_module(py_two_joint_types ${py_two_joint_types_SRC_FILES})
+target_link_libraries(py_two_joint_types PRIVATE ${catkin_LIBRARIES})
+set_target_properties(py_two_joint_types PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
+install(TARGETS py_two_joint_types DESTINATION ${CATKIN_PACKAGE_PYTHON_DESTINATION})
 
 
 ##########################
