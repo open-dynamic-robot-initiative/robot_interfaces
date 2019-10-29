@@ -11,6 +11,7 @@
 #include <cmath>
 
 #include <Eigen/Eigen>
+#include <yaml-cpp/yaml.h>
 
 #include <robot_interfaces/robot_backend.hpp>
 #include <robot_interfaces/robot_data.hpp>
@@ -177,6 +178,53 @@ struct NJointRobotTypes
 
     typedef RobotFrontend<Action, Observation> Frontend;
     typedef std::shared_ptr<Frontend> FrontendPtr;
+
+
+    /**
+     * @brief Vector-YAML converter to implement automatic YAML conversion.
+     *
+     * To implement automatic YAML de- and encoding for a specific n-joint type,
+     * simply use the following code snippet:
+     *
+     *     struct MyTypes : public NJointRobotTypes<42> {};
+     *
+     *     namespace YAML
+     *     {
+     *     template <>
+     *     struct convert<MyTypes::Vector> : MyTypes::yaml_convert_vector {};
+     *     }
+     */
+    struct yaml_convert_vector
+    {
+        static YAML::Node encode(const Vector &rhs)
+        {
+            YAML::Node node;
+
+            for (size_t i = 0; i < N; i++)
+            {
+                node.push_back(rhs[i]);
+            }
+
+            return node;
+        }
+
+        static bool decode(const YAML::Node &node, Vector &rhs)
+        {
+            if (!node.IsSequence() || node.size() != N)
+            {
+                return false;
+            }
+
+            for (size_t i = 0; i < N; i++)
+            {
+                rhs[i] = node[i].as<double>();
+            }
+
+            return true;
+        }
+    };
+
+
 };  // namespace robot_interfaces
 
 }  // namespace robot_interfaces

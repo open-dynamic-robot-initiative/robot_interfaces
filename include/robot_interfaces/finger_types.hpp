@@ -20,3 +20,13 @@ struct FingerTypes : public NJointRobotTypes<3>
 };
 
 }  // namespace robot_interfaces
+
+
+namespace YAML
+{
+template <>
+struct convert<robot_interfaces::FingerTypes::Vector>
+    : robot_interfaces::FingerTypes::yaml_convert_vector
+{
+};
+}  // namespace YAML
