@@ -14,14 +14,21 @@
 #include <robot_interfaces/robot_data.hpp>
 #include <robot_interfaces/robot_frontend.hpp>
 
+/**
+* @brief Contains definitions of the methods to be implemented by the n joint
+* robot data types. The idea is that any external block such as the logger can
+* extract the information about the fields of the Observation and Action structures
+* using these methods. 
+* **/
+
 namespace robot_interfaces
 {
 class Loggable
 {
 public:
 
-  void std::vector<std::string>> get_name() = 0;
-  void std::vector<std::vector<double>> get_data() = 0;
-}
+  virtual std::vector<std::string> get_name() = 0;
+  virtual std::vector<std::vector<double>> get_data() = 0;
+};
 
 } //namespace robot_interfaces

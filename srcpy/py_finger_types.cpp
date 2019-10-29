@@ -65,5 +65,7 @@ PYBIND11_MODULE(py_finger_types, m)
 
     pybind11::class_<robot_interfaces::FingerLogger>(m, "FingerLogger")
         .def(pybind11::init<FingerTypes::DataPtr, int, std::string>())
-        .def("run", &robot_interfaces::FingerLogger::run);
+        .def("start", &robot_interfaces::FingerLogger::start)
+        .def("stop", &robot_interfaces::FingerLogger::stop);
+
 }

@@ -15,6 +15,9 @@
 #include <robot_interfaces/robot_backend.hpp>
 #include <robot_interfaces/robot_data.hpp>
 #include <robot_interfaces/robot_frontend.hpp>
+#include <robot_interfaces/loggable.hpp>
+
+using namespace std;
 
 namespace robot_interfaces
 {
@@ -27,12 +30,16 @@ namespace robot_interfaces
  *
  * @tparam N Number of joints
  */
+class Loggable;
+
 template <size_t N>
 struct NJointRobotTypes
 {
     typedef Eigen::Matrix<double, N, 1> Vector;
+    //typedef std::vector<std::string> Field_Name;
+    //typedef std::vector<std::vector<double>> Field_Data;
 
-    struct Action
+    struct Action: public Loggable
     {
         //! Desired torque command (in addition to position controller).
         Vector torque;
@@ -43,6 +50,42 @@ struct NJointRobotTypes
         //! D-gain for position controller.  If NaN, default is used.
         Vector position_kd;
 
+        std::vector<std::string> get_name() override
+        {
+          std::vector<std::string> names;
+          names.push_back("torque");
+          names.push_back("position");
+          names.push_back("position_kp");
+          names.push_back("position_kd");
+          return names;
+        }
+
+        std::vector<std::vector<double>> get_data() override
+        {
+          //first map the Eigen vectors to std::vectors
+          std::vector<double> torque_;
+          torque_.resize(torque.size());
+          Vector::Map(&torque_[0], torque.size()) = torque;
+
+          std::vector<double> position_;
+          position_.resize(position.size());
+          Vector::Map(&position_[0], position.size()) = position;
+
+          std::vector<double> position_kp_;
+          position_kp_.resize(position_kp.size());
+          Vector::Map(&position_kp_[0], position_kp.size()) = position_kp;
+
+          std::vector<double> position_kd_;
+          position_kd_.resize(position_kd.size());
+          Vector::Map(&position_kd_[0], position_kd.size()) = position_kd;
+
+          //then return them in a fixed size vector of vectors to avoid copying due to pushing back
+          //value of information!
+          std::vector<std::vector<double>> result;
+          result = {torque_, position_, position_kp_, position_kd_};
+
+          return result;
+        }
 
         /**
          * @brief Create action with desired torque and (optional) position.
@@ -161,11 +204,43 @@ struct NJointRobotTypes
         }
     };
 
-    struct Observation
+    struct Observation : public Loggable
     {
         Vector position;
         Vector velocity;
         Vector torque;
+
+        std::vector<std::string> get_name() override
+        {
+          std::vector<std::string> names;
+          names.push_back("position");
+          names.push_back("velocity");
+          names.push_back("torque");
+          return names;
+        }
+
+        std::vector<std::vector<double>> get_data() override
+        {
+
+          std::vector<double> position_;
+          position_.resize(position.size());
+          Vector::Map(&position_[0], torque.size()) = position;
+
+          std::vector<double> velocity_;
+          velocity_.resize(velocity.size());
+          Vector::Map(&velocity_[0], velocity.size()) = velocity;
+
+          std::vector<double> torque_;
+          torque_.resize(torque.size());
+          Vector::Map(&torque_[0], torque.size()) = torque;
+
+          std::vector<std::vector<double>> result;
+          result = {position_, velocity_, torque_};
+
+          return result;
+
+        }
+
     };
 
     typedef RobotBackend<Action, Observation> Backend;
