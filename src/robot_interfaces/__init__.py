@@ -1,2 +1,3 @@
 import robot_interfaces.py_finger_types as finger
 import robot_interfaces.py_one_joint_types as one_joint
+import robot_interfaces.py_two_joint_types as two_joint
