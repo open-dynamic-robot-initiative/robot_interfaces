@@ -63,7 +63,14 @@ PYBIND11_MODULE(py_finger_types, m)
         .def("wait_until_time_index", &FingerTypes::Frontend::wait_until_timeindex)
         .def("get_current_time_index", &FingerTypes::Frontend::get_current_timeindex);
 
-    pybind11::class_<robot_interfaces::FingerLogger>(m, "FingerLogger")
-        .def(pybind11::init<FingerTypes::DataPtr, int, std::string>())
-        .def("run", &robot_interfaces::FingerLogger::run);
+    // pybind11::class_<robot_interfaces::Logger<FingerTypes::Action, FingerTypes::Observation, FingerTypes::Status>>(m, "Logger")
+    //     .def(pybind11::init<FingerTypes::DataPtr, int, std::string>())
+    //     .def("start", &robot_interfaces::Logger<FingerTypes::Action, FingerTypes::Observation, FingerTypes::Status>::start)
+    //     .def("stop", &robot_interfaces::Logger<FingerTypes::Action, FingerTypes::Observation, FingerTypes::Status>::stop);
+
+    pybind11::class_<FingerTypes::Logger>(m, "Logger")
+        .def(pybind11::init<FingerTypes::DataPtr, int>())
+        .def("start", &FingerTypes::Logger::start)
+        .def("stop", &FingerTypes::Logger::stop);
+
 }
