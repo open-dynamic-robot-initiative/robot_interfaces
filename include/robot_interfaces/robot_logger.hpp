@@ -206,11 +206,13 @@ public:
 
                         }
 
-                        for(k = 0; k < desired_action_data.size(); k++)
+                        for(k = 0; k < desired_action_data.size() - 1; k++)
                         {
-                          std::copy(desired_action_data[k].begin(), desired_action_data[k].end() - 1, mid_iterator_);
-                          std::copy(desired_action_data[k].end() - 1, desired_action_data[k].end(), end_iterator_);
+                          std::copy(desired_action_data[k].begin(), desired_action_data[k].end(), mid_iterator_);
                         }
+
+                        std::copy(desired_action_data[desired_action_data.size() - 1].end() - 1, desired_action_data[desired_action_data.size() - 1].end(), end_iterator_);
+
 
                         // output_file_ << std::endl;
                     }
@@ -295,11 +297,13 @@ public:
 
         }
 
-        for(k = 0; k < desired_action_data.size(); k++)
+        for(k = 0; k < desired_action_data.size() - 1; k++)
         {
-          std::copy(desired_action_data[k].begin(), desired_action_data[k].end() - 1, mid_iterator_);
-          std::copy(desired_action_data[k].end() - 1, desired_action_data[k].end(), end_iterator_);
+          std::copy(desired_action_data[k].begin(), desired_action_data[k].end(), mid_iterator_);
         }
+
+        std::copy(desired_action_data[desired_action_data.size()].end() - 1, desired_action_data[desired_action_data.size()].end(), end_iterator_);
+
 
       }
 
