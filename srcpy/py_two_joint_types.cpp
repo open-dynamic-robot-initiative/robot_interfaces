@@ -61,5 +61,6 @@ PYBIND11_MODULE(py_two_joint_types, m)
         .def("get_time_stamp_ms", &NJointRobotTypes<2>::Frontend::get_time_stamp_ms)
         .def("append_desired_action", &NJointRobotTypes<2>::Frontend::append_desired_action)
         .def("wait_until_time_index", &NJointRobotTypes<2>::Frontend::wait_until_timeindex)
-        .def("get_current_time_index", &NJointRobotTypes<2>::Frontend::get_current_timeindex);
+        .def("get_current_time_index", &NJointRobotTypes<2>::Frontend::get_current_timeindex)
+        .def("get_oldest_time_index", &NJointRobotTypes<2>::Frontend::get_oldest_timeindex);
 }
