@@ -68,6 +68,10 @@ public:
     {
         return robot_data_->observation->newest_timeindex();
     }
+    TimeIndex get_oldest_timeindex()
+    {
+        return robot_data_->observation->oldest_timeindex();
+    }
 
     TimeIndex append_desired_action(const Action &desired_action)
     {

@@ -61,7 +61,8 @@ PYBIND11_MODULE(py_finger_types, m)
         .def("get_time_stamp_ms", &FingerTypes::Frontend::get_time_stamp_ms)
         .def("append_desired_action", &FingerTypes::Frontend::append_desired_action)
         .def("wait_until_time_index", &FingerTypes::Frontend::wait_until_timeindex)
-        .def("get_current_time_index", &FingerTypes::Frontend::get_current_timeindex);
+        .def("get_current_time_index", &FingerTypes::Frontend::get_current_timeindex)
+        .def("get_oldest_time_index", &FingerTypes::Frontend::get_oldest_timeindex);
 
     pybind11::class_<robot_interfaces::FingerLogger>(m, "FingerLogger")
         .def(pybind11::init<FingerTypes::DataPtr, int, std::string>())
