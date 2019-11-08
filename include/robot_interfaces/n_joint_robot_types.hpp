@@ -36,6 +36,27 @@ struct NJointRobotTypes
 {
     typedef Eigen::Matrix<double, N, 1> Vector;
 
+    // struct Status : public Loggable
+    // {
+    //     uint32_t action_repetitions;
+    //
+    //     std::vector<std::string> get_name override
+    //     {
+    //       std::vector<std::string> name;
+    //       name.push_back("Status");
+    //       return name;
+    //     }
+    //
+    //     std::vector<std::vector<double>> get_data override
+    //     {
+    //       std::vector<std::vector<double>> result;
+    //       std:vector<double> temp = status;
+    //       result = temp;
+    //       return result;
+    //     }
+    //
+    // };
+
     struct Action: public Loggable
     {
         //! Desired torque command (in addition to position controller).

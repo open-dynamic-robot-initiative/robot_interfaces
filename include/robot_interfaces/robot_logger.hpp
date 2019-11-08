@@ -133,6 +133,81 @@ public:
 
     }
 
+    void append_header()
+    {
+
+      output_file_.open(output_file_name_);
+      std::ostream_iterator<std::string> mid_iterator(output_file_, " , ");
+      std::ostream_iterator<std::string> end_iterator(output_file_, "\n");
+
+      std::vector<std::string> header = get_header();
+      std::copy(header.begin(), header.end() - 1, mid_iterator);
+      std::copy(header.end() - 1, header.end(), end_iterator);
+
+      output_file_.close();
+
+    }
+
+
+    void append_new()
+    {
+
+      std::ostream_iterator<double> mid_iterator_(output_file_, " , ");
+      std::ostream_iterator<double> end_iterator_(output_file_, "\n");
+
+      std::vector<std::vector<double>> observation_data = observation.get_data();
+      std::vector<std::vector<double>> applied_action_data = applied_action.get_data();
+      std::vector<std::vector<double>> desired_action_data = desired_action.get_data();
+
+      int k;
+
+      output_file_.open(output_file_name_, std::ios_base::app);
+
+      for (long int j = index_; j < std::min(index_ + block_size_, logger_data_->observation->newest_timeindex()); j++)
+      {
+          try
+          {
+              applied_action = (*logger_data_->applied_action)[j];
+              desired_action = (*logger_data_->desired_action)[j];
+              observation = (*logger_data_->observation)[j];
+              status = (*logger_data_->status)[j];
+
+              observation_data = observation.get_data();
+              applied_action_data = applied_action.get_data();
+              desired_action_data = desired_action.get_data();
+
+              output_file_ << logger_data_->observation->timestamp_s(j) << " , " << j << " , " ;
+
+              for(k = 0; k < observation_data.size(); k++)
+              {
+              std::copy(observation_data[k].begin(), observation_data[k].end(), mid_iterator_);
+              }
+
+              for(k = 0; k < applied_action_data.size(); k++)
+              {
+                std::copy(applied_action_data[k].begin(), applied_action_data[k].end(), mid_iterator_);
+
+              }
+
+              for(k = 0; k < desired_action_data.size() - 1; k++)
+              {
+                std::copy(desired_action_data[k].begin(), desired_action_data[k].end(), mid_iterator_);
+              }
+
+              std::copy(desired_action_data[desired_action_data.size() - 1].end() - 1, desired_action_data[desired_action_data.size() - 1].end(), end_iterator_);
+
+          }
+
+          catch (const std::exception &e)
+          {
+              std::cout << "Trying to access index older than the "
+                           "oldest! Skipping ahead."
+                        << std::endl;
+          }
+        }
+
+    }
+
     static void *write(void *instance_pointer)
     {
         ((RobotLogger *)(instance_pointer))->write();
@@ -141,22 +216,6 @@ public:
 
     void write()
     {
-
-        std::vector<std::vector<double>> observation_data = observation.get_data();
-        std::vector<std::vector<double>> applied_action_data = applied_action.get_data();
-        std::vector<std::vector<double>> desired_action_data = desired_action.get_data();
-
-        output_file_.open(output_file_name_);
-        std::ostream_iterator<std::string> mid_iterator(output_file_, " , ");
-        std::ostream_iterator<std::string> end_iterator(output_file_, "\n");
-        std::vector<std::string> header = get_header();
-        std::copy(header.begin(), header.end() - 1, mid_iterator);
-        std::copy(header.end() - 1, header.end(), end_iterator);
-
-        output_file_ << std::endl;
-        output_file_.close();
-
-        int k;
 
         while (!stop_was_called_ &&
                !(logger_data_->desired_action->length() > 0))
@@ -171,63 +230,16 @@ public:
             if (index_ + block_size_ <=
                 logger_data_->observation->newest_timeindex())
             {
-                output_file_.open(output_file_name_, std::ios_base::app);
-
 
 #ifdef VERBOSE
                 auto t1 = std::chrono::high_resolution_clock::now();
 #endif
 
-                for (long int j = index_; j < index_ + block_size_; j++)
-                {
-                    try
-                    {
-                        std::ostream_iterator<double> mid_iterator_(output_file_, " , ");
-                        std::ostream_iterator<double> end_iterator_(output_file_, "\n");
-                        applied_action = (*logger_data_->applied_action)[j];
-                        desired_action = (*logger_data_->desired_action)[j];
-                        observation = (*logger_data_->observation)[j];
-                        status = (*logger_data_->status)[j];
+                append_new();
 
-                        observation_data = observation.get_data();
-                        applied_action_data = applied_action.get_data();
-                        desired_action_data = desired_action.get_data();
+                index_ += block_size_;
 
-                        output_file_ << logger_data_->observation->timestamp_s(j) << " , " << j << " , " ;
-
-                        for(k = 0; k < observation_data.size(); k++)
-                        {
-                        std::copy(observation_data[k].begin(), observation_data[k].end(), mid_iterator_);
-                        }
-
-                        for(k = 0; k < applied_action_data.size(); k++)
-                        {
-                          std::copy(applied_action_data[k].begin(), applied_action_data[k].end(), mid_iterator_);
-
-                        }
-
-                        for(k = 0; k < desired_action_data.size() - 1; k++)
-                        {
-                          std::copy(desired_action_data[k].begin(), desired_action_data[k].end(), mid_iterator_);
-                        }
-
-                        std::copy(desired_action_data[desired_action_data.size() - 1].end() - 1, desired_action_data[desired_action_data.size() - 1].end(), end_iterator_);
-
-
-                        // output_file_ << std::endl;
-                    }
-
-                    catch (const std::exception &e)
-                    {
-                        std::cout << "Trying to access index older than the "
-                                     "oldest! Skipping ahead."
-                                  << std::endl;
-                    }
-                  }
-
-                    index_ += block_size_;
-
-                    output_file_.close();
+                output_file_.close();
 
 // to check whether the data being requested to be logged is in the buffer of
 // the timeseries and inspect effect of delays
@@ -265,49 +277,10 @@ public:
     void stop()
     {
 
-      std::vector<std::vector<double>> observation_data;
-      std::vector<std::vector<double>> applied_action_data;
-      std::vector<std::vector<double>> desired_action_data;
-
-      output_file_.open(output_file_name_, std::ios_base::app);
-      std::ostream_iterator<double> mid_iterator_(output_file_, " , ");
-      std::ostream_iterator<double> end_iterator_(output_file_, "\n");
-
-      int k;
-
-      for(int j = index_; j < logger_data_->observation->newest_timeindex(); j++)
-      {
-        applied_action = (*logger_data_->applied_action)[j];
-        desired_action = (*logger_data_->desired_action)[j];
-        observation = (*logger_data_->observation)[j];
-        status = (*logger_data_->status)[j];
-
-        observation_data = observation.get_data();
-        applied_action_data = applied_action.get_data();
-        desired_action_data = desired_action.get_data();
-
-        for(k = 0; k < observation_data.size(); k++)
-        {
-          std::copy(observation_data[k].begin(), observation_data[k].end(), mid_iterator_);
-        }
-
-        for(k = 0; k < applied_action_data.size(); k++)
-        {
-          std::copy(applied_action_data[k].begin(), applied_action_data[k].end(), mid_iterator_);
-
-        }
-
-        for(k = 0; k < desired_action_data.size() - 1; k++)
-        {
-          std::copy(desired_action_data[k].begin(), desired_action_data[k].end(), mid_iterator_);
-        }
-
-        std::copy(desired_action_data[desired_action_data.size()].end() - 1, desired_action_data[desired_action_data.size()].end(), end_iterator_);
-
-
-      }
+      append_new();
 
       output_file_.close();
+
     }
 
 private:
