@@ -10,24 +10,23 @@
 
 namespace robot_interfaces
 {
-
-/**
-* @brief Contains definitions of the methods to be implemented by the data types.
-**/
+/*
+ * @brief Contains definitions of the methods to be implemented by all the robot
+ * data types.
+ */
 
 class Loggable
 {
 public:
+    /*
+     * @brief Return the names of the fields in the structure.
+     */
+    virtual std::vector<std::string> get_name() = 0;
 
-  /**
-  * @brief Return the names of the fields in the structure.
-  **/
-  virtual std::vector<std::string> get_name() = 0;
-
-  /**
-  * @brief Return the data in the fields of the structure.
-  **/
-  virtual std::vector<std::vector<double>> get_data() = 0;
+    /*
+     * @brief Return the data in the fields of the structure.
+     */
+    virtual std::vector<std::vector<double>> get_data() = 0;
 };
 
-} //namespace robot_interfaces
+}// namespace robot_interfaces
