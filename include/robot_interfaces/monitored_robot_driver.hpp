@@ -168,9 +168,17 @@ private:
         // loop until shutdown and monitor action timing
         for (size_t t = 0; !is_shutdown_; t++)
         {
-            bool action_has_ended_on_time =
-                action_end_logger_.wait_for_timeindex(t,
-                                                      max_action_duration_s_);
+	  bool action_has_ended_on_time;
+	  if (max_action_duration_s_ >0)
+	    {
+	      action_has_ended_on_time = action_end_logger_.wait_for_timeindex(t,
+									       max_action_duration_s_);
+	    }
+	  else
+	    {
+	      action_has_ended_on_time = action_end_logger_.wait_for_timeindex(t);
+	    }
+	    
             if (!action_has_ended_on_time)
             {
                 std::cout
@@ -181,9 +189,15 @@ private:
                 return;
             }
 
-            bool action_has_started_on_time =
-                action_start_logger_.wait_for_timeindex(
-                    t + 1, max_inter_action_duration_s_);
+            bool action_has_started_on_time;
+	    if(max_inter_action_duration_s_>0)
+	      action_has_started_on_time = action_start_logger_.wait_for_timeindex(
+										   t + 1, max_inter_action_duration_s_);
+	    else
+	      {
+		action_has_started_on_time = action_start_logger_.wait_for_timeindex(
+										   t + 1);
+	      }
             if (!action_has_started_on_time)
             {
                 std::cout << "Action did not start on time, shutting down. Any "
