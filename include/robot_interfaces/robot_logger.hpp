@@ -217,6 +217,8 @@ public:
     void write()
     {
 
+        append_header();
+
         while (!stop_was_called_ &&
                !(logger_data_->desired_action->length() > 0))
         {
