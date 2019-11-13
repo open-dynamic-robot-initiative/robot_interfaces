@@ -15,10 +15,10 @@
 
 #include <Eigen/Eigen>
 
-#include <robot_interfaces/infix_iterator.h>
 #include <mpi_cpp_tools/basic_tools.hpp>
 #include <mpi_cpp_tools/dynamical_systems.hpp>
 #include <mpi_cpp_tools/math.hpp>
+#include <mpi_cpp_tools/infix_iterator.h>
 
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
@@ -44,6 +44,7 @@ template <typename Action, typename Observation, typename Status>
 class RobotLogger
 {
 public:
+
     static_assert(std::is_base_of<Loggable, Action>::value,
                   "Action must derive from Loggable");
     static_assert(std::is_base_of<Loggable, Observation>::value,
@@ -95,6 +96,7 @@ public:
 
     std::vector<std::string> get_header()
     {
+
         std::vector<std::string> observation_name = observation.get_name();
         std::vector<std::string> applied_action_name =
             applied_action.get_name();
@@ -109,9 +111,6 @@ public:
         std::vector<std::vector<double>> desired_action_data =
             desired_action.get_data();
         std::vector<std::vector<double>> status_data = status.get_data();
-
-        std::string temp;
-        int i, j;
 
         // using the newest index information in logger_data to extract
         // information on the fields to be logged
@@ -137,11 +136,13 @@ public:
         append_name_to_header(desired_action_name, desired_action_data);
 
         return header_;
+
     }
 
     void append_name_to_header(std::vector<std::string> field_name,
                                std::vector<std::vector<double>> field_data)
     {
+
         int i, j;
         std::string temp;
 
@@ -161,32 +162,28 @@ public:
             }
           }
         }
+
     }
 
-    //TODO: Using the infix_iterator results in a blank log file.
     void append_header_to_file()
     {
-        output_file_.open(output_file_name_);
 
-        std::ostream_iterator<std::string> mid_iterator_string(output_file_,
-                                                               " , ");
-        std::ostream_iterator<std::string> end_iterator_string(output_file_,
-                                                               "\n");
+      output_file_.open(output_file_name_, std::ios_base::app);
+      infix_ostream_iterator<std::string> string_iterator(output_file_, ", ");
 
-        header_ = get_header();
+      header_ = get_header();
 
-        std::copy(header_.begin(), header_.end() - 1, mid_iterator_string);
-        std::copy(header_.end() - 1, header_.end(), end_iterator_string);
+      std::copy(header_.begin(), header_.end(), string_iterator);
+      output_file_ << std::endl;
 
-        output_file_.close();
+      output_file_.close();
+
     }
 
-    //TODO: fix the working of the infix_iterator and move the redundant writing
-    //part in a separate method.
     void append_robot_data_to_file()
     {
-        std::ostream_iterator<double> mid_iterator_double(output_file_, " , ");
-        std::ostream_iterator<double> end_iterator_double(output_file_, "\n");
+
+        output_file_.open(output_file_name_, std::ios_base::app);
 
         std::vector<std::vector<double>> observation_data =
             observation.get_data();
@@ -195,8 +192,6 @@ public:
         std::vector<std::vector<double>> desired_action_data =
             desired_action.get_data();
         std::vector<std::vector<double>> status_data = status.get_data();
-
-        int k;
 
         for (long int j = index_;
              j < std::min(index_ + block_size_,
@@ -218,39 +213,13 @@ public:
                 output_file_ << logger_data_->observation->timestamp_s(j)
                              << " , " << j << " , ";
 
-                for (k = 0; k < status_data.size(); k++)
-                {
-                    std::copy(status_data[k].begin(),
-                              status_data[k].end(),
-                              mid_iterator_double);
-                }
+                append_field_data_to_robot_data(status_data);
+                append_field_data_to_robot_data(observation_data);
+                append_field_data_to_robot_data(applied_action_data);
+                append_field_data_to_robot_data(desired_action_data);
 
-                for (k = 0; k < observation_data.size(); k++)
-                {
-                    std::copy(observation_data[k].begin(),
-                              observation_data[k].end(),
-                              mid_iterator_double);
-                }
+                output_file_ << std::endl;
 
-                for (k = 0; k < applied_action_data.size(); k++)
-                {
-                    std::copy(applied_action_data[k].begin(),
-                              applied_action_data[k].end(),
-                              mid_iterator_double);
-                }
-
-                for (k = 0; k < desired_action_data.size(); k++)
-                {
-                    std::copy(desired_action_data[k].begin(),
-                              desired_action_data[k].end(),
-                              mid_iterator_double);
-                }
-
-                std::copy(
-                    desired_action_data[desired_action_data.size() - 1].end() -
-                        1,
-                    desired_action_data[desired_action_data.size() - 1].end(),
-                    end_iterator_double);
             }
 
             catch (const std::exception &e)
@@ -260,6 +229,22 @@ public:
                           << std::endl;
             }
         }
+
+        output_file_.close();
+    }
+
+    void append_field_data_to_robot_data(std::vector<std::vector<double>> field_data)
+    {
+
+      infix_ostream_iterator<double> double_iterator(output_file_, ", ");
+
+      for (auto data : field_data)
+      {
+          std::copy(data.begin(),
+                    data.end(),
+                    double_iterator);
+      }
+
     }
 
     static void *write(void *instance_pointer)
@@ -270,9 +255,8 @@ public:
 
     void write()
     {
-        append_header_to_file();
 
-        output_file_.open(output_file_name_, std::ios_base::app);
+        append_header_to_file();
 
         while (!stop_was_called_ &&
                !(logger_data_->desired_action->length() > 0))
@@ -293,28 +277,7 @@ public:
 
                 append_robot_data_to_file();
 
-                        }
-
-                        for(k = 0; k < desired_action_data.size(); k++)
-                        {
-                          std::copy(desired_action_data[k].begin(), desired_action_data[k].end() - 1, mid_iterator_);
-                          std::copy(desired_action_data[k].end() - 1, desired_action_data[k].end(), end_iterator_);
-                        }
-
-                        // output_file_ << std::endl;
-                    }
-
-                    catch (const std::exception &e)
-                    {
-                        std::cout << "Trying to access index older than the "
-                                     "oldest! Skipping ahead."
-                                  << std::endl;
-                    }
-                  }
-
-                    index_ += block_size_;
-
-                    output_file_.close();
+                index_ += block_size_;
 
 // to check whether the data being requested to be logged is in the buffer of
 // the timeseries and inspect effect of delays
@@ -339,21 +302,26 @@ public:
 #endif
             }
         }
+
     }
 
     void start(std::string filename)
     {
+
         output_file_name_ = filename;
         thread_->create_realtime_thread(&RobotLogger::write, this);
+
     }
 
     void stop()
     {
+
         output_file_.open(output_file_name_, std::ios_base::app);
 
         append_robot_data_to_file();
 
         output_file_.close();
+
     }
 
 private:

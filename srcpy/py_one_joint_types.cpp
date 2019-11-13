@@ -62,5 +62,5 @@ PYBIND11_MODULE(py_one_joint_types, m)
         .def("append_desired_action", &NJointRobotTypes<1>::Frontend::append_desired_action)
         .def("wait_until_time_index", &NJointRobotTypes<1>::Frontend::wait_until_timeindex)
         .def("get_current_time_index", &NJointRobotTypes<1>::Frontend::get_current_timeindex);
-
 }
+

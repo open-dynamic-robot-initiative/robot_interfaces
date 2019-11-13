@@ -36,11 +36,8 @@ struct NJointRobotTypes
 {
     typedef Eigen::Matrix<double, N, 1> Vector;
 
-<<<<<<< HEAD
     struct Action: public Loggable
-=======
-    struct Action : public Loggable
->>>>>>> 297fa30... implementing methods for reducing redundancy
+
     {
         //! Desired torque command (in addition to position controller).
         Vector torque;
@@ -242,6 +239,6 @@ struct NJointRobotTypes
     typedef std::shared_ptr<Frontend> FrontendPtr;
 
     typedef RobotLogger<Action, Observation, Status> Logger;
-};  // namespace robot_interfaces
+}; 
 
 }  // namespace robot_interfaces
