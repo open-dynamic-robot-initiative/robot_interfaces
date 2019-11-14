@@ -32,9 +32,10 @@ namespace robot_interfaces
   /**
    * @brief To log data from *any* robot (real, simulated, fake).
    *
-   * The logger logs the timestamp, the time index, and the values of every
-   * observation, action, and status variable. Further loggable data structures
-   * can be added to the logger, which *must* derive from class Loggable.
+   * The RobotLogger logs the timestamp, the time index, and the values of every
+   * Observation, Action, and Status variable. Observation, Action, and Status
+   * *must* derive from Loggable. Any further data structure can be logged
+   * similarly, which derives from Loggable.
    *
    * @tparam Action
    * @tparam Observation
@@ -45,6 +46,11 @@ class RobotLogger
 {
 public:
 
+    /*
+    * This is to verify that the template types of the RobotLogger are based on
+    * Loggable.
+    */
+
     static_assert(std::is_base_of<Loggable, Action>::value,
                   "Action must derive from Loggable");
     static_assert(std::is_base_of<Loggable, Observation>::value,
@@ -53,15 +59,11 @@ public:
                   "Status must derive from Loggable");
 
     /*
-    * Currently, the level of generalisability of the logger is that we know
-    * the following four structures exist for *any* robot whose data is to be
-    * logged.
+    * Currently, the level of generalisability of the logger is that we *know*
+    * the following four timeseries structures exist for *any* robot whose data is to be
+    * logged- applied_action and desired_action (of type Action), observation
+    * (of type Observation), and status (of type Status).
     */
-
-    Action applied_action;
-    Action desired_action;
-    Observation observation;
-    Status status;
 
     std::shared_ptr<robot_interfaces::RobotData<Action, Observation, Status>>
         logger_data_;
@@ -94,8 +96,18 @@ public:
         thread_->join();
     }
 
+    /*
+    * get_header() is to get the title of the log file, describing all the information
+    * that will be logged in it.
+    */
+
     std::vector<std::string> get_header()
     {
+
+        Action applied_action;
+        Action desired_action;
+        Observation observation;
+        Status status;
 
         std::vector<std::string> observation_name = observation.get_name();
         std::vector<std::string> applied_action_name =
@@ -112,58 +124,50 @@ public:
             desired_action.get_data();
         std::vector<std::vector<double>> status_data = status.get_data();
 
-        // using the newest index information in logger_data to extract
-        // information on the fields to be logged
-        applied_action =
-            (*logger_data_->applied_action)[logger_data_->applied_action
-                                                ->newest_timeindex()];
-        desired_action =
-            (*logger_data_->desired_action)[logger_data_->desired_action
-                                                ->newest_timeindex()];
-        observation =
-            (*logger_data_
-                  ->observation)[logger_data_->observation->newest_timeindex()];
-        status =
-            (*logger_data_->status)[logger_data_->status->newest_timeindex()];
-
         header_.push_back("#");
         header_.push_back("[Timestamp]");
-        header_.push_back("(Time Index)");
+        header_.push_back("Time Index");
 
-        append_name_to_header(status_name, status_data);
-        append_name_to_header(observation_name, observation_data);
-        append_name_to_header(applied_action_name, applied_action_data);
-        append_name_to_header(desired_action_name, desired_action_data);
+        append_name_to_header("(S)", status_name, status_data);
+        append_name_to_header("(O)", observation_name, observation_data);
+        append_name_to_header("(AA)", applied_action_name, applied_action_data);
+        append_name_to_header("(DA)", desired_action_name, desired_action_data);
 
         return header_;
 
     }
 
-    void append_name_to_header(std::vector<std::string> field_name,
+    /*
+    * append_name_to_header() fills in the name information of each field to be logged
+    * according to the size of the field.
+    */
+
+    void append_name_to_header(std::string identifier, std::vector<std::string> field_name,
                                std::vector<std::vector<double>> field_data)
     {
 
-        int i, j;
-        std::string temp;
-
-        for (i = 0; i < field_name.size(); i++)
+        for (size_t i = 0; i < field_name.size(); i++)
         {
           if(field_data[i].size() == 1)
           {
-            temp = field_name[i];
+            std::string temp = field_name[i];
             header_.push_back(temp);
           }
           else
           {
-            for (j = 0; j < field_data[i].size(); j++)
+            for (size_t j = 0; j < field_data[i].size(); j++)
             {
-                temp = field_name[i] + " " + std::to_string(j);
+                std::string temp = identifier + " " + field_name[i] + " " + std::to_string(j);
                 header_.push_back(temp);
             }
           }
         }
 
     }
+
+    /*
+    * append_header_to_file() finally writes the header to the log file.
+    */
 
     void append_header_to_file()
     {
@@ -180,18 +184,15 @@ public:
 
     }
 
+    /*
+    * append_robot_data_to_file() writes the timestamped robot data at *hopefully*
+    * every time index to the log file.
+    */
+
     void append_robot_data_to_file()
     {
 
         output_file_.open(output_file_name_, std::ios_base::app);
-
-        std::vector<std::vector<double>> observation_data =
-            observation.get_data();
-        std::vector<std::vector<double>> applied_action_data =
-            applied_action.get_data();
-        std::vector<std::vector<double>> desired_action_data =
-            desired_action.get_data();
-        std::vector<std::vector<double>> status_data = status.get_data();
 
         for (long int j = index_;
              j < std::min(index_ + block_size_,
@@ -200,23 +201,23 @@ public:
         {
             try
             {
-                applied_action = (*logger_data_->applied_action)[j];
-                desired_action = (*logger_data_->desired_action)[j];
-                observation = (*logger_data_->observation)[j];
-                status = (*logger_data_->status)[j];
+                Action applied_action = (*logger_data_->applied_action)[j];
+                Action desired_action = (*logger_data_->desired_action)[j];
+                Observation observation = (*logger_data_->observation)[j];
+                Status status = (*logger_data_->status)[j];
 
-                status_data = status.get_data();
-                observation_data = observation.get_data();
-                applied_action_data = applied_action.get_data();
-                desired_action_data = desired_action.get_data();
+                std::vector<std::vector<double>> status_data = status.get_data();
+                std::vector<std::vector<double>> observation_data = observation.get_data();
+                std::vector<std::vector<double>> applied_action_data = applied_action.get_data();
+                std::vector<std::vector<double>> desired_action_data = desired_action.get_data();
 
                 output_file_ << logger_data_->observation->timestamp_s(j)
                              << " , " << j << " , ";
 
-                append_field_data_to_robot_data(status_data);
-                append_field_data_to_robot_data(observation_data);
-                append_field_data_to_robot_data(applied_action_data);
-                append_field_data_to_robot_data(desired_action_data);
+                append_field_data_to_file(status_data);
+                append_field_data_to_file(observation_data);
+                append_field_data_to_file(applied_action_data);
+                append_field_data_to_file(desired_action_data);
 
                 output_file_ << std::endl;
 
@@ -233,7 +234,12 @@ public:
         output_file_.close();
     }
 
-    void append_field_data_to_robot_data(std::vector<std::vector<double>> field_data)
+    /*
+    * append_field_data_to_robot_data() appends the data corresponding to
+    * every field at the same time index to the log file.
+    */
+
+    void append_field_data_to_file(std::vector<std::vector<double>> field_data)
     {
 
       infix_ostream_iterator<double> double_iterator(output_file_, ", ");
@@ -241,8 +247,9 @@ public:
       for (auto data : field_data)
       {
           std::copy(data.begin(),
-                    data.end(),
+                    data.end() - 1,
                     double_iterator);
+
       }
 
     }
@@ -252,6 +259,12 @@ public:
         ((RobotLogger *)(instance_pointer))->write();
         return nullptr;
     }
+
+    /*
+    * write() is the master function which writes everything to the log file.
+    * It dumps all the data corresponding to block_size_ number of time indices
+    * at one go.
+    */
 
     void write()
     {
@@ -279,23 +292,24 @@ public:
 
                 index_ += block_size_;
 
+#ifdef VERBOSE
+
 // to check whether the data being requested to be logged is in the buffer of
 // the timeseries and inspect effect of delays
-#ifdef VERBOSE
+
                 std::cout << "Index trying to access, oldest index in the "
                              "buffer: "
                           << j << ","
                           << logger_data_->observation->oldest_timeindex()
                           << std::endl;
-#endif
 
-// to print the time taken for one block of data to be logged.
-#ifdef VERBOSE
                 auto t2 = std::chrono::high_resolution_clock::now();
                 auto duration =
                     std::chrono::duration_cast<std::chrono::microseconds>(t2 -
                                                                           t1)
                         .count();
+
+// to print the time taken for one block of data to be logged.
 
                 std::cout << "Time taken for one block of data to be logged: "
                           << duration << std::endl;
@@ -305,6 +319,10 @@ public:
 
     }
 
+    /*
+    * call start() to create the thread for the RobotLogger and start logging!
+    */
+
     void start(std::string filename)
     {
 
@@ -312,6 +330,10 @@ public:
         thread_->create_realtime_thread(&RobotLogger::write, this);
 
     }
+
+    /*
+    * call stop() when you want to stop logging.
+    */
 
     void stop()
     {
