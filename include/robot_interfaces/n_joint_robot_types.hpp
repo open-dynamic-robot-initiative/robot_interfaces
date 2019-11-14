@@ -211,7 +211,7 @@ struct NJointRobotTypes
         {
             std::vector<double> position_;
             position_.resize(position.size());
-            Vector::Map(&position_[0], torque.size()) = position;
+            Vector::Map(&position_[0], position.size()) = position;
 
             std::vector<double> velocity_;
             velocity_.resize(velocity.size());
@@ -239,6 +239,6 @@ struct NJointRobotTypes
     typedef std::shared_ptr<Frontend> FrontendPtr;
 
     typedef RobotLogger<Action, Observation, Status> Logger;
-}; 
+};
 
 }  // namespace robot_interfaces
