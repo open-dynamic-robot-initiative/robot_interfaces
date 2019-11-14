@@ -15,55 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pybind11/eigen.h>
-#include <pybind11/stl_bind.h>
-#include <pybind11/pybind11.h>
-
+/**
+ * \file
+ * \brief Create bindings for One-Joint robot types
+ */
+#include <robot_interfaces/pybind_helper.hpp>
 #include <robot_interfaces/finger_types.hpp>
 #include <robot_interfaces/finger_logger.hpp>
+
 
 using namespace robot_interfaces;
 
 PYBIND11_MODULE(py_finger_types, m)
 {
-    pybind11::class_<FingerTypes::Data,
-        FingerTypes::DataPtr>(m, "Data")
-            .def(pybind11::init<>());
+    create_python_bindings<FingerTypes>(m);
 
-    pybind11::class_<FingerTypes::Backend,
-        FingerTypes::BackendPtr>(m, "Backend")
-            .def("initialize", &FingerTypes::Backend::initialize);
-
-    pybind11::class_<FingerTypes::Action>(m, "Action")
-        .def_readwrite("torque", &FingerTypes::Action::torque)
-        .def_readwrite("position", &FingerTypes::Action::position)
-        .def_readwrite("position_kp", &FingerTypes::Action::position_kp)
-        .def_readwrite("position_kd", &FingerTypes::Action::position_kd)
-        .def(pybind11::init<FingerTypes::Vector,
-                            FingerTypes::Vector,
-                            FingerTypes::Vector,
-                            FingerTypes::Vector>(),
-             pybind11::arg("torque") = FingerTypes::Vector::Zero(),
-             pybind11::arg("position") = FingerTypes::Action::None(),
-             pybind11::arg("position_kp") = FingerTypes::Action::None(),
-             pybind11::arg("position_kd") = FingerTypes::Action::None());
-
-    pybind11::class_<FingerTypes::Observation>(m, "Observation")
-        .def_readwrite("position", &FingerTypes::Observation::position)
-        .def_readwrite("velocity", &FingerTypes::Observation::velocity)
-        .def_readwrite("torque", &FingerTypes::Observation::torque);
-
-    pybind11::class_<FingerTypes::Frontend, FingerTypes::FrontendPtr>(m, "Frontend")
-        .def(pybind11::init<FingerTypes::DataPtr>())
-        .def("get_observation", &FingerTypes::Frontend::get_observation)
-        .def("get_desired_action", &FingerTypes::Frontend::get_desired_action)
-        .def("get_applied_action", &FingerTypes::Frontend::get_applied_action)
-        .def("get_time_stamp_ms", &FingerTypes::Frontend::get_time_stamp_ms)
-        .def("append_desired_action", &FingerTypes::Frontend::append_desired_action)
-        .def("wait_until_time_index", &FingerTypes::Frontend::wait_until_timeindex)
-        .def("get_current_time_index", &FingerTypes::Frontend::get_current_timeindex);
-
-    pybind11::class_<robot_interfaces::FingerLogger>(m, "FingerLogger")
+    pybind11::class_<FingerLogger>(m, "FingerLogger")
         .def(pybind11::init<FingerTypes::DataPtr, int, std::string>())
-        .def("run", &robot_interfaces::FingerLogger::run);
+        .def("run", &FingerLogger::run);
 }
