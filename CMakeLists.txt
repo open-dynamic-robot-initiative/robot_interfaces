@@ -93,6 +93,16 @@ set_target_properties(py_finger_types PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
 install(TARGETS py_finger_types DESTINATION ${CATKIN_PACKAGE_PYTHON_DESTINATION})
 
+# trifinger #
+set(py_trifinger_types_SRC_FILES
+  srcpy/py_trifinger_types.cpp
+)
+pybind11_add_module(py_trifinger_types ${py_trifinger_types_SRC_FILES})
+target_link_libraries(py_trifinger_types PRIVATE ${catkin_LIBRARIES})
+set_target_properties(py_trifinger_types PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
+install(TARGETS py_trifinger_types DESTINATION ${CATKIN_PACKAGE_PYTHON_DESTINATION})
+
 # one joint #
 set(py_one_joint_types_SRC_FILES
   srcpy/py_one_joint_types.cpp
