@@ -45,7 +45,7 @@ public:
 
         std::vector<std::string> get_name() override
         {
-            return {"Action repetitions"};
+            return {"Action_repetitions"};
         }
 
         std::vector<std::vector<double>> get_data() override

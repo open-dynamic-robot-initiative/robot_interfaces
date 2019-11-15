@@ -20,6 +20,8 @@ class Loggable
 public:
     /*
      * @brief Return the names of the fields in the structure.
+     * Current restriction: a returned name should not have spaces between
+     * the words, use "_" instead.
      */
     virtual std::vector<std::string> get_name() = 0;
 
@@ -29,4 +31,4 @@ public:
     virtual std::vector<std::vector<double>> get_data() = 0;
 };
 
-}// namespace robot_interfaces
+}  // namespace robot_interfaces
