@@ -15,7 +15,6 @@
 
 #include <Eigen/Eigen>
 
-#include <mpi_cpp_tools/infix_iterator.h>
 #include <mpi_cpp_tools/basic_tools.hpp>
 #include <mpi_cpp_tools/dynamical_systems.hpp>
 #include <mpi_cpp_tools/math.hpp>
@@ -41,7 +40,6 @@ namespace robot_interfaces
  * @tparam Observation
  * @tparam Status
  */
-
 template <typename Action, typename Observation, typename Status>
 class RobotLogger
 {
@@ -50,25 +48,20 @@ public:
      * This is to verify that the template types of the RobotLogger are based on
      * Loggable.
      */
-
     static_assert(std::is_base_of<Loggable, Action>::value,
                   "Action must derive from Loggable");
     static_assert(std::is_base_of<Loggable, Observation>::value,
                   "Observation must derive from Loggable");
     static_assert(std::is_base_of<Loggable, Status>::value,
                   "Status must derive from Loggable");
-
     /**
      * Currently, the level of generalisability of the logger is that we *know*
      * the following four timeseries structures exist for *any* robot whose data
      * is to be logged- applied_action and desired_action (of type Action),
      * observation (of type Observation), and status (of type Status).
      */
-
     std::shared_ptr<robot_interfaces::RobotData<Action, Observation, Status>>
         logger_data_;
-
-    // std::vector<std::string> header_;
 
     int block_size_;
     long int index_;
@@ -91,16 +84,15 @@ public:
 
     virtual ~RobotLogger()
     {
-        stop_was_called_ = true;
         stop();
-        thread_->join();
     }
 
     /**
-     * get_header() is to get the title of the log file, describing all the
+     * @brief To get the title of the log file, describing all the
      * information that will be logged in it.
+     *
+     * @return The title of the log file.
      */
-
     std::vector<std::string> get_header()
     {
         Action applied_action;
@@ -141,10 +133,14 @@ public:
     }
 
     /**
-     * append_name_to_header() fills in the name information of each field to be
+     * @brief Fills in the name information of each field to be
      * logged according to the size of the field.
+     *
+     * @param The structure the field corresponds to
+     * @param The name of the field
+     * @param The field data
+     * @param Reference to the header of the log file
      */
-
     void append_name_to_header(std::string identifier,
                                std::vector<std::string> field_name,
                                std::vector<std::vector<double>> field_data,
@@ -170,9 +166,8 @@ public:
     }
 
     /**
-     * append_header_to_file() finally writes the header to the log file.
+     * @brief Writes the header to the log file.
      */
-
     void append_header_to_file()
     {
         output_file_.open(output_file_name_, std::ios_base::app);
@@ -187,10 +182,9 @@ public:
     }
 
     /**
-     * append_robot_data_to_file() writes the timestamped robot data at
+     * @brief Writes the timestamped robot data at
      * *hopefully* every time index to the log file.
      */
-
     void append_robot_data_to_file()
     {
         output_file_.open(output_file_name_, std::ios_base::app);
@@ -241,10 +235,11 @@ public:
     }
 
     /**
-     * append_field_data_to_robot_data() appends the data corresponding to
+     * @brief Appends the data corresponding to
      * every field at the same time index to the log file.
+     *
+     * @param The field data
      */
-
     void append_field_data_to_file(std::vector<std::vector<double>> field_data)
     {
         std::ostream_iterator<double> double_iterator(output_file_, " ");
@@ -262,11 +257,11 @@ public:
     }
 
     /**
-     * write() is the master function which writes everything to the log file.
+     * @brief Writes everything to the log file.
+     *
      * It dumps all the data corresponding to block_size_ number of time indices
      * at one go.
      */
-
     void write()
     {
         append_header_to_file();
@@ -296,7 +291,6 @@ public:
 
                 // to check whether the data being requested to be logged is in
                 // the buffer of the timeseries and inspect effect of delays
-
                 std::cout << "Index trying to access, oldest index in the "
                              "buffer: "
                           << j << ","
@@ -310,7 +304,6 @@ public:
                         .count();
 
                 // to print the time taken for one block of data to be logged.
-
                 std::cout << "Time taken for one block of data to be logged: "
                           << duration << std::endl;
 #endif
@@ -319,9 +312,11 @@ public:
     }
 
     /**
-     * call start() to create the thread for the RobotLogger and start logging!
+     * @brief Call start() to create the thread for the RobotLogger and start
+     * logging!
+     *
+     * @param The name of the log file.
      */
-
     void start(std::string filename)
     {
         output_file_name_ = filename;
@@ -329,12 +324,13 @@ public:
     }
 
     /**
-     * call stop() when you want to stop logging.
+     * @brief Call stop() when you want to stop logging.
      */
-
     void stop()
     {
+        stop_was_called_ = true;
         append_robot_data_to_file();
+        thread_->join();
     }
 
 private:
