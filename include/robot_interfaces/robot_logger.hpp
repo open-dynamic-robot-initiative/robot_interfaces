@@ -91,7 +91,7 @@ public:
      * @brief To get the title of the log file, describing all the
      * information that will be logged in it.
      *
-     * @return The title of the log file.
+     * @return header The title of the log file.
      */
     std::vector<std::string> get_header()
     {
@@ -136,10 +136,10 @@ public:
      * @brief Fills in the name information of each field to be
      * logged according to the size of the field.
      *
-     * @param The structure the field corresponds to
-     * @param The name of the field
-     * @param The field data
-     * @param Reference to the header of the log file
+     * @param identifier The structure the field corresponds to
+     * @param field_name The name of the field
+     * @param field_data The field data
+     * @param &header Reference to the header of the log file
      */
     void append_name_to_header(std::string identifier,
                                std::vector<std::string> field_name,
@@ -238,7 +238,7 @@ public:
      * @brief Appends the data corresponding to
      * every field at the same time index to the log file.
      *
-     * @param The field data
+     * @param field_data The field data
      */
     void append_field_data_to_file(std::vector<std::vector<double>> field_data)
     {
@@ -312,10 +312,9 @@ public:
     }
 
     /**
-     * @brief Call start() to create the thread for the RobotLogger and start
-     * logging!
+     * @brief Call start() to create the thread for the RobotLogger and start logging!
      *
-     * @param The name of the log file.
+     * @param filename The name of the log file.
      */
     void start(std::string filename)
     {
@@ -329,8 +328,8 @@ public:
     void stop()
     {
         stop_was_called_ = true;
-        append_robot_data_to_file();
         thread_->join();
+        append_robot_data_to_file();
     }
 
 private:
