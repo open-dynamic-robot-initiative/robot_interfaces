@@ -60,6 +60,11 @@ public:
     {
         return (*robot_data_->applied_action)[t];
     }
+    Status get_status(const TimeIndex &t)
+    {
+        return (*robot_data_->status)[t];
+    }
+
     TimeStamp get_time_stamp_ms(const TimeIndex &t)
     {
         return robot_data_->observation->timestamp_ms(t);

@@ -71,11 +71,15 @@ void create_python_bindings(pybind11::module &m)
         .def_readwrite("velocity", &Types::Observation::velocity)
         .def_readwrite("torque", &Types::Observation::torque);
 
+    pybind11::class_<typename Types::Status>(m, "Status")
+        .def_readwrite("action_repetitions", &Types::Status::action_repetitions);
+
     pybind11::class_<typename Types::Frontend, typename Types::FrontendPtr>(m, "Frontend")
         .def(pybind11::init<typename Types::DataPtr>())
         .def("get_observation", &Types::Frontend::get_observation)
         .def("get_desired_action", &Types::Frontend::get_desired_action)
         .def("get_applied_action", &Types::Frontend::get_applied_action)
+        .def("get_status", &Types::Frontend::get_status)
         .def("get_time_stamp_ms", &Types::Frontend::get_time_stamp_ms)
         .def("append_desired_action", &Types::Frontend::append_desired_action)
         .def("wait_until_time_index", &Types::Frontend::wait_until_timeindex)
