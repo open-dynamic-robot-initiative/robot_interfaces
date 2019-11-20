@@ -84,6 +84,11 @@ void create_python_bindings(pybind11::module &m)
         .def("append_desired_action", &Types::Frontend::append_desired_action)
         .def("wait_until_time_index", &Types::Frontend::wait_until_timeindex)
         .def("get_current_time_index", &Types::Frontend::get_current_timeindex);
+
+    pybind11::class_<typename Types::Logger>(m, "Logger")
+        .def(pybind11::init<typename Types::DataPtr, int>())
+        .def("start", &Types::Logger::start)
+        .def("stop", &Types::Logger::stop);
 }
 
 }  // namespace

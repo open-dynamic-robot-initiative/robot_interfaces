@@ -12,9 +12,12 @@
 
 #include <Eigen/Eigen>
 
+#include <robot_interfaces/loggable.hpp>
 #include <robot_interfaces/robot_backend.hpp>
 #include <robot_interfaces/robot_data.hpp>
 #include <robot_interfaces/robot_frontend.hpp>
+
+#include <robot_interfaces/robot_logger.hpp>
 
 namespace robot_interfaces
 {
@@ -27,12 +30,14 @@ namespace robot_interfaces
  *
  * @tparam N Number of joints
  */
+
 template <size_t N>
 struct NJointRobotTypes
 {
     typedef Eigen::Matrix<double, N, 1> Vector;
 
-    struct Action
+    struct Action: public Loggable
+
     {
         //! Desired torque command (in addition to position controller).
         Vector torque;
@@ -43,6 +48,37 @@ struct NJointRobotTypes
         //! D-gain for position controller.  If NaN, default is used.
         Vector position_kd;
 
+        std::vector<std::string> get_name() override
+        {
+            return {"Torque", "Position", "Position_kp", "Position_kd"};
+        }
+
+        std::vector<std::vector<double>> get_data() override
+        {
+            // first map the Eigen vectors to std::vectors
+            std::vector<double> torque_;
+            torque_.resize(torque.size());
+            Vector::Map(&torque_[0], torque.size()) = torque;
+
+            std::vector<double> position_;
+            position_.resize(position.size());
+            Vector::Map(&position_[0], position.size()) = position;
+
+            std::vector<double> position_kp_;
+            position_kp_.resize(position_kp.size());
+            Vector::Map(&position_kp_[0], position_kp.size()) = position_kp;
+
+            std::vector<double> position_kd_;
+            position_kd_.resize(position_kd.size());
+            Vector::Map(&position_kd_[0], position_kd.size()) = position_kd;
+
+            // then return them in a fixed size vector of vectors to avoid
+            // copying due to pushing back value of information!
+            std::vector<std::vector<double>> result;
+            result = {torque_, position_, position_kp_, position_kd_};
+
+            return result;
+        }
 
         /**
          * @brief Create action with desired torque and (optional) position.
@@ -135,8 +171,7 @@ struct NJointRobotTypes
                                         Vector position_kp = None(),
                                         Vector position_kd = None())
         {
-            return Action(
-                torque, position, position_kp, position_kd);
+            return Action(torque, position, position_kp, position_kd);
         }
 
         /**
@@ -161,11 +196,36 @@ struct NJointRobotTypes
         }
     };
 
-    struct Observation
+    struct Observation : public Loggable
     {
         Vector position;
         Vector velocity;
         Vector torque;
+
+        std::vector<std::string> get_name() override
+        {
+            return {"Position", "Velocity", "Torque"};
+        }
+
+        std::vector<std::vector<double>> get_data() override
+        {
+            std::vector<double> position_;
+            position_.resize(position.size());
+            Vector::Map(&position_[0], position.size()) = position;
+
+            std::vector<double> velocity_;
+            velocity_.resize(velocity.size());
+            Vector::Map(&velocity_[0], velocity.size()) = velocity;
+
+            std::vector<double> torque_;
+            torque_.resize(torque.size());
+            Vector::Map(&torque_[0], torque.size()) = torque;
+
+            std::vector<std::vector<double>> result;
+            result = {position_, velocity_, torque_};
+
+            return result;
+        }
     };
 
     typedef RobotBackend<Action, Observation> Backend;
@@ -177,6 +237,8 @@ struct NJointRobotTypes
 
     typedef RobotFrontend<Action, Observation> Frontend;
     typedef std::shared_ptr<Frontend> FrontendPtr;
-};  // namespace robot_interfaces
+
+    typedef RobotLogger<Action, Observation, Status> Logger;
+};
 
 }  // namespace robot_interfaces

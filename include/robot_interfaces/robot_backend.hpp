@@ -21,6 +21,8 @@
 #include <robot_interfaces/robot_data.hpp>
 #include <robot_interfaces/robot_driver.hpp>
 
+#include <robot_interfaces/loggable.hpp>
+
 namespace robot_interfaces
 {
 /**
@@ -37,9 +39,19 @@ template <typename Action, typename Observation>
 class RobotBackend
 {
 public:
-    struct Status
+    struct Status : public Loggable
     {
-        uint32_t action_repetitions;
+        uint32_t action_repetitions = 0;
+
+        std::vector<std::string> get_name() override
+        {
+            return {"Action_repetitions"};
+        }
+
+        std::vector<std::vector<double>> get_data() override
+        {
+            return {{action_repetitions}};
+        }
     };
 
     // TODO add parameter: n_max_repeat_of_same_action
@@ -148,7 +160,7 @@ private:
             // infinite, meaning it requires receiving actions in fixed time
             // intervals), but robot_data_ has not received yet the next action
             // to apply, we optionally repeat the previous action.
-            Status status = {0};
+            Status status;
             if (std::isfinite(
                     robot_driver_.get_max_inter_action_duration_s()) &&
                 robot_data_->desired_action->newest_timeindex() < t)
