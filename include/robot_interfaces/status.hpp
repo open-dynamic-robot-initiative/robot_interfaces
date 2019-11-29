@@ -19,7 +19,7 @@ namespace robot_interfaces
     
     std::vector<std::vector<double>> get_data() override
     {
-      return {{action_repetitions}};
+      return {{static_cast<double>(action_repetitions)}};
     }
     
   };
