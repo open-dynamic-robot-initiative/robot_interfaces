@@ -152,9 +152,10 @@ int main()
   Action action;
   Observation observation;
 
-  robot_interfaces::TimeIndex index = frontend.get_current_timeindex();
+  //robot_interfaces::TimeIndex index = frontend.get_current_timeindex();
+  robot_interfaces::TimeIndex index = 0;
   
-  for(uint value=200;value<=0300;value++)
+  for(uint value=200;value<=300;value++)
     {
       action.values[0]=value;
       action.values[1]=500-value;
