@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <atomic>
 
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
@@ -70,7 +71,7 @@ public:
         : robot_driver_(
               robot_driver, max_action_duration_s, max_inter_action_duration_s),
           robot_data_(robot_data),
-          destructor_was_called_(false),
+	  should_stop_(false),
           max_action_repetitions_(0)
     {
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
@@ -79,10 +80,16 @@ public:
 
     virtual ~RobotBackend()
     {
-        destructor_was_called_ = true;
+        should_stop_ = true;
+	robot_data_->desired_action->append(desired_action_);
         thread_->join();
     }
 
+    void stop()
+    {
+        should_stop_ = true;
+    }
+  
     uint32_t get_max_action_repetitions()
     {
         return max_action_repetitions_;
@@ -100,9 +107,10 @@ public:
 private:
     MonitoredRobotDriver<Action, Observation> robot_driver_;
     std::shared_ptr<RobotData<Action, Observation, Status>> robot_data_;
-    bool destructor_was_called_;  // should be atomic
+    std::atomic<bool> should_stop_;
     uint32_t max_action_repetitions_;
-
+    Action desired_action_;
+  
     std::vector<real_time_tools::Timer> timers_;
 
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
@@ -128,12 +136,12 @@ private:
 
         // wait until first desired_action was received
         // ----------------------------
-        while (!destructor_was_called_ &&
+        while (!should_stop_ &&
                !robot_data_->desired_action->wait_for_timeindex(0, 0.1))
         {
         }
 
-        for (long int t = 0; !destructor_was_called_; t++)
+        for (long int t = 0; !should_stop_; t++)
         {
             // TODO: figure out latency stuff!! open /dev/cpu_dma_latency:
             // Permission denied
@@ -180,10 +188,10 @@ private:
 
             timers_[3].tic();
             // TODO: this may wait forever
-            Action desired_action = (*robot_data_->desired_action)[t];
+            desired_action_ = (*robot_data_->desired_action)[t];
             timers_[3].tac();
             timers_[4].tic();
-            Action applied_action = robot_driver_.apply_action(desired_action);
+            Action applied_action = robot_driver_.apply_action(desired_action_);
             timers_[4].tac();
             timers_[5].tic();
             robot_data_->applied_action->append(applied_action);
