@@ -40,7 +40,6 @@ template <typename Action, typename Observation>
 class RobotBackend
 {
 public:
-    // TODO add parameter: n_max_repeat_of_same_action
     /**
      * @param robot_driver  Driver instance for the actual robot.  This is
      *     internally wrapped in a MonitoredRobotDriver for increased safety.
@@ -73,6 +72,21 @@ public:
     {
         return max_action_repetitions_;
     }
+
+    /**
+     * @brief Set how often an action is repeated if no new one is provided.
+     *
+     * If the next action is due to be executed but the user did not provide one
+     * yet (i.e. there is no new action in the robot data time series), the last
+     * action will be repeated by automatically adding it to the time series
+     * again.
+     *
+     * Use this this method to specify how often the action shall be repeated
+     * (default is 0, i.e. no repetition at all).  If this limit is exceeded,
+     * the robot will be shut down and the RobotBackend stops.
+     *
+     * @param max_action_repetitions
+     */
     void set_max_action_repetitions(const uint32_t &max_action_repetitions)
     {
         max_action_repetitions_ = max_action_repetitions;
@@ -87,6 +101,11 @@ private:
     MonitoredRobotDriver<Action, Observation> robot_driver_;
     std::shared_ptr<RobotData<Action, Observation, Status>> robot_data_;
     std::atomic<bool> destructor_was_called_;
+
+    /**
+     * @brief Number of times the previous action is repeated if no new one
+     *        is provided.
+     */
     uint32_t max_action_repetitions_;
 
     std::vector<real_time_tools::Timer> timers_;
@@ -121,8 +140,7 @@ private:
 
         for (long int t = 0; !destructor_was_called_; t++)
         {
-            // TODO: figure out latency stuff!! open /dev/cpu_dma_latency:
-            // Permission denied
+            // TODO: figure out latency stuff!!
 
             timers_[0].tac_tic();
 
@@ -160,23 +178,31 @@ private:
                         robot_data_->desired_action->newest_element());
                     status.action_repetitions = action_repetitions + 1;
                 }
+                else
+                {
+                    // No action provided and number of allowed repetitions of
+                    // the previous action is exceeded --> Error
+                    status.error_status = Status::ErrorStatus::BACKEND_ERROR;
+                    status.error_message =
+                        "Next action was not provided in time";
+                }
             }
 
-            bool has_error = false;
             std::string driver_error_msg = robot_driver_.get_error();
             if (!driver_error_msg.empty())
             {
                 status.error_status = Status::ErrorStatus::DRIVER_ERROR;
                 status.error_message = driver_error_msg;
-                has_error = true;
             }
 
             robot_data_->status->append(status);
             timers_[2].tac();
 
             // if there is an error, shut robot down and stop loop
-            if (has_error)
+            if (status.error_status != Status::ErrorStatus::NO_ERROR)
             {
+                std::cerr << "Error: " << status.error_message
+                          << "\nRobot is shut down." << std::endl;
                 robot_driver_.shutdown();
                 return;
             }
