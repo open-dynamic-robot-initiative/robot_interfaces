@@ -16,7 +16,7 @@ set(CMAKE_SKIP_BUILD_RPATH  FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
-
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 ############################
 # Search for dependencies. #
@@ -29,6 +29,17 @@ pybind11_catkin
 
 )
 find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
+
+find_package(Pylon REQUIRED)
+
+get_cmake_property(_variableNames VARIABLES)
+list (SORT _variableNames)
+foreach (_variableName ${_variableNames})
+    message(STATUS "${_variableName}=${${_variableName}}")
+endforeach()
+
+# include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindPylon.cmake")
+# message(FATAL_ERROR "XXXXXXXXXXXXX ${PYLON_INCLUDE_DIR}")
 
 search_for_eigen()
 
@@ -50,8 +61,11 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/include
     ${catkin_INCLUDE_DIRS}
     ${Eigen_INCLUDE_DIRS}
+    ${PYLON_INCLUDE_DIRS}
 #    ${Boost_INCLUDE_DIRS}
 )
+
+# link_directories(/opt/pylon/5/lib64)
 
 ########################################################
 # manage the creation of the libraries and executables #
@@ -82,6 +96,16 @@ add_subdirectory(demos)
 ###################
 # python bindings #
 ###################
+
+# camera #
+set(py_camera_types_SRC_FILES
+  srcpy/py_camera_types.cpp
+)
+pybind11_add_module(py_camera_types ${py_camera_types_SRC_FILES})
+target_link_libraries(py_camera_types PRIVATE ${catkin_LIBRARIES})
+set_target_properties(py_camera_types PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
+install(TARGETS py_camera_types DESTINATION ${CATKIN_PACKAGE_PYTHON_DESTINATION})
 
 # finger #
 set(py_finger_types_SRC_FILES
