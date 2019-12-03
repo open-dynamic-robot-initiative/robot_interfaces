@@ -33,8 +33,8 @@ public:
 
 private:
 
-  CameraDriver<CameraObservation> camera_driver_;
-  CameraData<CameraObservation> camera_data_;
+  std::shared_ptr<CameraDriver<CameraObservation>> camera_driver_;
+  std::shared_ptr<CameraData<CameraObservation>> camera_data_;
 
   bool destructor_was_called_;
 
@@ -57,8 +57,8 @@ private:
 
     for (long int t = 0; !destructor_was_called_; t++)
     {
-      CameraObservation *camera_observation_ptr;
-      camera_observation_ptr = camera_driver_.grab_frame();
+      CameraObservation camera_observation_ptr;
+      camera_observation_ptr = camera_driver_->grab_frame();
 
       camera_data_->observation->append(camera_observation_ptr);
 

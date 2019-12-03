@@ -29,6 +29,7 @@ struct CameraDataTypes
   typedef CameraData<CameraObservation> CData;
   typedef std::shared_ptr<CData> CDataPtr;
   typedef CameraDriver<CameraObservation> CDriver;
+  typedef std::shared_ptr<CDriver> CDriverPtr;
   typedef CameraFrontend<CameraObservation> CFrontend;
   typedef CameraBackend<CameraObservation> CBackend;
 

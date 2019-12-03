@@ -21,22 +21,12 @@ class CameraDriver
 {
 
 public:
-
-  // CameraDriver()
-  // {
-  // }
-  //
-  // ~CameraDriver()
-  // {
-  // }
-
   int exitCode = 0;
-  // typedef Eigen::Matrix<uint8_t, N, M> Image;
   void PylonInitialize(void);
 
-  CameraObservation* grab_frame()
+  CameraObservation grab_frame()
   {
-    CameraObservation *CameraObservationPtr;
+    CameraObservation CameraObservationPtr;
     try
     {
       Pylon::CInstantCamera camera(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
@@ -46,26 +36,26 @@ public:
       camera.StartGrabbing(1);
 
       Pylon::CGrabResultPtr ptrGrabResult;
-      Pylon::CImageFormatConverter formatConverter;
-      formatConverter.OutputPixelFormat = Pylon::PixelType_BayerBG8;
-      Pylon::CPylonImage pylonImage;
-
-      // Image save_image;
+      // Pylon::CImageFormatConverter formatConverter;
+      // formatConverter.OutputPixelFormat = Pylon::PixelType_BayerBG8;
+      // Pylon::CPylonImage pylonImage;
 
       while (camera.IsGrabbing())
       {
         camera.RetrieveResult(5000, ptrGrabResult, Pylon::TimeoutHandling_ThrowException);
         if (ptrGrabResult->GrabSucceeded())
         {
-          const uint8_t *pImageBuffer = (uint8_t *) ptrGrabResult->GetBuffer();
-          formatConverter.Convert(pylonImage, ptrGrabResult);
+          // formatConverter.Convert(pylonImage, ptrGrabResult);
 
-          // save_image = (uint8_t *)pylonImage.GetBuffer();
           time_t current_time = time(NULL);
 
-          // CameraObservationPtr->image = save_image;
-          CameraObservationPtr->image = (uint8_t *)pylonImage.GetBuffer();
-          CameraObservationPtr->time_stamp = current_time;
+          // CameraObservationPtr.image = (uint8_t *)pylonImage.GetBuffer();
+          // CameraObservationPtr->image = (uint8_t *)pylonImage.GetBuffer();
+          // CameraObservationPtr.image = (uint8_t *)ptrGrabResult->GetBuffer();
+          //TODO: conversion to an Eigen matrix is not supported here
+          CameraObservationPtr.time_stamp = current_time;
+
+          Pylon::CImagePersistence::Save(Pylon::ImageFileFormat_Raw, "test.rw2", ptrGrabResult);
         }
         else
         {
