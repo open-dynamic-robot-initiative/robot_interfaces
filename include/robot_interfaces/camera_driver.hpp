@@ -22,16 +22,16 @@ class CameraDriver
 
 public:
 
-  CameraDriver()
-  {
-  }
-
-  ~CameraDriver()
-  {
-  }
+  // CameraDriver()
+  // {
+  // }
+  //
+  // ~CameraDriver()
+  // {
+  // }
 
   int exitCode = 0;
-  typedef Eigen::Matrix<uint8_t, 720, 540> Image;
+  // typedef Eigen::Matrix<uint8_t, N, M> Image;
   void PylonInitialize(void);
 
   CameraObservation* grab_frame()
@@ -50,7 +50,7 @@ public:
       formatConverter.OutputPixelFormat = Pylon::PixelType_BayerBG8;
       Pylon::CPylonImage pylonImage;
 
-      Image save_image;
+      // Image save_image;
 
       while (camera.IsGrabbing())
       {
@@ -60,10 +60,11 @@ public:
           const uint8_t *pImageBuffer = (uint8_t *) ptrGrabResult->GetBuffer();
           formatConverter.Convert(pylonImage, ptrGrabResult);
 
-          save_image = (uint8_t *)pylonImage.GetBuffer();
+          // save_image = (uint8_t *)pylonImage.GetBuffer();
           time_t current_time = time(NULL);
 
-          CameraObservationPtr->image = save_image;
+          // CameraObservationPtr->image = save_image;
+          CameraObservationPtr->image = (uint8_t *)pylonImage.GetBuffer();
           CameraObservationPtr->time_stamp = current_time;
         }
         else

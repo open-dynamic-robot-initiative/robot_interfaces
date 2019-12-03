@@ -5,7 +5,6 @@
 
 #include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
 
-#include <robot_interfaces/camera_backend.hpp>
 #include <robot_interfaces/camera_data.hpp>
 
 namespace robot_interfaces
@@ -46,8 +45,6 @@ namespace robot_interfaces
 
   private:
       std::shared_ptr<CameraData<CameraObservation>> camera_data_;
-
-
 
   };
 

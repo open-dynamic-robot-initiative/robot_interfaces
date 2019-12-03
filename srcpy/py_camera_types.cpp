@@ -9,18 +9,19 @@
 
 using namespace robot_interfaces;
 
+template <typename <CameraDataTypes<720,540>>>
 PYBIND11_MODULE(py_camera_types, m)
 {
-  pybind11::class_<typename CameraDataTypes::CData>(m, "CData")
+  pybind11::class_<typename <CameraDataTypes<720,540>>>::CData>(m, "CData")
           .def(pybind11::init<>());
 
-  pybind11::class_<typename CameraDataTypes::CBackend>(m, "CBackend")
+  pybind11::class_<typename <CameraDataTypes<720,540>>>::CBackend>(m, "CBackend")
           .def(pybind11::init<>());
 
-  pybind11::class_<typename CameraDataTypes::CFrontend>(m, "CFrontend")
-      .def(pybind11::init<typename CameraDataTypes::CDataPtr>())
-      .def("get_observation", &CameraDataTypes::CFrontend::get_observation)
-      .def("get_time_stamp_ms", &CameraDataTypes::CFrontend::get_time_stamp_ms)
-      .def("get_current_time_index", &CameraDataTypes::CFrontend::get_current_timeindex);
+  pybind11::class_<typename <CameraDataTypes<720,540>>::CFrontend>(m, "CFrontend")
+      .def(pybind11::init<typename <CameraDataTypes<720,540>> >::CDataPtr>())
+      .def("get_observation", &<CameraDataTypes<720,540>>::CFrontend::get_observation)
+      .def("get_time_stamp_ms", &<CameraDataTypes<720,540>>::CFrontend::get_time_stamp_ms)
+      .def("get_current_time_index", &<CameraDataTypes<720,540>>::CFrontend::get_current_timeindex);
 
 }

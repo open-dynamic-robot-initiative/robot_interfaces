@@ -13,10 +13,11 @@
 namespace robot_interfaces
 {
 
+template <uint8_t N, uint8_t M>
 struct CameraDataTypes
 {
 
-  typedef Eigen::Matrix<uint8_t, 720, 540> Image;
+  typedef Eigen::Matrix<uint8_t, N, M> Image;
   typedef time_t TimeStamp;
 
   struct CameraObservation
