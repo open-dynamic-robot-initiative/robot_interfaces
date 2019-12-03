@@ -26,16 +26,19 @@ public:
 
   CameraObservation grab_frame()
   {
-    CameraObservation CameraObservationPtr;
+    CameraObservation image_frame;
+    //FIXME: Can;t append a pointer to a threadsafe_timeseries as defined in real_time_tools
     try
     {
       Pylon::CInstantCamera camera(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
       std::cout << "Using device " << camera.GetDeviceInfo().GetModelName() << std::endl;
+      // get this error when trying to use this: ImportError: /home/sjoshi/blmc_ei/workspace/devel/lib/python3/dist-packages/robot_interfaces/py_camera_types.cpython-35m-x86_64-linux-gnu.so: undefined symbol: _ZTVN5Pylon11CDeviceInfoE
       camera.MaxNumBuffer = 5;
 
       camera.StartGrabbing(1);
 
-      Pylon::CGrabResultPtr ptrGrabResult;
+      Pylon::CGrabResultPtr ptrGrabResult; //*imgGrabResult;
+      // Pylon::CGrabResultData imgGrabResult;
       // Pylon::CImageFormatConverter formatConverter;
       // formatConverter.OutputPixelFormat = Pylon::PixelType_BayerBG8;
       // Pylon::CPylonImage pylonImage;
@@ -46,14 +49,16 @@ public:
         if (ptrGrabResult->GrabSucceeded())
         {
           // formatConverter.Convert(pylonImage, ptrGrabResult);
+          uint8_t *pImageBuffer = (uint8_t *) ptrGrabResult->GetBuffer();
 
           time_t current_time = time(NULL);
+          // imgGrabResult = (uint8_t *)ptrGrabResult->GetBuffer();
+          // imgGrabResult = *(ptrGrabResult->CArray());
 
-          // CameraObservationPtr.image = (uint8_t *)pylonImage.GetBuffer();
-          // CameraObservationPtr->image = (uint8_t *)pylonImage.GetBuffer();
-          // CameraObservationPtr.image = (uint8_t *)ptrGrabResult->GetBuffer();
+          // image_frame.image = (uint8_t *)pylonImage.GetBuffer();
+          // image_frame.image = imgGrabResult;
           //TODO: conversion to an Eigen matrix is not supported here
-          CameraObservationPtr.time_stamp = current_time;
+          image_frame.time_stamp = current_time;
 
           Pylon::CImagePersistence::Save(Pylon::ImageFileFormat_Raw, "test.rw2", ptrGrabResult);
         }
@@ -70,7 +75,7 @@ public:
       exitCode = 1;
     }
 
-    return CameraObservationPtr;
+    return image_frame;
   }
 };
 }//namespace robot_interfaces

@@ -57,10 +57,10 @@ private:
 
     for (long int t = 0; !destructor_was_called_; t++)
     {
-      CameraObservation camera_observation_ptr;
-      camera_observation_ptr = camera_driver_->grab_frame();
+      CameraObservation camera_observation;
+      camera_observation = camera_driver_->grab_frame();
 
-      camera_data_->observation->append(camera_observation_ptr);
+      camera_data_->observation->append(camera_observation);
 
     }
 
