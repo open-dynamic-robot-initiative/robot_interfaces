@@ -84,23 +84,26 @@ public:
 
   // just clip desired values
   // between 0 and 1000
-  Action apply_action(const Action &desired_action)
+  Action apply_action(const Action &action_to_apply)
   {
     Action applied;
     for(unsigned int i=0;i<2;i++)
       {
-	if(desired_action.values[i]>Driver::MAX)
+	if(action_to_apply.values[i]>Driver::MAX)
 	  {
 	    applied.values[i]=Driver::MAX;
 	  }
-	else if(desired_action.values[i]<Driver::MIN)
+	else if(action_to_apply.values[i]<Driver::MIN)
 	  {
 	    applied.values[i]=Driver::MIN;
 	  }
 	else
 	  {
-	    applied.values[i]=desired_action.values[i];
+	    applied.values[i]=action_to_apply.values[i];
 	  }
+	// simulating the time if could take for a real
+	// robot to perform the action
+	usleep(1000);
 	values_[i] = applied.values[i];
       }
     return applied;
@@ -135,11 +138,14 @@ int main()
   typedef robot_interfaces::RobotData<Action,Observation,Status> Data;
   typedef robot_interfaces::RobotFrontend<Action,Observation> Frontend;
   
-  std::shared_ptr<Driver> driver_ptr(new Driver);
-  std::shared_ptr<Data> data_ptr(new Data);
+  std::shared_ptr<Driver> driver_ptr = std::make_shared<Driver>();
+  std::shared_ptr<Data> data_ptr = std::make_shared<Data>();
 
-  double max_action_duration_s = 1.0;
-  double max_inter_action_duration_s = 1.0;
+  // max time allowed for the robot to apply an action.
+  double max_action_duration_s = 0.002;
+
+  // max time allowed for 2 successive actions
+  double max_inter_action_duration_s = 0.005;
 
   Backend backend(driver_ptr,
 		  data_ptr,
@@ -152,17 +158,20 @@ int main()
   Action action;
   Observation observation;
 
-  //robot_interfaces::TimeIndex index = frontend.get_current_timeindex();
-  robot_interfaces::TimeIndex index = 0;
+  // simulated action :
+  // 1 dof going from 200 to 300
+  // The other going from 300 to 200
   
   for(uint value=200;value<=300;value++)
     {
       action.values[0]=value;
       action.values[1]=500-value;
-      frontend.append_desired_action(action);
+      // this action will be stored at index
+      robot_interfaces::TimeIndex index = frontend.append_desired_action(action);
       frontend.wait_until_timeindex(index+1);
-      observation = frontend.get_observation(index+1);
-      index++;
+      // getting the observation corresponding to the applied
+      // action, i.e. at the same index
+      observation = frontend.get_observation(index);
       std::cout << "value: " << value << " | ";
       action.print(false);
       observation.print(true);
