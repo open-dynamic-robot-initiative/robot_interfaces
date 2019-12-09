@@ -71,7 +71,7 @@ public:
         : robot_driver_(
               robot_driver, max_action_duration_s, max_inter_action_duration_s),
           robot_data_(robot_data),
-	  should_stop_(false),
+	  destructor_was_called_(false),
           max_action_repetitions_(0)
     {
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
@@ -80,14 +80,13 @@ public:
 
     virtual ~RobotBackend()
     {
-        should_stop_ = true;
-	robot_data_->desired_action->append(desired_action_);
+        destructor_was_called_ = true;
         thread_->join();
     }
 
     void stop()
     {
-        should_stop_ = true;
+        destructor_was_called_ = true;
     }
   
     uint32_t get_max_action_repetitions()
@@ -107,7 +106,7 @@ public:
 private:
     MonitoredRobotDriver<Action, Observation> robot_driver_;
     std::shared_ptr<RobotData<Action, Observation, Status>> robot_data_;
-    std::atomic<bool> should_stop_;
+    std::atomic<bool> destructor_was_called_;
     uint32_t max_action_repetitions_;
     Action desired_action_;
   
@@ -136,13 +135,14 @@ private:
 
         // wait until first desired_action was received
         // ----------------------------
-        while (!should_stop_ &&
+        while (!destructor_was_called_ &&
                !robot_data_->desired_action->wait_for_timeindex(0, 0.1))
         {
         }
 
-        for (long int t = 0; !should_stop_; t++)
+        for (long int t = 0; !destructor_was_called_; t++)
         {
+
             // TODO: figure out latency stuff!! open /dev/cpu_dma_latency:
             // Permission denied
 
@@ -188,6 +188,14 @@ private:
 
             timers_[3].tic();
             // TODO: this may wait forever
+	    while (!destructor_was_called_ &&
+		   !robot_data_->desired_action->wait_for_timeindex(t, 0.1))
+	      {
+		if(destructor_was_called_)
+		  {
+		    return;
+		  }
+	      }
             desired_action_ = (*robot_data_->desired_action)[t];
             timers_[3].tac();
             timers_[4].tic();
