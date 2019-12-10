@@ -69,7 +69,7 @@ public:
         const double max_action_duration_s,
         const double max_inter_action_duration_s)
         : robot_driver_(
-              robot_driver, max_action_duration_s, max_inter_action_duration_s),
+			robot_driver, max_action_duration_s, max_inter_action_duration_s),
           robot_data_(robot_data),
 	  destructor_was_called_(false),
           max_action_repetitions_(0)
@@ -84,11 +84,6 @@ public:
         thread_->join();
     }
 
-    void stop()
-    {
-        destructor_was_called_ = true;
-    }
-  
     uint32_t get_max_action_repetitions()
     {
         return max_action_repetitions_;
@@ -108,7 +103,6 @@ private:
     std::shared_ptr<RobotData<Action, Observation, Status>> robot_data_;
     std::atomic<bool> destructor_was_called_;
     uint32_t max_action_repetitions_;
-    Action desired_action_;
   
     std::vector<real_time_tools::Timer> timers_;
 
@@ -187,19 +181,18 @@ private:
             timers_[2].tac();
 
             timers_[3].tic();
-            // TODO: this may wait forever
-	    while (!destructor_was_called_ &&
-		   !robot_data_->desired_action->wait_for_timeindex(t, 0.1))
+	    // early exit if destructor has been called 
+	    while (!robot_data_->desired_action->wait_for_timeindex(t, 0.1))
 	      {
-		if(destructor_was_called_)
+		  if(destructor_was_called_)
 		  {
-		    return;
+		      return;
 		  }
 	      }
-            desired_action_ = (*robot_data_->desired_action)[t];
+            Action desired_action = (*robot_data_->desired_action)[t];
             timers_[3].tac();
             timers_[4].tic();
-            Action applied_action = robot_driver_.apply_action(desired_action_);
+            Action applied_action = robot_driver_.apply_action(desired_action);
             timers_[4].tac();
             timers_[5].tic();
             robot_data_->applied_action->append(applied_action);
