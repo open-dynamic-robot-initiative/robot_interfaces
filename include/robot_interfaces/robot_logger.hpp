@@ -188,6 +188,7 @@ public:
     void append_robot_data_to_file()
     {
         output_file_.open(output_file_name_, std::ios_base::app);
+        output_file_.precision(27);
 
         for (long int j = index_;
              j < std::min(index_ + block_size_,
@@ -314,6 +315,11 @@ public:
     /**
      * @brief Call start() to create the thread for the RobotLogger and start logging!
      *
+     * \note
+     * Every time you start the logger with the same file name, it will obviously
+     * append newer data to the same file. This shouldn't be a problem. But for
+     * different log files, specify different file names while starting the logger.
+     * 
      * @param filename The name of the log file.
      */
     void start(std::string filename)
