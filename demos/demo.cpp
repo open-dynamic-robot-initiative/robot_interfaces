@@ -78,8 +78,8 @@ public:
   // at init dof are at min value
   void initialize()
   {
-    values_[0] = Driver::MIN;
-    values_[1] = Driver::MIN;
+    state_[0] = Driver::MIN;
+    state_[1] = Driver::MIN;
   }
 
   // just clip desired values
@@ -104,7 +104,7 @@ public:
 	// simulating the time if could take for a real
 	// robot to perform the action
 	usleep(1000);
-	values_[i] = applied.values[i];
+	state_[i] = applied.values[i];
       }
     return applied;
   }
@@ -112,8 +112,8 @@ public:
   Observation get_latest_observation()
   {
     Observation observation;
-    observation.values[0] = values_[0];
-    observation.values[1] = values_[1];
+    observation.values[0] = state_[0];
+    observation.values[1] = state_[1];
     return observation;
   }
     
@@ -121,7 +121,7 @@ public:
 
 private:
 
-  int values_[2];
+  int state_[2];
     
   const static int MAX = 1000;
   const static int MIN = 0;
@@ -168,7 +168,6 @@ int main()
       action.values[1]=500-value;
       // this action will be stored at index
       robot_interfaces::TimeIndex index = frontend.append_desired_action(action);
-      frontend.wait_until_timeindex(index+1);
       // getting the observation corresponding to the applied
       // action, i.e. at the same index
       observation = frontend.get_observation(index);
