@@ -230,7 +230,9 @@ struct NJointRobotTypes
 
     typedef RobotBackend<Action, Observation> Backend;
     typedef std::shared_ptr<Backend> BackendPtr;
-    typedef typename Backend::Status Status;
+
+    // allows cleaner creation of python bindings in pybind_helper.hpp
+    typedef Status RobotStatus;
 
     typedef RobotData<Action, Observation, Status> Data;
     typedef std::shared_ptr<Data> DataPtr;

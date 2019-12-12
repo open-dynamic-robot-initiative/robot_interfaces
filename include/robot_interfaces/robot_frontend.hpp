@@ -38,9 +38,6 @@ class RobotFrontend
 {
 public:
     typedef Timeseries<int>::Timestamp TimeStamp;
-    // TODO define Status somewhere else so we don't have an otherwise
-    // unnecessary dependency on RobotBackend here.
-    typedef typename RobotBackend<Action, Observation>::Status Status;
 
     RobotFrontend(
         std::shared_ptr<RobotData<Action, Observation, Status>> robot_data)

@@ -20,7 +20,7 @@
 #include <robot_interfaces/monitored_robot_driver.hpp>
 #include <robot_interfaces/robot_data.hpp>
 #include <robot_interfaces/robot_driver.hpp>
-
+#include <robot_interfaces/status.hpp>
 #include <robot_interfaces/loggable.hpp>
 
 namespace robot_interfaces
@@ -39,20 +39,6 @@ template <typename Action, typename Observation>
 class RobotBackend
 {
 public:
-    struct Status : public Loggable
-    {
-        uint32_t action_repetitions = 0;
-
-        std::vector<std::string> get_name() override
-        {
-            return {"Action_repetitions"};
-        }
-
-        std::vector<std::vector<double>> get_data() override
-        {
-            return {{action_repetitions}};
-        }
-    };
 
     // TODO add parameter: n_max_repeat_of_same_action
     /**

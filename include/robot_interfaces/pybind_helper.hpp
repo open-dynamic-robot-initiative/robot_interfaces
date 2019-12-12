@@ -71,8 +71,8 @@ void create_python_bindings(pybind11::module &m)
         .def_readwrite("velocity", &Types::Observation::velocity)
         .def_readwrite("torque", &Types::Observation::torque);
 
-    pybind11::class_<typename Types::Status>(m, "Status")
-        .def_readwrite("action_repetitions", &Types::Status::action_repetitions);
+    pybind11::class_<typename Types::RobotStatus>(m, "Status")
+        .def_readwrite("action_repetitions", &Types::RobotStatus::action_repetitions);
 
     pybind11::class_<typename Types::Frontend, typename Types::FrontendPtr>(m, "Frontend")
         .def(pybind11::init<typename Types::DataPtr>())
