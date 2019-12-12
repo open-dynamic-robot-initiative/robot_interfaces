@@ -70,14 +70,12 @@ catkin_package(
 ####################
 # manage the demos #
 ####################
-add_subdirectory(demos)
-
-
+add_executable(demo demos/demo.cpp)
+target_link_libraries(demo ${catkin_LIBRARIES})
 
 #########################
 # manage the unit tests #
 #########################
-
 
 ###################
 # python bindings #
