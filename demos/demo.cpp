@@ -10,6 +10,7 @@
 #include "robot_interfaces/robot_driver.hpp"
 #include "robot_interfaces/robot_backend.hpp"
 #include "robot_interfaces/robot_frontend.hpp"
+#include "robot_interfaces/status.hpp"
 
 #include <memory>
 
@@ -134,8 +135,9 @@ int main()
 {
 
   typedef robot_interfaces::RobotBackend<Action,Observation> Backend;
-  typedef Backend::Status Status;
-  typedef robot_interfaces::RobotData<Action,Observation,Status> Data;
+  typedef robot_interfaces::RobotData<Action,
+				      Observation,
+				      robot_interfaces::Status> Data;
   typedef robot_interfaces::RobotFrontend<Action,Observation> Frontend;
   
   std::shared_ptr<Driver> driver_ptr = std::make_shared<Driver>();
