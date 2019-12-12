@@ -81,6 +81,13 @@ target_link_libraries(demo ${catkin_LIBRARIES})
 # python bindings #
 ###################
 
+# generic #
+pybind11_add_module(py_generic srcpy/py_generic.cpp)
+target_link_libraries(py_generic PRIVATE ${catkin_LIBRARIES})
+set_target_properties(py_generic PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
+install(TARGETS py_generic DESTINATION ${CATKIN_PACKAGE_PYTHON_DESTINATION})
+
 # finger #
 set(py_finger_types_SRC_FILES
   srcpy/py_finger_types.cpp
