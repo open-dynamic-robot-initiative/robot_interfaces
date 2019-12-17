@@ -59,8 +59,8 @@ TEST_F(TestProcessDesiredAction, valid_torque_no_safety)
                                           default_position_control_kp,
                                           default_position_control_kd);
 
-    ASSERT_EQ(0.1, resulting_action.torque[0]);
-    ASSERT_EQ(0.2, resulting_action.torque[1]);
+    ASSERT_EQ(desired_torque[0], resulting_action.torque[0]);
+    ASSERT_EQ(desired_torque[1], resulting_action.torque[1]);
 }
 
 /**
@@ -83,8 +83,8 @@ TEST_F(TestProcessDesiredAction, exceed_max_torque_no_safety)
                                           default_position_control_kp,
                                           default_position_control_kd);
 
-    ASSERT_EQ(0.3, resulting_action.torque[0]);
-    ASSERT_EQ(-0.3, resulting_action.torque[1]);
+    ASSERT_EQ(max_torque_Nm, resulting_action.torque[0]);
+    ASSERT_EQ(-max_torque_Nm, resulting_action.torque[1]);
 }
 
 /**
@@ -107,10 +107,10 @@ TEST_F(TestProcessDesiredAction, velocity_damping_low_velocity)
     // joint 0 has positive velocity so expecting a reduced torque.
     // joint 1 has negative velocity so expecting an increased torque.
     // both should remain within the max. torque range.
-    ASSERT_LT(resulting_action.torque[0], 0.1);
-    ASSERT_GE(resulting_action.torque[0], -0.3);
-    ASSERT_GT(resulting_action.torque[1], 0.2);
-    ASSERT_LE(resulting_action.torque[1], 0.3);
+    ASSERT_LT(resulting_action.torque[0], desired_torque[0]);
+    ASSERT_GE(resulting_action.torque[0], -max_torque_Nm);
+    ASSERT_GT(resulting_action.torque[1], desired_torque[1]);
+    ASSERT_LE(resulting_action.torque[1], max_torque_Nm);
 }
 
 /**
@@ -139,10 +139,10 @@ TEST_F(TestProcessDesiredAction, velocity_damping_high_velocity)
     // joint 0 has positive velocity so expecting a reduced torque.
     // joint 1 has negative velocity so expecting an increased torque.
     // both should remain within the max. torque range.
-    ASSERT_LT(resulting_action.torque[0], 0.1);
-    ASSERT_GE(resulting_action.torque[0], -0.3);
-    ASSERT_GT(resulting_action.torque[1], 0.2);
-    ASSERT_LE(resulting_action.torque[1], 0.3);
+    ASSERT_LT(resulting_action.torque[0], desired_torque[0]);
+    ASSERT_GE(resulting_action.torque[0], -max_torque_Nm);
+    ASSERT_GT(resulting_action.torque[1], desired_torque[1]);
+    ASSERT_LE(resulting_action.torque[1], max_torque_Nm);
 }
 
 /**
@@ -171,10 +171,10 @@ TEST_F(TestProcessDesiredAction, position_controller_basic)
     // Just testing here if the torque command goes in the right direction
 
     ASSERT_LT(resulting_action.torque[0], 0.0);
-    ASSERT_GE(resulting_action.torque[0], -0.3);
+    ASSERT_GE(resulting_action.torque[0], -max_torque_Nm);
 
     ASSERT_GT(resulting_action.torque[1], 0.0);
-    ASSERT_LE(resulting_action.torque[1], 0.3);
+    ASSERT_LE(resulting_action.torque[1], max_torque_Nm);
 
     // verify that position and gains are set correctly in the returned action
     ASSERT_EQ(desired_position[0], resulting_action.position[0]);
@@ -210,7 +210,7 @@ TEST_F(TestProcessDesiredAction, position_controller_one_joint_only)
 
     // Just testing here if the torque command goes in the right direction
     ASSERT_LT(resulting_action.torque[0], 0.0);
-    ASSERT_GE(resulting_action.torque[0], -0.3);
+    ASSERT_GE(resulting_action.torque[0], -max_torque_Nm);
 
     // desired position for joint 1 is nan, so no torque should be generated
     ASSERT_EQ(0.0, resulting_action.torque[1]);
@@ -337,9 +337,9 @@ TEST_F(TestProcessDesiredAction, position_controller_and_torque)
 
     // Just testing here if the torque command goes in the right direction
 
-    ASSERT_LT(resulting_action.torque[0], -0.2);
-    ASSERT_GE(resulting_action.torque[0], -0.3);
+    ASSERT_LT(resulting_action.torque[0], desired_torque[0]);
+    ASSERT_GE(resulting_action.torque[0], -max_torque_Nm);
 
-    ASSERT_GT(resulting_action.torque[1], 0.2);
-    ASSERT_LE(resulting_action.torque[1], 0.3);
+    ASSERT_GT(resulting_action.torque[1], desired_torque[1]);
+    ASSERT_LE(resulting_action.torque[1], max_torque_Nm);
 }
