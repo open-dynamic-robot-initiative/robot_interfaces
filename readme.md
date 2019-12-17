@@ -17,3 +17,5 @@ Copyright(c) 2018-2019 Max Planck Gesellschaft
 BSD 3-Clause License
 
 
+#### (for personal reference)
+singularity shell -B /opt/pylon5 ../../blmc_ei.sif
