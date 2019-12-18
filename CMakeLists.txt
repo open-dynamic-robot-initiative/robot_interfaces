@@ -76,6 +76,7 @@ target_link_libraries(demo ${catkin_LIBRARIES})
 #########################
 # manage the unit tests #
 #########################
+add_subdirectory(tests)
 
 ###################
 # python bindings #
