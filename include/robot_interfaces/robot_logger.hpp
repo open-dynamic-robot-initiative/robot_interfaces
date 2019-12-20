@@ -75,9 +75,9 @@ public:
                     robot_interfaces::RobotData<Action, Observation, Status>>
                     robot_data,
                 int block_size)
-        : block_size_(block_size),
-          stop_was_called_(false),
-          logger_data_(robot_data)
+        : logger_data_(robot_data),
+          block_size_(block_size),
+          stop_was_called_(false)
     {
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
     }
