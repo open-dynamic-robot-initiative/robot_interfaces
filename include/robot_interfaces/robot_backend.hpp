@@ -161,8 +161,25 @@ private:
                     status.action_repetitions = action_repetitions + 1;
                 }
             }
+
+            bool has_error = false;
+            std::string driver_error_msg = robot_driver_.get_error();
+            if (!driver_error_msg.empty())
+            {
+                status.error_status = Status::ErrorStatus::DRIVER_ERROR;
+                status.error_message = driver_error_msg;
+                has_error = true;
+            }
+
             robot_data_->status->append(status);
             timers_[2].tac();
+
+            // if there is an error, shut robot down and stop loop
+            if (has_error)
+            {
+                robot_driver_.shutdown();
+                return;
+            }
 
             timers_[3].tic();
             // early exit if destructor has been called
