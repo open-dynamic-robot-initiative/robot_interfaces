@@ -6,6 +6,11 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
+/**
+ * @file
+ * @brief Defines the Status struct.
+ */
+
 #pragma once
 
 #include <robot_interfaces/loggable.hpp>
@@ -14,6 +19,12 @@
 
 namespace robot_interfaces
 {
+/**
+ * @brief Status information from the backend.
+ *
+ * This struct is used to report status information that is not directly
+ * robot-related from the backend to the frontend.
+ */
 struct Status : public Loggable
 {
     enum class ErrorStatus
@@ -23,8 +34,20 @@ struct Status : public Loggable
         BACKEND_ERROR
     };
 
+    /**
+     * @brief Number of times the current action has been repeated because no
+     * new action has been provided.
+     */
     uint32_t action_repetitions = 0;
+
+    //! @brief Indicates if there is an error and, if yes, in which component.
     ErrorStatus error_status = ErrorStatus::NO_ERROR;
+
+    /**
+     * @brief Message describing the error.
+     *
+     * Value is undefined if `error_status == NO_ERROR`.
+     */
     std::string error_message;
 
     std::vector<std::string> get_name() override
