@@ -16,16 +16,28 @@ namespace robot_interfaces
 {
 struct Status : public Loggable
 {
+    enum class ErrorStatus
+    {
+        NO_ERROR = 0,
+        DRIVER_ERROR,
+        BACKEND_ERROR
+    };
+
     uint32_t action_repetitions = 0;
+    ErrorStatus error_status = ErrorStatus::NO_ERROR;
+    std::string error_message;
 
     std::vector<std::string> get_name() override
     {
-        return {"Action_repetitions"};
+        return {"action_repetitions", "error_status"};
     }
 
     std::vector<std::vector<double>> get_data() override
     {
-        return {{static_cast<double>(action_repetitions)}};
+        // FIXME error message cannot be logged because only numeric types are
+        // supported
+        return {{static_cast<double>(action_repetitions)},
+                {static_cast<double>(error_status)}};
     }
 };
 
