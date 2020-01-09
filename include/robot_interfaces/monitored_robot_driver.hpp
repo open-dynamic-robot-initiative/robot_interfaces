@@ -119,6 +119,11 @@ public:
         return robot_driver_->get_latest_observation();
     }
 
+    virtual std::string get_error()
+    {
+        return robot_driver_->get_error();
+    }
+
     /**
      * @brief Shut down the robot safely.
      *

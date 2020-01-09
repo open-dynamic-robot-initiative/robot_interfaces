@@ -9,20 +9,20 @@
 #pragma once
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <cstdint>
-#include <atomic>
 
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
 #include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
 #include <real_time_tools/timer.hpp>
 
+#include <robot_interfaces/loggable.hpp>
 #include <robot_interfaces/monitored_robot_driver.hpp>
 #include <robot_interfaces/robot_data.hpp>
 #include <robot_interfaces/robot_driver.hpp>
 #include <robot_interfaces/status.hpp>
-#include <robot_interfaces/loggable.hpp>
 
 namespace robot_interfaces
 {
@@ -40,7 +40,6 @@ template <typename Action, typename Observation>
 class RobotBackend
 {
 public:
-
     // TODO add parameter: n_max_repeat_of_same_action
     /**
      * @param robot_driver  Driver instance for the actual robot.  This is
@@ -55,9 +54,9 @@ public:
         const double max_action_duration_s,
         const double max_inter_action_duration_s)
         : robot_driver_(
-			robot_driver, max_action_duration_s, max_inter_action_duration_s),
+              robot_driver, max_action_duration_s, max_inter_action_duration_s),
           robot_data_(robot_data),
-	  destructor_was_called_(false),
+          destructor_was_called_(false),
           max_action_repetitions_(0)
     {
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
@@ -89,7 +88,7 @@ private:
     std::shared_ptr<RobotData<Action, Observation, Status>> robot_data_;
     std::atomic<bool> destructor_was_called_;
     uint32_t max_action_repetitions_;
-  
+
     std::vector<real_time_tools::Timer> timers_;
 
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
@@ -122,7 +121,6 @@ private:
 
         for (long int t = 0; !destructor_was_called_; t++)
         {
-
             // TODO: figure out latency stuff!! open /dev/cpu_dma_latency:
             // Permission denied
 
@@ -163,18 +161,35 @@ private:
                     status.action_repetitions = action_repetitions + 1;
                 }
             }
+
+            bool has_error = false;
+            std::string driver_error_msg = robot_driver_.get_error();
+            if (!driver_error_msg.empty())
+            {
+                status.error_status = Status::ErrorStatus::DRIVER_ERROR;
+                status.error_message = driver_error_msg;
+                has_error = true;
+            }
+
             robot_data_->status->append(status);
             timers_[2].tac();
 
+            // if there is an error, shut robot down and stop loop
+            if (has_error)
+            {
+                robot_driver_.shutdown();
+                return;
+            }
+
             timers_[3].tic();
-	    // early exit if destructor has been called 
-	    while (!robot_data_->desired_action->wait_for_timeindex(t, 0.1))
-	      {
-		  if(destructor_was_called_)
-		  {
-		      return;
-		  }
-	      }
+            // early exit if destructor has been called
+            while (!robot_data_->desired_action->wait_for_timeindex(t, 0.1))
+            {
+                if (destructor_was_called_)
+                {
+                    return;
+                }
+            }
             Action desired_action = (*robot_data_->desired_action)[t];
             timers_[3].tac();
             timers_[4].tic();

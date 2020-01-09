@@ -117,6 +117,11 @@ public:
     observation.values[1] = state_[1];
     return observation;
   }
+
+  std::string get_error()
+  {
+      return ""; // no error
+  }
     
   void shutdown(){}
 

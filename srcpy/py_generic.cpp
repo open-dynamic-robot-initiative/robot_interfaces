@@ -26,9 +26,15 @@ using namespace robot_interfaces;
 
 PYBIND11_MODULE(py_generic, m)
 {
-    pybind11::class_<Status>(m, "Status")
-        .def(pybind11::init<>())
-        .def_readwrite("action_repetitions",
-                       &Status::action_repetitions);
+    pybind11::class_<Status> pystatus(m, "Status");
+    pystatus.def(pybind11::init<>())
+        .def_readwrite("action_repetitions", &Status::action_repetitions)
+        .def_readwrite("error_status", &Status::error_status)
+        .def_readwrite("error_message", &Status::error_message);
+
+    pybind11::enum_<Status::ErrorStatus>(pystatus, "ErrorStatus")
+        .value("NO_ERROR", Status::ErrorStatus::NO_ERROR)
+        .value("DRIVER_ERROR", Status::ErrorStatus::DRIVER_ERROR)
+        .value("BACKEND_ERROR", Status::ErrorStatus::BACKEND_ERROR);
 }
 

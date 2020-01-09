@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <string>
+
 namespace robot_interfaces
 {
 /**
@@ -57,6 +59,13 @@ public:
      * @return Observation
      */
     virtual Observation get_latest_observation() = 0;
+
+    /**
+     * @brief Get error message if there is any error.
+     *
+     * @return Returns an error message or an empty string if there is no error.
+     */
+    virtual std::string get_error() = 0;
 
     /**
      * @brief Shut down the robot safely.
