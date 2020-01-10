@@ -12,12 +12,12 @@
 #include <memory>
 #include <string>
 
-#include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
+#include <time_series/time_series.hpp>
 
 namespace robot_interfaces
 {
 template <typename Type>
-using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
+using Timeseries = time_series::TimeSeries<Type>;
 
 /**
  * @brief Contains all the input and output data of the robot.

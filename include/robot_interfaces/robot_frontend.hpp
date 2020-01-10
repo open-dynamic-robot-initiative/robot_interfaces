@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
+#include <time_series/time_series.hpp>
 
 #include <robot_interfaces/robot_backend.hpp>
 #include <robot_interfaces/robot_data.hpp>
@@ -19,9 +19,9 @@
 namespace robot_interfaces
 {
 template <typename Type>
-using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
+using Timeseries = time_series::TimeSeries<Type>;
 
-typedef Timeseries<int>::Index TimeIndex;
+typedef time_series::Index TimeIndex;
 
 /**
  * @brief Communication link between RobotData and the user.
@@ -37,7 +37,7 @@ template <typename Action, typename Observation>
 class RobotFrontend
 {
 public:
-    typedef Timeseries<int>::Timestamp TimeStamp;
+    typedef time_series::Timestamp TimeStamp;
 
     RobotFrontend(
         std::shared_ptr<RobotData<Action, Observation, Status>> robot_data)
