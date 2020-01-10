@@ -25,7 +25,6 @@
 
 namespace robot_interfaces
 {
-
 /**
  * @brief Timer to measure code execution time with "checkpoints"
  *
@@ -67,7 +66,6 @@ template <size_t NUM_CHECKPOINTS, bool ENABLED = true>
 class CheckpointTimer
 {
 public:
-
     //! @brief Start timer iteration.
     void start()
     {
