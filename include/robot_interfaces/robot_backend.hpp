@@ -66,6 +66,13 @@ template <size_t NUM_CHECKPOINTS, bool ENABLED = true>
 class CheckpointTimer
 {
 public:
+    CheckpointTimer()
+    {
+        static_assert(NUM_CHECKPOINTS > 0,
+                      "CheckpointTimer needs at least one checkpoint");
+        checkpoint_names_[0] = "Total";
+    }
+
     //! @brief Start timer iteration.
     void start()
     {
@@ -109,12 +116,10 @@ public:
     {
         if (ENABLED)
         {
-            std::cout << "===== Total:" << std::endl;
-            timers_[0].print_statistics();
-
-            for (size_t i = 1; i < timers_.size(); i++)
+            std::cout << "======================================" << std::endl;
+            for (size_t i = 0; i < timers_.size(); i++)
             {
-                std::cout << "----- " << checkpoint_names_[i] << std::endl;
+                std::cout << "===== " << checkpoint_names_[i] << std::endl;
                 timers_[i].print_statistics();
             }
         }
@@ -325,7 +330,7 @@ private:
             robot_data_->applied_action->append(applied_action);
             timer_.checkpoint("append applied action");
 
-            if (t % 5000 == 0)
+            if (t % 5000 == 0 && t > 0)
             {
                 timer_.print_statistics();
             }
