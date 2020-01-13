@@ -15,6 +15,7 @@
 
 #include <robot_interfaces/robot_backend.hpp>
 #include <robot_interfaces/robot_data.hpp>
+#include <robot_interfaces/status.hpp>
 
 namespace robot_interfaces
 {
@@ -40,7 +41,7 @@ public:
     typedef time_series::Timestamp TimeStamp;
 
     RobotFrontend(
-        std::shared_ptr<RobotData<Action, Observation, Status>> robot_data)
+        std::shared_ptr<RobotData<Action, Observation>> robot_data)
         : robot_data_(robot_data)
     {
     }
@@ -120,7 +121,7 @@ public:
     }
 
 private:
-    std::shared_ptr<RobotData<Action, Observation, Status>> robot_data_;
+    std::shared_ptr<RobotData<Action, Observation>> robot_data_;
 };
 
 }  // namespace robot_interfaces

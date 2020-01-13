@@ -140,13 +140,12 @@ int main()
 {
 
   typedef robot_interfaces::RobotBackend<Action,Observation> Backend;
-  typedef robot_interfaces::RobotData<Action,
-				      Observation,
-				      robot_interfaces::Status> Data;
+  typedef robot_interfaces::RobotData<Action, Observation> BaseData;
+  typedef robot_interfaces::SingleProcessRobotData<Action, Observation> SingleProcessData;
   typedef robot_interfaces::RobotFrontend<Action,Observation> Frontend;
   
   std::shared_ptr<Driver> driver_ptr = std::make_shared<Driver>();
-  std::shared_ptr<Data> data_ptr = std::make_shared<Data>();
+  std::shared_ptr<BaseData> data_ptr = std::make_shared<SingleProcessData>();
 
   // max time allowed for the robot to apply an action.
   double max_action_duration_s = 0.002;

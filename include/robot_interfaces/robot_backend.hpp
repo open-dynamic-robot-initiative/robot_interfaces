@@ -50,7 +50,7 @@ public:
      */
     RobotBackend(
         std::shared_ptr<RobotDriver<Action, Observation>> robot_driver,
-        std::shared_ptr<RobotData<Action, Observation, Status>> robot_data,
+        std::shared_ptr<RobotData<Action, Observation>> robot_data,
         const double max_action_duration_s,
         const double max_inter_action_duration_s)
         : robot_driver_(
@@ -100,7 +100,7 @@ public:
 
 private:
     MonitoredRobotDriver<Action, Observation> robot_driver_;
-    std::shared_ptr<RobotData<Action, Observation, Status>> robot_data_;
+    std::shared_ptr<RobotData<Action, Observation>> robot_data_;
     std::atomic<bool> destructor_was_called_;
 
     /**

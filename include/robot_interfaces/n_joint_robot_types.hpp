@@ -19,6 +19,33 @@
 
 #include <robot_interfaces/robot_logger.hpp>
 
+// https://stackoverflow.com/a/51944389/2095383
+// Authors: Azoth, eudoxos
+// Date: 2020-01-15
+// License: CC BY-SA 4.0
+namespace cereal
+{
+  template <class Archive, class Derived> inline
+    typename std::enable_if<traits::is_output_serializable<BinaryData<typename Derived::Scalar>, Archive>::value, void>::type
+    save(Archive & ar, Eigen::PlainObjectBase<Derived> const & m){
+      typedef Eigen::PlainObjectBase<Derived> ArrT;
+      if(ArrT::RowsAtCompileTime==Eigen::Dynamic) ar(m.rows());
+      if(ArrT::ColsAtCompileTime==Eigen::Dynamic) ar(m.cols());
+      ar(binary_data(m.data(),m.size()*sizeof(typename Derived::Scalar)));
+    }
+
+  template <class Archive, class Derived> inline
+    typename std::enable_if<traits::is_input_serializable<BinaryData<typename Derived::Scalar>, Archive>::value, void>::type
+    load(Archive & ar, Eigen::PlainObjectBase<Derived> & m){
+      typedef Eigen::PlainObjectBase<Derived> ArrT;
+      Eigen::Index rows=ArrT::RowsAtCompileTime, cols=ArrT::ColsAtCompileTime;
+      if(rows==Eigen::Dynamic) ar(rows);
+      if(cols==Eigen::Dynamic) ar(cols);
+      m.resize(rows,cols);
+      ar(binary_data(m.data(),static_cast<std::size_t>(rows*cols*sizeof(typename Derived::Scalar))));
+    }
+}
+
 namespace robot_interfaces
 {
 /**
@@ -47,6 +74,12 @@ struct NJointRobotTypes
         Vector position_kp;
         //! D-gain for position controller.  If NaN, default is used.
         Vector position_kd;
+
+        template <class Archive>
+        void serialize(Archive& archive)
+        {
+            archive(torque, position, position_kp, position_kd);
+        }
 
         std::vector<std::string> get_name() override
         {
@@ -202,6 +235,12 @@ struct NJointRobotTypes
         Vector velocity;
         Vector torque;
 
+        template <class Archive>
+        void serialize(Archive& archive)
+        {
+            archive(position, velocity, torque);
+        }
+
         std::vector<std::string> get_name() override
         {
             return {"Position", "Velocity", "Torque"};
@@ -231,13 +270,17 @@ struct NJointRobotTypes
     typedef RobotBackend<Action, Observation> Backend;
     typedef std::shared_ptr<Backend> BackendPtr;
 
-    typedef RobotData<Action, Observation, Status> Data;
-    typedef std::shared_ptr<Data> DataPtr;
+    typedef RobotData<Action, Observation> BaseData;
+    typedef std::shared_ptr<BaseData> BaseDataPtr;
+    typedef SingleProcessRobotData<Action, Observation> SingleProcessData;
+    typedef std::shared_ptr<SingleProcessData> SingleProcessDataPtr;
+    typedef MultiProcessRobotData<Action, Observation> MultiProcessData;
+    typedef std::shared_ptr<MultiProcessData> MultiProcessDataPtr;
 
     typedef RobotFrontend<Action, Observation> Frontend;
     typedef std::shared_ptr<Frontend> FrontendPtr;
 
-    typedef RobotLogger<Action, Observation, Status> Logger;
+    typedef RobotLogger<Action, Observation> Logger;
 };
 
 }  // namespace robot_interfaces
