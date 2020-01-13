@@ -195,10 +195,10 @@ private:
         }
     }
 
-    static void *loop(void *instance_pointer)
+    static THREAD_FUNCTION_RETURN_TYPE loop(void *instance_pointer)
     {
         ((MonitoredRobotDriver *)(instance_pointer))->loop();
-        return nullptr;
+        return THREAD_FUNCTION_RETURN_VALUE;
     }
 };
 

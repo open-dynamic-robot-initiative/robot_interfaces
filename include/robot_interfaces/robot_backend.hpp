@@ -95,10 +95,10 @@ private:
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 
     // control loop ------------------------------------------------------------
-    static void *loop(void *instance_pointer)
+    static THREAD_FUNCTION_RETURN_TYPE loop(void *instance_pointer)
     {
         ((RobotBackend *)(instance_pointer))->loop();
-        return nullptr;
+        return THREAD_FUNCTION_RETURN_VALUE;
     }
 
     /**
