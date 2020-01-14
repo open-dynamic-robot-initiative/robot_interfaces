@@ -11,40 +11,52 @@
 #include <robot_interfaces/robot_frontend.hpp>
 #include <robot_interfaces/robot_backend.hpp>
 #include <robot_interfaces/robot_data.hpp>
+#include <type_traits>
 
 namespace robot_interfaces
 {
 
 /**
  * @brief RobotFrontend that construct and encapsulates
- * its related RobotBackend
+ * its related RobotBackend. It also construct and starts
+ * the robot driver.
  */
-template<typename Action, typename Observation>
+template<typename Action,
+	 typename Observation,
+	 typename Driver,
+	 typename ... Args>
 class Robot : public RobotFrontend<Action,Observation>
 {
 
   typedef RobotData<Action,Observation,Status> Data;
   typedef std::shared_ptr<Data> DataPtr;
-
-public:
+  typedef std::shared_ptr<Driver> RobotDriverPtr;
   
+public:
+
   /**
-   * @param robot_driver Driver instance for the actual robot. This is
-   * internally wrapped in a MonitoredRobotDriver for increased safety.
    * @param max_action_duration_s See MonitoredRobotDriver.
    * @param max_inter_action_duration_s See MonitoredRobotDriver.
+   * @param args Arguments required to instantiate the driver
+   * @param data_ptr Optional, shared pointer to the data. Instantiated
+   * if not provided.
    */
-  Robot(std::shared_ptr<RobotDriver<Action, Observation>> robot_driver,
-	double max_action_duration_s,
+  Robot(double max_action_duration_s,
 	double max_inter_action_duration_s,
+	Args ... args,
 	DataPtr data_ptr = std::make_shared<Data>())
     : RobotFrontend<Action,Observation>(data_ptr),
     data_ptr_(data_ptr),
-    backend_(robot_driver,
+    driver_ptr_(std::make_shared<Driver>(args ...)),
+    backend_(driver_ptr_,
 	     data_ptr_,
 	     max_action_duration_s,
 	     max_inter_action_duration_s)
-  {}
+  {
+    // compile time checking template Driver inherate from RobotDriver
+    static_assert(std::is_base_of<RobotDriver<Action,Observation>, Driver>::value,
+		  "template Driver must be a subclass of robot_interfaces::RobotDriver");
+  }
 
   /**
    * initialize the backend
@@ -57,14 +69,16 @@ public:
   /**
    * return the data shared by the frontend and the backend.
    */
-  DataPtr get_data()
+  const Data& get_data() const
   {
-    return data_ptr_;
+    return *data_ptr_;
   }
-        
+
+  
 private:
 
   DataPtr data_ptr_;
+  RobotDriverPtr driver_ptr_;
   RobotBackend<Action,Observation> backend_;
         
 };

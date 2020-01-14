@@ -145,7 +145,6 @@ int main()
 				      Observation,
 				      robot_interfaces::Status> Data;
   typedef robot_interfaces::RobotFrontend<Action,Observation> Frontend;
-  typedef robot_interfaces::Robot<Action,Observation> Robot;
   
   // max time allowed for the robot to apply an action.
   double max_action_duration_s = 0.02;
@@ -197,11 +196,12 @@ int main()
   {
 
     std::cout << "\n -- * -- Robot -- * --\n" << std::endl;
+
+    typedef robot_interfaces::Robot<Action,Observation,Driver> Robot;
     
-    std::shared_ptr<Driver> driver_ptr = std::make_shared<Driver>();
-    Robot robot(driver_ptr,
-		max_action_duration_s,
+    Robot robot(max_action_duration_s,
 		max_inter_action_duration_s);
+    
     robot.initialize();
 
     Action action;
