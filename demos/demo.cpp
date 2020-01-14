@@ -11,6 +11,7 @@
 #include "robot_interfaces/robot_backend.hpp"
 #include "robot_interfaces/robot_frontend.hpp"
 #include "robot_interfaces/status.hpp"
+#include "robot_interfaces/robot.hpp"
 
 #include <memory>
 
@@ -144,43 +145,85 @@ int main()
 				      Observation,
 				      robot_interfaces::Status> Data;
   typedef robot_interfaces::RobotFrontend<Action,Observation> Frontend;
+  typedef robot_interfaces::Robot<Action,Observation> Robot;
   
-  std::shared_ptr<Driver> driver_ptr = std::make_shared<Driver>();
-  std::shared_ptr<Data> data_ptr = std::make_shared<Data>();
-
   // max time allowed for the robot to apply an action.
-  double max_action_duration_s = 0.002;
-
+  double max_action_duration_s = 0.02;
+  
   // max time allowed for 2 successive actions
-  double max_inter_action_duration_s = 0.005;
+  double max_inter_action_duration_s = 0.05;
 
-  Backend backend(driver_ptr,
-		  data_ptr,
-		  max_action_duration_s,
-		  max_inter_action_duration_s);
-  backend.initialize();
   
-  Frontend frontend(data_ptr);
+  // demo showing the separated usage of backend and frontend
+  {
 
-  Action action;
-  Observation observation;
+    std::cout << "\n -- * -- Frontend and Backend -- * --\n" << std::endl;
+    
+    std::shared_ptr<Driver> driver_ptr = std::make_shared<Driver>();
+    std::shared_ptr<Data> data_ptr = std::make_shared<Data>();
 
-  // simulated action :
-  // 1 dof going from 200 to 300
-  // The other going from 300 to 200
+    Backend backend(driver_ptr,
+		    data_ptr,
+		    max_action_duration_s,
+		    max_inter_action_duration_s);
+    backend.initialize();
   
-  for(uint value=200;value<=300;value++)
-    {
-      action.values[0]=value;
-      action.values[1]=500-value;
-      // this action will be stored at index
-      robot_interfaces::TimeIndex index = frontend.append_desired_action(action);
-      // getting the observation corresponding to the applied
-      // action, i.e. at the same index
-      observation = frontend.get_observation(index);
-      std::cout << "value: " << value << " | ";
-      action.print(false);
-      observation.print(true);
-    }
+    Frontend frontend(data_ptr);
+
+    Action action;
+    Observation observation;
+
+    // simulated action :
+    // 1 dof going from 200 to 300
+    // The other going from 300 to 200
   
+    for(uint value=200;value<=300;value++)
+      {
+	action.values[0]=value;
+	action.values[1]=500-value;
+	// this action will be stored at index
+	robot_interfaces::TimeIndex index = frontend.append_desired_action(action);
+	// getting the observation corresponding to the applied
+	// action, i.e. at the same index
+	observation = frontend.get_observation(index);
+	std::cout << "value: " << value << " | ";
+	action.print(false);
+	observation.print(true);
+      }
+  }
+
+  // demo representing usage of frontend and backend
+  // encapsulated in the same instance
+  {
+
+    std::cout << "\n -- * -- Robot -- * --\n" << std::endl;
+    
+    std::shared_ptr<Driver> driver_ptr = std::make_shared<Driver>();
+    Robot robot(driver_ptr,
+		max_action_duration_s,
+		max_inter_action_duration_s);
+    robot.initialize();
+
+    Action action;
+    Observation observation;
+
+    // simulated action :
+    // 1 dof going from 200 to 300
+    // The other going from 300 to 200
+  
+    for(uint value=200;value<=300;value++)
+      {
+	action.values[0]=value;
+	action.values[1]=500-value;
+	// this action will be stored at index
+	robot_interfaces::TimeIndex index = robot.append_desired_action(action);
+	// getting the observation corresponding to the applied
+	// action, i.e. at the same index
+	observation = robot.get_observation(index);
+	std::cout << "value: " << value << " | ";
+	action.print(false);
+	observation.print(true);
+      }
+  }
+
 }
