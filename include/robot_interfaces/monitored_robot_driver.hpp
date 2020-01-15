@@ -10,6 +10,7 @@
 
 #include <iostream>
 
+#include <mpi_cpp_tools/multithreading.hpp>
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
 #include <real_time_tools/timer.hpp>
@@ -124,7 +125,7 @@ public:
         const std::string driver_error = robot_driver_->get_error();
         if (driver_error.empty())
         {
-            return error_message_;
+            return error_message_.get();
         }
         else
         {
@@ -162,7 +163,7 @@ private:
 
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 
-    std::string error_message_ = "";
+    MutexedType<std::string> error_message_;
 
     /**
      * @brief Monitor the timing of action execution.
@@ -188,7 +189,7 @@ private:
                                                       max_action_duration_s_);
             if (!action_has_ended_on_time)
             {
-                error_message_ = "Action did not end on time, shutting down.";
+                error_message_.set("Action did not end on time, shutting down.");
                 shutdown();
                 return;
             }
@@ -198,7 +199,7 @@ private:
                     t + 1, max_inter_action_duration_s_);
             if (!action_has_started_on_time)
             {
-                error_message_ = "Action did not start on time, shutting down.";
+                error_message_.set("Action did not start on time, shutting down.");
                 shutdown();
                 return;
             }

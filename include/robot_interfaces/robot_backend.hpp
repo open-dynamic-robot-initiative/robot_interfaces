@@ -109,7 +109,7 @@ private:
      */
     uint32_t max_action_repetitions_;
 
-    real_time_tools::CheckpointTimer<6, true> timer_;
+    real_time_tools::CheckpointTimer<6, false> timer_;
 
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 
