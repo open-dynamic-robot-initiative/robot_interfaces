@@ -15,7 +15,7 @@
 
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
-#include <real_time_tools/timer.hpp>
+#include <real_time_tools/checkpoint_timer.hpp>
 
 #include <robot_interfaces/loggable.hpp>
 #include <robot_interfaces/monitored_robot_driver.hpp>
@@ -25,118 +25,6 @@
 
 namespace robot_interfaces
 {
-/**
- * @brief Timer to measure code execution time with "checkpoints"
- *
- * This timer is meant to be used for measuring execution time of a loop.  It
- * measures time between calls of the `start` method, so by calling this at the
- * beginning of the loop, you get the execution time of the full iteration.
- * Further, you can define "checkpoints" within the loop to measure time of
- * separate steps in the loop.  Call the `checkpoint` method after the code that
- * is associated with it.  For each checkpoint, the time elapsed since the last
- * checkpoint is measured (`start` counts as a checkpoint in this regard).
- *
- * Example:
- *
- * ~~~{.cpp}
- * CheckpointTimer<3> timer;
- *
- * while (condition)
- * {
- *     timer.start();
- *
- *     initialize()
- *     timer.checkpoint("initialize");
- *
- *     do();
- *     some();
- *     stuff();
- *     timer.checkpoint("do some stuff");
- *
- *     write_log();
- *     timer.checkpoint("logging");
- * }
- * ~~~
- *
- * @tparam NUM_CHECKPOINTS Number of checkpoints.
- * @tparam ENABLED Set to false, to disable timer.  Method calls will have no
- * effect (and should hopefully be optimized away by the compiler).
- */
-template <size_t NUM_CHECKPOINTS, bool ENABLED = true>
-class CheckpointTimer
-{
-public:
-    CheckpointTimer()
-    {
-        static_assert(NUM_CHECKPOINTS > 0,
-                      "CheckpointTimer needs at least one checkpoint");
-        checkpoint_names_[0] = "Total";
-    }
-
-    //! @brief Start timer iteration.
-    void start()
-    {
-        if (ENABLED)
-        {
-            timers_[0].tac_tic();
-            current_checkpoint = 1;
-            timers_[current_checkpoint].tic();
-        }
-    }
-
-    /**
-     * @brief Set checkpoint for time measurement.
-     *
-     * Measures time from the last call of start() or checkpoint() until this
-     * call.  The given name is used when printing the results.
-     *
-     * @param checkpoint_name Name of the checkpoint (used for printing results)
-     */
-    void checkpoint(const std::string &checkpoint_name)
-    {
-        if (ENABLED)
-        {
-            timers_[current_checkpoint].tac();
-
-            if (checkpoint_names_[current_checkpoint].empty())
-            {
-                checkpoint_names_[current_checkpoint] = checkpoint_name;
-            }
-            else if (checkpoint_names_[current_checkpoint] != checkpoint_name)
-            {
-                throw std::runtime_error("Wrong checkpoint called (expected '" +
-                                         checkpoint_names_[current_checkpoint] +
-                                         "' but got '" + checkpoint_name +
-                                         "').");
-            }
-
-            current_checkpoint++;
-            if (current_checkpoint < timers_.size())
-            {
-                timers_[current_checkpoint].tic();
-            }
-        }
-    }
-
-    //! @brief Print results of time measurements.
-    void print_statistics() const
-    {
-        if (ENABLED)
-        {
-            std::cout << "======================================" << std::endl;
-            for (size_t i = 0; i < timers_.size(); i++)
-            {
-                std::cout << "===== " << checkpoint_names_[i] << std::endl;
-                timers_[i].print_statistics();
-            }
-        }
-    }
-
-private:
-    std::array<real_time_tools::Timer, NUM_CHECKPOINTS + 1> timers_;
-    std::array<std::string, NUM_CHECKPOINTS + 1> checkpoint_names_;
-    size_t current_checkpoint = 1;
-};  // namespace robot_interfaces
 
 /**
  * @brief Communication link between RobotDriver and RobotData.
@@ -221,7 +109,7 @@ private:
      */
     uint32_t max_action_repetitions_;
 
-    CheckpointTimer<6, false> timer_;
+    real_time_tools::CheckpointTimer<6, true> timer_;
 
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 
