@@ -102,6 +102,13 @@ public:
             {
                 checkpoint_names_[current_checkpoint] = checkpoint_name;
             }
+            else if (checkpoint_names_[current_checkpoint] != checkpoint_name)
+            {
+                throw std::runtime_error("Wrong checkpoint called (expected '" +
+                                         checkpoint_names_[current_checkpoint] +
+                                         "' but got '" + checkpoint_name +
+                                         "').");
+            }
 
             current_checkpoint++;
             if (current_checkpoint < timers_.size())
