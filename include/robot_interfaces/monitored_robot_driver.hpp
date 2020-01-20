@@ -10,9 +10,9 @@
 
 #include <iostream>
 
-#include <mpi_cpp_tools/multithreading.hpp>
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
+#include <real_time_tools/threadsafe/threadsafe_object.hpp>
 #include <real_time_tools/timer.hpp>
 #include <time_series/time_series.hpp>
 
@@ -163,7 +163,7 @@ private:
 
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 
-    MutexedType<std::string> error_message_;
+    real_time_tools::SingletypeThreadsafeObject<std::string, 1> error_message_;
 
     /**
      * @brief Monitor the timing of action execution.
