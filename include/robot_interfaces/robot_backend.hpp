@@ -15,7 +15,6 @@
 
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
-#include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
 #include <real_time_tools/timer.hpp>
 
 #include <robot_interfaces/loggable.hpp>

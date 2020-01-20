@@ -12,8 +12,8 @@
 
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
-#include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
 #include <real_time_tools/timer.hpp>
+#include <time_series/time_series.hpp>
 
 #include <robot_interfaces/robot_driver.hpp>
 
@@ -149,8 +149,8 @@ private:
     //! \brief Whether shutdown was initiated.
     bool is_shutdown_;  // TODO: should be atomic
 
-    real_time_tools::ThreadsafeTimeseries<bool> action_start_logger_;
-    real_time_tools::ThreadsafeTimeseries<bool> action_end_logger_;
+    time_series::TimeSeries<bool> action_start_logger_;
+    time_series::TimeSeries<bool> action_end_logger_;
 
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 
