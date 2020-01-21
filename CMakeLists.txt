@@ -58,6 +58,12 @@ catkin_package(
 add_executable(demo demos/demo.cpp)
 target_link_libraries(demo ${catkin_LIBRARIES})
 
+add_executable(demo_multiprocess_backend demos/demo_multiprocess_backend.cpp)
+target_link_libraries(demo_multiprocess_backend ${catkin_LIBRARIES} rt pthread)
+
+add_executable(demo_multiprocess_frontend demos/demo_multiprocess_frontend.cpp)
+target_link_libraries(demo_multiprocess_frontend ${catkin_LIBRARIES} rt pthread)
+
 #########################
 # manage the unit tests #
 #########################
