@@ -148,10 +148,10 @@ int main()
   std::shared_ptr<BaseData> data_ptr = std::make_shared<SingleProcessData>();
 
   // max time allowed for the robot to apply an action.
-  double max_action_duration_s = 0.002;
+  double max_action_duration_s = 0.02;
 
   // max time allowed for 2 successive actions
-  double max_inter_action_duration_s = 0.005;
+  double max_inter_action_duration_s = 0.05;
 
   Backend backend(driver_ptr,
 		  data_ptr,
