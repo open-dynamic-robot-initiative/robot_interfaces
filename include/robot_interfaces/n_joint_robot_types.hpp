@@ -16,35 +16,9 @@
 #include <robot_interfaces/robot_backend.hpp>
 #include <robot_interfaces/robot_data.hpp>
 #include <robot_interfaces/robot_frontend.hpp>
-
 #include <robot_interfaces/robot_logger.hpp>
+#include <robot_interfaces/cereal_eigen.hpp>
 
-// https://stackoverflow.com/a/51944389/2095383
-// Authors: Azoth, eudoxos
-// Date: 2020-01-15
-// License: CC BY-SA 4.0
-namespace cereal
-{
-  template <class Archive, class Derived> inline
-    typename std::enable_if<traits::is_output_serializable<BinaryData<typename Derived::Scalar>, Archive>::value, void>::type
-    save(Archive & ar, Eigen::PlainObjectBase<Derived> const & m){
-      typedef Eigen::PlainObjectBase<Derived> ArrT;
-      if(ArrT::RowsAtCompileTime==Eigen::Dynamic) ar(m.rows());
-      if(ArrT::ColsAtCompileTime==Eigen::Dynamic) ar(m.cols());
-      ar(binary_data(m.data(),m.size()*sizeof(typename Derived::Scalar)));
-    }
-
-  template <class Archive, class Derived> inline
-    typename std::enable_if<traits::is_input_serializable<BinaryData<typename Derived::Scalar>, Archive>::value, void>::type
-    load(Archive & ar, Eigen::PlainObjectBase<Derived> & m){
-      typedef Eigen::PlainObjectBase<Derived> ArrT;
-      Eigen::Index rows=ArrT::RowsAtCompileTime, cols=ArrT::ColsAtCompileTime;
-      if(rows==Eigen::Dynamic) ar(rows);
-      if(cols==Eigen::Dynamic) ar(cols);
-      m.resize(rows,cols);
-      ar(binary_data(m.data(),static_cast<std::size_t>(rows*cols*sizeof(typename Derived::Scalar))));
-    }
-}
 
 namespace robot_interfaces
 {
