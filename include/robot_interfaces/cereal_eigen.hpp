@@ -7,7 +7,8 @@
  * @license CC BY-SA 4.0
  * @todo Move this to some "serialization tools" package.
  *
- * Taken from https://stackoverflow.com/a/51944389/2095383.
+ * Taken from https://stackoverflow.com/a/51944389/2095383 with minor
+ * modifications.
  */
 #include <Eigen/Eigen>
 #include <type_traits>
@@ -19,12 +20,22 @@ inline typename std::enable_if<
     traits::is_output_serializable<BinaryData<typename Derived::Scalar>,
                                    Archive>::value,
     void>::type
-save(Archive& ar, Eigen::PlainObjectBase<Derived> const& m)
+save(Archive& archive, const Eigen::PlainObjectBase<Derived>& object)
 {
     typedef Eigen::PlainObjectBase<Derived> ArrT;
-    if (ArrT::RowsAtCompileTime == Eigen::Dynamic) ar(m.rows());
-    if (ArrT::ColsAtCompileTime == Eigen::Dynamic) ar(m.cols());
-    ar(binary_data(m.data(), m.size() * sizeof(typename Derived::Scalar)));
+
+    // only add dimensions to the serialized data when they are dynamic
+    if (ArrT::RowsAtCompileTime == Eigen::Dynamic)
+    {
+        archive(object.rows());
+    }
+    if (ArrT::ColsAtCompileTime == Eigen::Dynamic)
+    {
+        archive(object.cols());
+    }
+
+    archive(binary_data(object.data(),
+                        object.size() * sizeof(typename Derived::Scalar)));
 }
 
 template <class Archive, class Derived>
@@ -32,15 +43,24 @@ inline typename std::enable_if<
     traits::is_input_serializable<BinaryData<typename Derived::Scalar>,
                                   Archive>::value,
     void>::type
-load(Archive& ar, Eigen::PlainObjectBase<Derived>& m)
+load(Archive& archive, Eigen::PlainObjectBase<Derived>& object)
 {
     typedef Eigen::PlainObjectBase<Derived> ArrT;
+
     Eigen::Index rows = ArrT::RowsAtCompileTime, cols = ArrT::ColsAtCompileTime;
-    if (rows == Eigen::Dynamic) ar(rows);
-    if (cols == Eigen::Dynamic) ar(cols);
-    m.resize(rows, cols);
-    ar(binary_data(m.data(),
-                   static_cast<std::size_t>(rows * cols *
-                                            sizeof(typename Derived::Scalar))));
+    // information about dimensions are only serialized for dynamic-size types
+    if (rows == Eigen::Dynamic)
+    {
+        archive(rows);
+    }
+    if (cols == Eigen::Dynamic)
+    {
+        archive(cols);
+    }
+
+    object.resize(rows, cols);
+    archive(binary_data(object.data(),
+                        static_cast<std::size_t>(
+                            rows * cols * sizeof(typename Derived::Scalar))));
 }
 }  // namespace cereal
