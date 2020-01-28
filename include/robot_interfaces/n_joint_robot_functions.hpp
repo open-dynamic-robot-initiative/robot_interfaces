@@ -97,7 +97,7 @@ struct NJointRobotFunctions
 
             // simple PD controller
             typename Types::Vector position_control_torque =
-                processed_action.position_kp.cwiseProduct(position_error) +
+                processed_action.position_kp.cwiseProduct(position_error) -
                 processed_action.position_kd.cwiseProduct(
                     latest_observation.velocity);
 
