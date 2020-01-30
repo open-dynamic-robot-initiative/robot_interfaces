@@ -252,10 +252,11 @@ TEST_F(TestProcessDesiredAction, position_controller_with_velocity)
             default_position_control_kd);
 
     // Since velocity has same sign as position error, the resulting
-    // (absolute) torques should be higher
-    EXPECT_GT(result_action_without_velocity.torque[0],
+    // (absolute) torques should be lower (since it is
+    //   torque = P * position_error - D * velocity )
+    EXPECT_LT(result_action_without_velocity.torque[0],
               result_action_with_velocity.torque[0]);
-    EXPECT_LT(result_action_without_velocity.torque[1],
+    EXPECT_GT(result_action_without_velocity.torque[1],
               result_action_with_velocity.torque[1]);
 }
 
