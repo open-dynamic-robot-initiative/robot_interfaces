@@ -75,13 +75,14 @@ class Driver : public robot_interfaces::RobotDriver< Action,Observation>
   
 public:
 
-  Driver(){}
+  Driver(int min, int max)
+    : min_(min),max_(max){}
 
   // at init dof are at min value
   void initialize()
   {
-    state_[0] = Driver::MIN;
-    state_[1] = Driver::MIN;
+    state_[0] = min_;
+    state_[1] = min_;
   }
 
   // just clip desired values
@@ -91,13 +92,13 @@ public:
     Action applied;
     for(unsigned int i=0;i<2;i++)
       {
-	if(action_to_apply.values[i]>Driver::MAX)
+	if(action_to_apply.values[i]>max_)
 	  {
-	    applied.values[i]=Driver::MAX;
+	    applied.values[i]=max_;
 	  }
-	else if(action_to_apply.values[i]<Driver::MIN)
+	else if(action_to_apply.values[i]<min_)
 	  {
-	    applied.values[i]=Driver::MIN;
+	    applied.values[i]=min_;
 	  }
 	else
 	  {
@@ -129,9 +130,8 @@ public:
 private:
 
   int state_[2];
-    
-  const static int MAX = 1000;
-  const static int MIN = 0;
+  int min_;
+  int max_;
 
 };
 
@@ -158,7 +158,7 @@ int main()
 
     std::cout << "\n -- * -- Frontend and Backend -- * --\n" << std::endl;
     
-    std::shared_ptr<Driver> driver_ptr = std::make_shared<Driver>();
+    std::shared_ptr<Driver> driver_ptr = std::make_shared<Driver>(0,1000);
     std::shared_ptr<Data> data_ptr = std::make_shared<Data>();
 
     Backend backend(driver_ptr,
@@ -198,9 +198,13 @@ int main()
     std::cout << "\n -- * -- Robot -- * --\n" << std::endl;
 
     typedef robot_interfaces::Robot<Action,Observation,Driver> Robot;
-    
+
+    int min = 0;
+    int max = 100;
     Robot robot(max_action_duration_s,
-		max_inter_action_duration_s);
+		max_inter_action_duration_s,
+		min,
+		max);
     
     robot.initialize();
 

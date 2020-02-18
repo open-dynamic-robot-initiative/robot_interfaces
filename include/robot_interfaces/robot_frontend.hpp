@@ -119,7 +119,7 @@ public:
         robot_data_->observation->timestamp_ms(t);
     }
 
-private:
+protected:
     std::shared_ptr<RobotData<Action, Observation, Status>> robot_data_;
 };
 

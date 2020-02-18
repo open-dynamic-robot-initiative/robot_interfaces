@@ -70,14 +70,17 @@ public:
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
         thread_->create_realtime_thread(&MonitoredRobotDriver::loop, this);
     }
-
+  
     /**
      * @brief Shuts down the robot and stops the monitoring thread.
      */
     ~MonitoredRobotDriver()
     {
-        shutdown();
-        thread_->join();
+	std::cout << "\t\tmonitored robot driver destructor called\n";
+	shutdown();
+	std::cout << "\t\tshutdown called\n";
+	thread_->join();
+	std::cout << "\t\tdone\n";
     }
 
     double get_max_inter_action_duration_s()
@@ -172,32 +175,45 @@ private:
 
         // loop until shutdown and monitor action timing
         for (size_t t = 0; !is_shutdown_; t++)
-        {
-            bool action_has_ended_on_time =
-                action_end_logger_.wait_for_timeindex(t,
-                                                      max_action_duration_s_);
-            if (!action_has_ended_on_time)
-            {
-                std::cout
-                    << "Action did not end on time, shutting down. Any further "
-                       "actions will be ignored."
-                    << std::endl;
-                shutdown();
-                return;
-            }
-
-            bool action_has_started_on_time =
-                action_start_logger_.wait_for_timeindex(
-                    t + 1, max_inter_action_duration_s_);
-            if (!action_has_started_on_time)
-            {
-                std::cout << "Action did not start on time, shutting down. Any "
-                             "further actions will be ignored."
-                          << std::endl;
-                shutdown();
-                return;
-            }
-        }
+	  {
+	    if(! std::isinf(max_action_duration_s_))
+	      {
+		bool action_has_ended_on_time =
+		  action_end_logger_.wait_for_timeindex(t,
+							max_action_duration_s_);
+		if (!action_has_ended_on_time)
+		  {
+		    std::cout
+		      << "Action did not end on time, shutting down. Any further "
+		      "actions will be ignored."
+		      << std::endl;
+		    shutdown();
+		    return;
+		  }
+	      }
+	      else
+		{	    
+		  real_time_tools::Timer::sleep_ms(1);
+		}
+	    if(! std::isinf(max_inter_action_duration_s_))
+		{
+		  bool action_has_started_on_time =
+		    action_start_logger_.wait_for_timeindex(
+							    t + 1, max_inter_action_duration_s_);
+		  if (!action_has_started_on_time)
+		    {
+		      std::cout << "Action did not start on time, shutting down. Any "
+			"further actions will be ignored."
+				<< std::endl;
+		      shutdown();
+		      return;
+		    }
+		}
+	    else
+	      {	    
+		real_time_tools::Timer::sleep_ms(1);
+	      }
+	  }
     }
 
     static void *loop(void *instance_pointer)
