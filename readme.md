@@ -7,6 +7,7 @@ Interface to robot hardware
 ## Authors
 
 Manuel Wuethrich
+
 Felix Widmaier
 
 ## Copyrights
