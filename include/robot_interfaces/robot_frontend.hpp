@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
+#include <time_series/time_series.hpp>
 
 #include <robot_interfaces/robot_backend.hpp>
 #include <robot_interfaces/robot_data.hpp>
@@ -19,9 +19,9 @@
 namespace robot_interfaces
 {
 template <typename Type>
-using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
+using Timeseries = time_series::TimeSeries<Type>;
 
-typedef Timeseries<int>::Index TimeIndex;
+typedef time_series::Index TimeIndex;
 
 /**
  * @brief Communication link between RobotData and the user.
@@ -37,10 +37,7 @@ template <typename Action, typename Observation>
 class RobotFrontend
 {
 public:
-    typedef Timeseries<int>::Timestamp TimeStamp;
-    // TODO define Status somewhere else so we don't have an otherwise
-    // unnecessary dependency on RobotBackend here.
-    typedef typename RobotBackend<Action, Observation>::Status Status;
+    typedef time_series::Timestamp TimeStamp;
 
     RobotFrontend(
         std::shared_ptr<RobotData<Action, Observation, Status>> robot_data)
@@ -76,6 +73,27 @@ public:
 
     TimeIndex append_desired_action(const Action &desired_action)
     {
+        // check error state. do not allow appending actions if there is an
+        // error
+        if (robot_data_->status->length() > 0)
+        {
+            const Status status = robot_data_->status->newest_element();
+            switch (status.error_status)
+            {
+                case Status::ErrorStatus::NO_ERROR:
+                    break;
+                case Status::ErrorStatus::DRIVER_ERROR:
+                    throw std::runtime_error("Driver Error: " +
+                                             status.error_message);
+                case Status::ErrorStatus::BACKEND_ERROR:
+                    throw std::runtime_error("Backend Error: " +
+                                             status.error_message);
+                default:
+                    throw std::runtime_error("Unknown Error: " +
+                                             status.error_message);
+            }
+        }
+
         // since the timeseries has a finite memory, we need to make sure that
         // by appending new actions we do not forget about actions which have
         // not been applied yet

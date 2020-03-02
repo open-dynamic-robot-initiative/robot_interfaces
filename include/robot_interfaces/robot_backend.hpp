@@ -9,28 +9,29 @@
 #pragma once
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <cstdint>
 
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
-#include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
-#include <real_time_tools/timer.hpp>
+#include <real_time_tools/checkpoint_timer.hpp>
 
+#include <robot_interfaces/loggable.hpp>
 #include <robot_interfaces/monitored_robot_driver.hpp>
 #include <robot_interfaces/robot_data.hpp>
 #include <robot_interfaces/robot_driver.hpp>
-
-#include <robot_interfaces/loggable.hpp>
+#include <robot_interfaces/status.hpp>
 
 namespace robot_interfaces
 {
+
 /**
  * @brief Communication link between RobotDriver and RobotData.
  *
- * At each time-step, it gets the observation from the RobotDriver and writes it
- * to RobotData, and it takes the desired_action from RobotData and applies it
- * on the RobotDriver.
+ * At each time-step, it gets the observation from the RobotDriver and
+ * writes it to RobotData, and it takes the desired_action from RobotData
+ * and applies it on the RobotDriver.
  *
  * @tparam Action
  * @tparam Observation
@@ -39,25 +40,10 @@ template <typename Action, typename Observation>
 class RobotBackend
 {
 public:
-    struct Status : public Loggable
-    {
-        uint32_t action_repetitions = 0;
-
-        std::vector<std::string> get_name() override
-        {
-            return {"Action_repetitions"};
-        }
-
-        std::vector<std::vector<double>> get_data() override
-        {
-            return {{action_repetitions}};
-        }
-    };
-
-    // TODO add parameter: n_max_repeat_of_same_action
     /**
      * @param robot_driver  Driver instance for the actual robot.  This is
-     *     internally wrapped in a MonitoredRobotDriver for increased safety.
+     *     internally wrapped in a MonitoredRobotDriver for increased
+     * safety.
      * @param robot_data  Data is send to/retrieved from here.
      * @param max_action_duration_s  See MonitoredRobotDriver.
      * @param max_inter_action_duration_s  See MonitoredRobotDriver.
@@ -87,6 +73,21 @@ public:
     {
         return max_action_repetitions_;
     }
+
+    /**
+     * @brief Set how often an action is repeated if no new one is provided.
+     *
+     * If the next action is due to be executed but the user did not provide
+     * one yet (i.e. there is no new action in the robot data time series),
+     * the last action will be repeated by automatically adding it to the
+     * time series again.
+     *
+     * Use this this method to specify how often the action shall be
+     * repeated (default is 0, i.e. no repetition at all).  If this limit is
+     * exceeded, the robot will be shut down and the RobotBackend stops.
+     *
+     * @param max_action_repetitions
+     */
     void set_max_action_repetitions(const uint32_t &max_action_repetitions)
     {
         max_action_repetitions_ = max_action_repetitions;
@@ -100,14 +101,20 @@ public:
 private:
     MonitoredRobotDriver<Action, Observation> robot_driver_;
     std::shared_ptr<RobotData<Action, Observation, Status>> robot_data_;
-    bool destructor_was_called_;  // should be atomic
+    std::atomic<bool> destructor_was_called_;
+
+    /**
+     * @brief Number of times the previous action is repeated if no new one
+     *        is provided.
+     */
     uint32_t max_action_repetitions_;
 
-    std::vector<real_time_tools::Timer> timers_;
+    real_time_tools::CheckpointTimer<6, false> timer_;
 
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 
-    // control loop ------------------------------------------------------------
+    // control loop
+    // ------------------------------------------------------------
     static void *loop(void *instance_pointer)
     {
         ((RobotBackend *)(instance_pointer))->loop();
@@ -117,13 +124,12 @@ private:
     /**
      * @brief Main loop.
      *
-     * Iterate over robot_data_.desired_action and apply these actions to the
-     * robot, and read the applied_action and the observation from the
+     * Iterate over robot_data_.desired_action and apply these actions to
+     * the robot, and read the applied_action and the observation from the
      * robot and append them to the corresponding timeseries in robot_data_.
      */
     void loop()
     {
-        timers_.resize(10);
         real_time_tools::set_cpu_dma_latency(0);
 
         // wait until first desired_action was received
@@ -135,31 +141,29 @@ private:
 
         for (long int t = 0; !destructor_was_called_; t++)
         {
-            // TODO: figure out latency stuff!! open /dev/cpu_dma_latency:
-            // Permission denied
+            // TODO: figure out latency stuff!!
 
-            timers_[0].tac_tic();
+            timer_.start();
 
-            timers_[6].tic();
-            // get latest observation from robot and append it to robot_data_
+            // get latest observation from robot and append it to
+            // robot_data_
             // --------
             Observation observation = robot_driver_.get_latest_observation();
-            timers_[6].tac();
+            timer_.checkpoint("get observation");
 
-            timers_[1].tic();
             robot_data_->observation->append(observation);
             // TODO: for some reason this sometimes takes more than 2 ms
             // i think this may be due to a non-realtime thread blocking the
-            // timeseries. this is in fact an issue, we might have to duplicate
-            // all the timeseries and have a realtime thread writing back and
-            // forth
-            timers_[1].tac();
+            // timeseries. this is in fact an issue, we might have to
+            // duplicate all the timeseries and have a realtime thread
+            // writing back and forth
+            timer_.checkpoint("append observation");
 
-            timers_[2].tic();
-            // if the robot has a finite max_inter_action_duration_s (not NAN or
-            // infinite, meaning it requires receiving actions in fixed time
-            // intervals), but robot_data_ has not received yet the next action
-            // to apply, we optionally repeat the previous action.
+            // if the robot has a finite max_inter_action_duration_s (not
+            // NAN or infinite, meaning it requires receiving actions in
+            // fixed time intervals), but robot_data_ has not received yet
+            // the next action to apply, we optionally repeat the previous
+            // action.
             Status status;
             if (std::isfinite(
                     robot_driver_.get_max_inter_action_duration_s()) &&
@@ -174,28 +178,57 @@ private:
                         robot_data_->desired_action->newest_element());
                     status.action_repetitions = action_repetitions + 1;
                 }
+                else
+                {
+                    // No action provided and number of allowed repetitions
+                    // of the previous action is exceeded --> Error
+                    status.error_status = Status::ErrorStatus::BACKEND_ERROR;
+                    status.error_message =
+                        "Next action was not provided in time";
+                }
             }
+
+            std::string driver_error_msg = robot_driver_.get_error();
+            if (!driver_error_msg.empty())
+            {
+                status.error_status = Status::ErrorStatus::DRIVER_ERROR;
+                status.error_message = driver_error_msg;
+            }
+
             robot_data_->status->append(status);
-            timers_[2].tac();
 
-            timers_[3].tic();
-            // TODO: this may wait forever
+            // if there is an error, shut robot down and stop loop
+            if (status.error_status != Status::ErrorStatus::NO_ERROR)
+            {
+                std::cerr << "Error: " << status.error_message
+                          << "\nRobot is shut down." << std::endl;
+                robot_driver_.shutdown();
+                return;
+            }
+            timer_.checkpoint("status");
+
+            // early exit if destructor has been called
+            while (!robot_data_->desired_action->wait_for_timeindex(t, 0.1))
+            {
+                if (destructor_was_called_)
+                {
+                    // TODO should shut down robot?
+                    return;
+                }
+            }
             Action desired_action = (*robot_data_->desired_action)[t];
-            timers_[3].tac();
-            timers_[4].tic();
-            Action applied_action = robot_driver_.apply_action(desired_action);
-            timers_[4].tac();
-            timers_[5].tic();
-            robot_data_->applied_action->append(applied_action);
-            timers_[5].tac();
+            timer_.checkpoint("get action");
 
-            // if (t % 5000 == 0) {
-            //   for (size_t i = 0; i < 7; i++) {
-            //     std::cout << i << " --------------------------------------"
-            //               << std::endl;
-            //     timers_[i].print_statistics();
-            //   }
-            // }
+            Action applied_action = robot_driver_.apply_action(desired_action);
+            timer_.checkpoint("apply action");
+
+            robot_data_->applied_action->append(applied_action);
+            timer_.checkpoint("append applied action");
+
+            if (t % 5000 == 0 && t > 0)
+            {
+                timer_.print_statistics();
+            }
         }
     }
 };

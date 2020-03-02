@@ -8,6 +8,8 @@ Interface to robot hardware
 
 Manuel Wuethrich
 
+Felix Widmaier
+
 ## Copyrights
 
 Copyright(c) 2018-2019 Max Planck Gesellschaft

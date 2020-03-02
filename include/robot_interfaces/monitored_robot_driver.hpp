@@ -12,8 +12,9 @@
 
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
-#include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
+#include <real_time_tools/threadsafe/threadsafe_object.hpp>
 #include <real_time_tools/timer.hpp>
+#include <time_series/time_series.hpp>
 
 #include <robot_interfaces/robot_driver.hpp>
 
@@ -119,6 +120,19 @@ public:
         return robot_driver_->get_latest_observation();
     }
 
+    virtual std::string get_error()
+    {
+        const std::string driver_error = robot_driver_->get_error();
+        if (driver_error.empty())
+        {
+            return error_message_.get();
+        }
+        else
+        {
+            return driver_error;
+        }
+    }
+
     /**
      * @brief Shut down the robot safely.
      *
@@ -142,12 +156,14 @@ private:
     double max_inter_action_duration_s_;
 
     //! \brief Whether shutdown was initiated.
-    bool is_shutdown_;  // TODO: should be atomic
+    std::atomic<bool> is_shutdown_;
 
-    real_time_tools::ThreadsafeTimeseries<bool> action_start_logger_;
-    real_time_tools::ThreadsafeTimeseries<bool> action_end_logger_;
+    time_series::TimeSeries<bool> action_start_logger_;
+    time_series::TimeSeries<bool> action_end_logger_;
 
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
+
+    real_time_tools::SingletypeThreadsafeObject<std::string, 1> error_message_;
 
     /**
      * @brief Monitor the timing of action execution.
@@ -173,10 +189,7 @@ private:
                                                       max_action_duration_s_);
             if (!action_has_ended_on_time)
             {
-                std::cout
-                    << "Action did not end on time, shutting down. Any further "
-                       "actions will be ignored."
-                    << std::endl;
+                error_message_.set("Action did not end on time, shutting down.");
                 shutdown();
                 return;
             }
@@ -186,9 +199,7 @@ private:
                     t + 1, max_inter_action_duration_s_);
             if (!action_has_started_on_time)
             {
-                std::cout << "Action did not start on time, shutting down. Any "
-                             "further actions will be ignored."
-                          << std::endl;
+                error_message_.set("Action did not start on time, shutting down.");
                 shutdown();
                 return;
             }

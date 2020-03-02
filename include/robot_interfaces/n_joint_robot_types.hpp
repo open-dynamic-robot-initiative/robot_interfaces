@@ -166,8 +166,8 @@ struct NJointRobotTypes
          *
          * @return Action with both torque and position commands.
          */
-        static Action TorqueAndPosition(Vector torque = Vector::Zero(),
-                                        Vector position = None(),
+        static Action TorqueAndPosition(Vector torque,
+                                        Vector position,
                                         Vector position_kp = None(),
                                         Vector position_kd = None())
         {
@@ -230,7 +230,6 @@ struct NJointRobotTypes
 
     typedef RobotBackend<Action, Observation> Backend;
     typedef std::shared_ptr<Backend> BackendPtr;
-    typedef typename Backend::Status Status;
 
     typedef RobotData<Action, Observation, Status> Data;
     typedef std::shared_ptr<Data> DataPtr;
