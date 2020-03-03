@@ -3,23 +3,22 @@
 #include <cmath>
 #include <ctime>
 #include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
-#include <Eigen/Eigen>
+// #include <Eigen/Eigen>
+#include <opencv2/opencv.hpp>
 
 #include<robot_interfaces/camera_data.hpp>
 #include<robot_interfaces/camera_driver.hpp>
 #include<robot_interfaces/camera_backend.hpp>
 #include<robot_interfaces/camera_frontend.hpp>
 
-// #include <pylon/PylonIncludes.h>
-
 namespace robot_interfaces
 {
 
-template <uint8_t N, uint8_t M>
 struct CameraDataTypes
 {
 
-  typedef Eigen::Matrix<uint8_t, N, M> Image;
+  typedef cv::Mat Image;
+  // typedef Eigen::Matrix<uint8_t, N, M> Image;
   // typedef Pylon::CGrabResultData Image; //in private scope, cannot do this meh
   // typedef Pylon::CGrabResultPtr *Image;
   typedef time_t TimeStamp;

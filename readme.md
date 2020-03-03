@@ -56,3 +56,7 @@ BSD 3-Clause License
 ```bash
 singularity shell -B /opt/pylon5 containers/blmc_ei.sif
 ```
+
+### Steps to setup the webcam
+
+Just connect to a USB 3 port and install guvcview following the instructions [here](http://ubuntuhandbook.org/index.php/2018/10/guvcview-2-0-6-released-install-ubuntu/).

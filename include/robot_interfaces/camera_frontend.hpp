@@ -19,7 +19,7 @@ namespace robot_interfaces
   class CameraFrontend
   {
 
-    public:
+  public:
 
       typedef Timeseries<int>::Timestamp TimeStamp;
 
@@ -29,9 +29,9 @@ namespace robot_interfaces
       {
       }
 
-      CameraObservation get_observation(const TimeIndex &t)
+      CameraObservation get_observation()
       {
-          return (*camera_data_->observation)[t];
+          return (*camera_data_->observation)[get_current_timeindex()];
       }
 
       TimeStamp get_time_stamp_ms(const TimeIndex &t)
@@ -47,6 +47,5 @@ namespace robot_interfaces
       std::shared_ptr<CameraData<CameraObservation>> camera_data_;
 
   };
-
 
 } //namespace robot_interfaces

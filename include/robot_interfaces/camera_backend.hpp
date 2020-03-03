@@ -4,6 +4,8 @@
 #include <cmath>
 #include <cstdint>
 
+#include "opencv2/opencv.hpp"
+
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
 #include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
@@ -58,12 +60,19 @@ private:
     for (long int t = 0; !destructor_was_called_; t++)
     {
       CameraObservation camera_observation;
-      camera_observation = camera_driver_->grab_frame();
+      cv::VideoCapture cap(0);
 
-      camera_data_->observation->append(camera_observation);
-
+      int flag = camera_driver_->is_grabbing_successful(cap);
+      if (flag == 1)
+      {
+        camera_observation = (camera_driver_->grab_frame(cap));
+        camera_data_->observation->append(camera_observation);
+      }
+      else
+      {
+        std::cout << "Cannot store images when cannot access camera." << std::endl;
+      }
     }
-
   }
 };
 

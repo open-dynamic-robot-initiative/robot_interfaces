@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-"""Send zero-torque commands to the robot and create a log"""
 
 import time
 import numpy as np

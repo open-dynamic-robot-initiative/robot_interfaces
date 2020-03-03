@@ -29,7 +29,7 @@ set(CATKIN_PKGS ${CATKIN_PKGS}
   time_series
 )
 find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
-
+find_package(OpenCV 2)
 find_package(Pylon REQUIRED)
 
 get_cmake_property(_variableNames VARIABLES)

@@ -5,5 +5,5 @@ using namespace robot_interfaces;
 
 PYBIND11_MODULE(py_camera_types, m)
 {
-    create_camera_bindings<CameraDataTypes<720,540>>(m);
+    create_camera_bindings<CameraDataTypes>(m);
 }

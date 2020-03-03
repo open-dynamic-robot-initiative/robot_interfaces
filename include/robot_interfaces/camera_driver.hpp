@@ -8,9 +8,49 @@
 #include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
 #include <real_time_tools/timer.hpp>
 
-#include <pylon/PylonIncludes.h>
+#include "opencv2/opencv.hpp"
 
-// using namespace Pylon;
+// #include <pylon/PylonIncludes.h>
+
+namespace robot_interfaces
+{
+
+  template <typename CameraObservation>
+  class CameraDriver
+  {
+
+  public:
+      int is_grabbing_successful(cv::VideoCapture cap)
+      {
+          if (!cap.isOpened())  // check if we succeeded
+          {
+            std::cout << "Could not access camera stream :(" <<std::endl;
+            return -1;
+          }
+          else
+          {
+            std::cout << "Succeeded in accessing camera stream!" <<std::endl;
+            return 1;
+          }
+      }
+
+      CameraObservation grab_frame(cv::VideoCapture cap)
+      {   
+          CameraObservation image_frame;
+          cv::Mat frame;
+          time_t current_time = time(NULL);
+          cap >> frame;
+          image_frame.image = frame;
+          image_frame.time_stamp = current_time;
+          return image_frame;
+      }
+
+  };
+
+} //namespace robot_interfaces
+
+/*
+FIXME: latest non-working 
 namespace robot_interfaces
 
 {
@@ -80,17 +120,7 @@ public:
 };
 }//namespace robot_interfaces
 
-
-
-
-
-
-
-
-
-
-
-
+*/
 
   // // Pylon::CInstantCamera() camera_object;
   // Pylon::CTlFactory create_camera;
