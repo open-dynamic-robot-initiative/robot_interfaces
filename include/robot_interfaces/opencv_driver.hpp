@@ -16,10 +16,17 @@ namespace robot_interfaces
 {
 
   template <typename CameraObservation>
-  class CameraDriver
+  class OpenCVDriver
   {
 
   public:
+
+      cv::VideoCapture start_grabbing()
+      {
+          cv::VideoCapture cap(0);
+          return cap;
+      }
+      
       int is_grabbing_successful(cv::VideoCapture cap)
       {
           if (!cap.isOpened())  // check if we succeeded

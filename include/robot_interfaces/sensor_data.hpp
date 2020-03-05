@@ -4,28 +4,28 @@
 #include <memory>
 #include <string>
 
-#include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
+#include <time_series/time_series.hpp>
 
 namespace robot_interfaces
 {
-  template <typename Type>
-  using Timeseries = real_time_tools::ThreadsafeTimeseries<Type>;
+template <typename Type>
+using Timeseries = time_series::TimeSeries<Type>;
 
 template <typename CameraObservation>
-class CameraData
+class SensorData
 {
 public:
   template <typename Type>
   using Ptr = std::shared_ptr<Type>;
 
-  CameraData(size_t history_length = 15000,
+  SensorData(size_t history_length = 15000,
             bool use_shared_memory = false,
             // suppress unused warning (will be used in the future)
             __attribute__((unused)) std::string shared_memory_address = "")
   {
       if (use_shared_memory)
       {
-          std::cout << "shared memory camera data is not implemented yet"
+          std::cout << "shared memory sensor data is not implemented yet"
                     << std::endl;
           exit(-1);
 
