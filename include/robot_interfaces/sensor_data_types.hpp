@@ -2,7 +2,7 @@
 
 #include <cmath>
 #include <ctime>
-#include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
+ #include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
 // #include <Eigen/Eigen>
 #include <opencv2/opencv.hpp>
 
@@ -13,8 +13,6 @@
 
 namespace robot_interfaces
 {
-template <typename Type>
-using Timeseries = time_series::TimeSeries<Type>;
 
 struct SensorDataTypes
 {
@@ -23,7 +21,7 @@ struct SensorDataTypes
   // typedef Eigen::Matrix<uint8_t, N, M> Image;
   // typedef Pylon::CGrabResultData Image; //in private scope, cannot do this meh
   // typedef Pylon::CGrabResultPtr *Image;
-  typedef time_series::Timestamp TimeStamp;
+  typedef time_t TimeStamp;
 
   struct CameraObservation
   {

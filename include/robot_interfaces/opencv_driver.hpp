@@ -25,18 +25,10 @@ namespace robot_interfaces
 
       OpenCVDriver()
       {
-
         cv::VideoCapture cap(0);
-        video_capture = cap;
-        
+        video_capture = cap; 
       }
 
-      // void start_grabbing()
-      // {
-      //     cv::VideoCapture cap(0);
-      //     video_capture = cap;
-      // }
-      
       int is_grabbing_successful()
       {
           if (!video_capture.isOpened())  // check if we succeeded
