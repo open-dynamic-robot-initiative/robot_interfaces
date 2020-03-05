@@ -11,6 +11,7 @@
 #include <robot_interfaces/sensor_data.hpp>
 #include <robot_interfaces/opencv_driver.hpp>
 
+
 namespace robot_interfaces
 {
 template <typename CameraObservation>
@@ -62,13 +63,12 @@ private:
     for (long int t = 0; !destructor_was_called_; t++)
     {
       CameraObservation camera_observation;
-      cv::VideoCapture cap;
-      cap = opencv_driver_->start_grabbing();
+      // opencv_driver_->start_grabbing();
 
-      int flag = opencv_driver_->is_grabbing_successful(cap);
+      int flag = opencv_driver_->is_grabbing_successful();
       if (flag == 1)
       {
-        camera_observation = (opencv_driver_->grab_frame(cap));
+        camera_observation = (opencv_driver_->grab_frame());
         sensor_data_->observation->append(camera_observation);
       }
       else

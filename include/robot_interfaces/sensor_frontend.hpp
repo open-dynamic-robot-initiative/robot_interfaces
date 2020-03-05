@@ -34,7 +34,7 @@ namespace robot_interfaces
           return (*sensor_data_->observation)[get_current_timeindex()];
       }
 
-      TimeStamp get_time_stamp_ms(const TimeIndex &t)
+      TimeStamp get_timestamp_ms(const TimeIndex &t)
       {
           return sensor_data_->observation->timestamp_ms(t);
       }

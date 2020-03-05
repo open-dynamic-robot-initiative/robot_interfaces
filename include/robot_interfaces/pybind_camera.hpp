@@ -21,12 +21,19 @@ void create_camera_bindings(pybind11::module &m)
           .def(pybind11::init<typename Types::CVDriverPtr, typename Types::DataPtr>());
 
     pybind11::class_<typename Types::CVDriver, typename Types::CVDriverPtr>(m, "OpenCVDriver")
-          .def(pybind11::init<>());
+          .def(pybind11::init<>())
+          .def("is_grabbing_successful", &Types::CVDriver::is_grabbing_successful)
+          .def("grab_frame", &Types::CVDriver::grab_frame);
     pybind11::class_<typename Types::Frontend>(m, "SensorFrontend")
-      .def(pybind11::init<typename Types::DataPtr>())
-      .def("get_observation", &Types::Frontend::get_observation)
-      .def("get_timestamp_ms", &Types::Frontend::get_time_stamp_ms)
-      .def("get_current_timeindex", &Types::Frontend::get_current_timeindex);
+          .def(pybind11::init<typename Types::DataPtr>())
+          .def("get_observation", &Types::Frontend::get_observation)
+          .def("get_timestamp_ms", &Types::Frontend::get_timestamp_ms)
+          .def("get_current_timeindex", &Types::Frontend::get_current_timeindex);
+
+    pybind11::class_<typename Types::CameraObservation>(m, "CameraObservation")
+        .def(pybind11::init<>())
+        .def_readwrite("image", &Types::CameraObservation::image)
+        .def_readwrite("time_stamp", &Types::CameraObservation::time_stamp);  
 
 //     PYBIND11_DECLARE_HOLDER_TYPE(CData, std::shared_ptr<CData>);  
 

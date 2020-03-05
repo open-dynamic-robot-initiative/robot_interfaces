@@ -21,15 +21,25 @@ namespace robot_interfaces
 
   public:
 
-      cv::VideoCapture start_grabbing()
+      cv::VideoCapture video_capture;
+
+      OpenCVDriver()
       {
-          cv::VideoCapture cap(0);
-          return cap;
+
+        cv::VideoCapture cap(0);
+        video_capture = cap;
+        
       }
+
+      // void start_grabbing()
+      // {
+      //     cv::VideoCapture cap(0);
+      //     video_capture = cap;
+      // }
       
-      int is_grabbing_successful(cv::VideoCapture cap)
+      int is_grabbing_successful()
       {
-          if (!cap.isOpened())  // check if we succeeded
+          if (!video_capture.isOpened())  // check if we succeeded
           {
             std::cout << "Could not access camera stream :(" <<std::endl;
             return -1;
@@ -41,12 +51,12 @@ namespace robot_interfaces
           }
       }
 
-      CameraObservation grab_frame(cv::VideoCapture cap)
+      CameraObservation grab_frame()
       {   
           CameraObservation image_frame;
           cv::Mat frame;
           time_t current_time = time(NULL);
-          cap >> frame;
+          video_capture >> frame;
           image_frame.image = frame;
           image_frame.time_stamp = current_time;
           return image_frame;
