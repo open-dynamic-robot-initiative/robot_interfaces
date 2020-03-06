@@ -25,7 +25,7 @@ img_list = []
 for i in range(num_imgs):
     print("Check5")
     # print("To store in type", (camera_handle.grab_frame()).image.type)
-    CameraObservation = (camera_handle.grab_frame())
+    CameraObservation = (camera_frontend.get_observation())
     print("Check6", CameraObservation)
     img_list.append(CameraObservation)
     print("At image", i)

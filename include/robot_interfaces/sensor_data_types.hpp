@@ -3,6 +3,8 @@
 #include <cmath>
 #include <ctime>
  #include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
+ #include <time_series/time_series.hpp>
+
 // #include <Eigen/Eigen>
 #include <opencv2/opencv.hpp>
 

@@ -41,6 +41,8 @@ private:
   std::shared_ptr<OpenCVDriver<CameraObservation>> opencv_driver_;
   std::shared_ptr<SensorData<CameraObservation>> sensor_data_;
 
+  // OpenCVDriver();
+
   bool destructor_was_called_;
 
   std::vector<real_time_tools::Timer> timers_;
@@ -55,10 +57,6 @@ private:
 
   void loop()
   {
-
-    while (!destructor_was_called_)
-    {
-    }
 
     for (long int t = 0; !destructor_was_called_; t++)
     {
