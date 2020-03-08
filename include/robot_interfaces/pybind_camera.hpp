@@ -24,6 +24,7 @@ void create_camera_bindings(pybind11::module &m)
           .def(pybind11::init<>())
           .def("is_grabbing_successful", &Types::CVDriver::is_grabbing_successful)
           .def("grab_frame", &Types::CVDriver::grab_frame);
+          
     pybind11::class_<typename Types::Frontend>(m, "SensorFrontend")
           .def(pybind11::init<typename Types::DataPtr>())
           .def("get_latest_observation", &Types::Frontend::get_latest_observation)
@@ -36,7 +37,6 @@ void create_camera_bindings(pybind11::module &m)
         .def_readwrite("image", &Types::CameraObservation::image)
         .def_readwrite("time_stamp", &Types::CameraObservation::time_stamp);  
 
-//     PYBIND11_DECLARE_HOLDER_TYPE(CData, std::shared_ptr<CData>);  
 
 }
 

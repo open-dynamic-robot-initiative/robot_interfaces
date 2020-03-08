@@ -50,8 +50,10 @@ namespace robot_interfaces
           cv::Mat frame;
           double current_time = timer.get_current_time_sec();
           video_capture >> frame;
-          // Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> frame_eigen(frame.ptr<float>(), frame.rows, frame.cols);
-          image_frame.image = frame;
+          cv::Rect frame_roi(10, 10, 100, 100);
+          cv::Mat frame_cropped = frame(frame_roi);
+          Eigen::Map<Eigen::Matrix<float, 100, 100>> frame_eigen(frame_cropped.ptr<float>(), frame_cropped.rows, frame_cropped.cols);
+          image_frame.image = frame_eigen;
           image_frame.time_stamp = current_time;
           return image_frame;
       }

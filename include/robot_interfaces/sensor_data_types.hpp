@@ -19,11 +19,11 @@ namespace robot_interfaces
 struct SensorDataTypes
 {
 
-  // typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Image;
+  typedef Eigen::Matrix<float, 100, 100> Image;
   // typedef Eigen::Matrix<uint8_t, N, M> Image;
   // typedef Pylon::CGrabResultData Image; //in private scope, cannot do this meh
   // typedef Pylon::CGrabResultPtr *Image;
-  typedef cv::Mat Image;
+  // typedef cv::Mat Image;
   typedef time_t TimeStamp;
 
   struct CameraObservation
