@@ -7,7 +7,7 @@
 #include <real_time_tools/thread.hpp>
 #include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
 #include <real_time_tools/timer.hpp>
-
+#include <Eigen/Eigen>
 #include "opencv2/opencv.hpp"
 
 // #include <pylon/PylonIncludes.h>
@@ -22,6 +22,7 @@ namespace robot_interfaces
   public:
 
       cv::VideoCapture video_capture;
+      real_time_tools::Timer timer;
 
       OpenCVDriver()
       {
@@ -47,8 +48,9 @@ namespace robot_interfaces
       {   
           CameraObservation image_frame;
           cv::Mat frame;
-          time_t current_time = time(NULL);
+          double current_time = timer.get_current_time_sec();
           video_capture >> frame;
+          // Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> frame_eigen(frame.ptr<float>(), frame.rows, frame.cols);
           image_frame.image = frame;
           image_frame.time_stamp = current_time;
           return image_frame;

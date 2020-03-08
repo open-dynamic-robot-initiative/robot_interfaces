@@ -29,7 +29,12 @@ namespace robot_interfaces
       {
       }
 
-      CameraObservation get_observation()
+      CameraObservation get_observation(const TimeIndex &t)
+      {
+          return (*sensor_data_->observation)[t];
+      }
+
+      CameraObservation get_latest_observation()
       {
           return (*sensor_data_->observation)[get_current_timeindex()];
       }

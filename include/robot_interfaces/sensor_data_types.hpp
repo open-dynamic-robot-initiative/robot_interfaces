@@ -2,10 +2,10 @@
 
 #include <cmath>
 #include <ctime>
- #include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
- #include <time_series/time_series.hpp>
+#include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
+#include <time_series/time_series.hpp>
 
-// #include <Eigen/Eigen>
+#include <Eigen/Eigen>
 #include <opencv2/opencv.hpp>
 
 #include<robot_interfaces/sensor_data.hpp>
@@ -19,10 +19,11 @@ namespace robot_interfaces
 struct SensorDataTypes
 {
 
-  typedef cv::Mat Image;
+  // typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Image;
   // typedef Eigen::Matrix<uint8_t, N, M> Image;
   // typedef Pylon::CGrabResultData Image; //in private scope, cannot do this meh
   // typedef Pylon::CGrabResultPtr *Image;
+  typedef cv::Mat Image;
   typedef time_t TimeStamp;
 
   struct CameraObservation

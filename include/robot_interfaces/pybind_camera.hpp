@@ -26,6 +26,7 @@ void create_camera_bindings(pybind11::module &m)
           .def("grab_frame", &Types::CVDriver::grab_frame);
     pybind11::class_<typename Types::Frontend>(m, "SensorFrontend")
           .def(pybind11::init<typename Types::DataPtr>())
+          .def("get_latest_observation", &Types::Frontend::get_latest_observation)
           .def("get_observation", &Types::Frontend::get_observation)
           .def("get_timestamp_ms", &Types::Frontend::get_timestamp_ms)
           .def("get_current_timeindex", &Types::Frontend::get_current_timeindex);

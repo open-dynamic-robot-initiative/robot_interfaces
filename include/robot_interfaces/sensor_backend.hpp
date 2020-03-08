@@ -41,8 +41,6 @@ private:
   std::shared_ptr<OpenCVDriver<CameraObservation>> opencv_driver_;
   std::shared_ptr<SensorData<CameraObservation>> sensor_data_;
 
-  // OpenCVDriver();
-
   bool destructor_was_called_;
 
   std::vector<real_time_tools::Timer> timers_;
@@ -61,7 +59,6 @@ private:
     for (long int t = 0; !destructor_was_called_; t++)
     {
       CameraObservation camera_observation;
-      // opencv_driver_->start_grabbing();
 
       int flag = opencv_driver_->is_grabbing_successful();
       if (flag == 1)
