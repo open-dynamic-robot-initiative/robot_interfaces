@@ -1,3 +1,6 @@
+# This file is actually from
+https://gitlab.ciirc.cvut.cz/cmirajak/laser_plane_scanner/blob/79b70f28cfd047e30dfa1fefe8241a95443ebc0e/cmake_modules/FindPylon.cmake
+
 # - Try to find Pylon
 # Once done this will define
 #  PYLON_FOUND - System has Pylon
