@@ -5,40 +5,43 @@
 #include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
 #include <time_series/time_series.hpp>
 
-#include <Eigen/Eigen>
 #include <opencv2/opencv.hpp>
 
-#include<robot_interfaces/sensor_data.hpp>
-#include<robot_interfaces/opencv_driver.hpp>
-#include<robot_interfaces/sensor_backend.hpp>
-#include<robot_interfaces/sensor_frontend.hpp>
+#include <robot_interfaces/opencv_driver.hpp>
+#include <robot_interfaces/sensor_backend.hpp>
+#include <robot_interfaces/sensor_data.hpp>
+#include <robot_interfaces/sensor_frontend.hpp>
 
 namespace robot_interfaces
 {
+/**
+ * @brief Collection of data types for the sensors used in the trifinger
+ * platform.
+ *
+ * Refer to the docstrings of individual data types for more details.
+ */
 
 struct SensorDataTypes
 {
+    typedef cv::Mat Image;
+    typedef long double TimeStamp;
 
-  typedef Eigen::Matrix<float, 100, 100> Image;
-  // typedef Eigen::Matrix<uint8_t, N, M> Image;
-  // typedef Pylon::CGrabResultData Image; //in private scope, cannot do this meh
-  // typedef Pylon::CGrabResultPtr *Image;
-  // typedef cv::Mat Image;
-  typedef time_t TimeStamp;
+    /**
+     * @brief Observation structure to store cv::Mat images with corresponding
+     * timestamps.
+     */
+    struct OpenCVObservation
+    {
+        Image image;
+        TimeStamp time_stamp;
+    };
 
-  struct CameraObservation
-  {
-    Image image;
-    TimeStamp time_stamp;
-  };
-
-  typedef SensorData<CameraObservation> Data;
-  typedef std::shared_ptr<Data> DataPtr;
-  typedef OpenCVDriver<CameraObservation> CVDriver;
-  typedef std::shared_ptr<CVDriver> CVDriverPtr;
-  typedef SensorFrontend<CameraObservation> Frontend;
-  typedef SensorBackend<CameraObservation> Backend;
-
+    typedef SensorData<OpenCVObservation> Data;
+    typedef std::shared_ptr<Data> DataPtr;
+    typedef OpenCVDriver<OpenCVObservation> CVDriver;
+    typedef std::shared_ptr<CVDriver> CVDriverPtr;
+    typedef SensorFrontend<OpenCVObservation> Frontend;
+    typedef SensorBackend<OpenCVObservation> Backend;
 };
 
-} //namespace robot_interfaces
+}  // namespace robot_interfaces
