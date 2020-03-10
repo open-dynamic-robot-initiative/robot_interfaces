@@ -1,3 +1,11 @@
+/**
+ * @file
+ * @brief Defines data structures for each of the different sensors.
+ * @copyright 2020, New York University, Max Planck Gesellschaft. All rights
+ *            reserved.
+ * @license BSD 3-clause
+ */
+
 #pragma once
 
 #include <cmath>

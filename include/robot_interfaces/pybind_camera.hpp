@@ -1,3 +1,11 @@
+/**
+ * @file
+ * @brief Binds methods and objects to enable access from python
+ * @copyright 2020, New York University, Max Planck Gesellschaft. All rights
+ *            reserved.
+ * @license BSD 3-clause
+ */
+
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl_bind.h>
