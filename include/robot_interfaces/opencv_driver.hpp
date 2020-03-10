@@ -11,9 +11,6 @@
 #include <ctime>
 #include <iostream>
 
-#include <real_time_tools/process_manager.hpp>
-#include <real_time_tools/thread.hpp>
-#include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
 #include <real_time_tools/timer.hpp>
 #include <opencv2/opencv.hpp>
 
@@ -69,7 +66,7 @@ public:
     {
         OpenCVObservation image_frame;
         cv::Mat frame;
-        long double current_time = real_time_tools::Timer::get_current_time_sec();
+        double current_time = real_time_tools::Timer::get_current_time_sec();
         video_capture_ >> frame;
         image_frame.image = frame;
         image_frame.time_stamp = current_time;

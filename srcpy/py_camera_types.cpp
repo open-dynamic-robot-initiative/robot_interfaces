@@ -5,5 +5,5 @@ using namespace robot_interfaces;
 
 PYBIND11_MODULE(py_camera_types, m)
 {
-    create_camera_bindings<SensorDataTypes>(m);
+    create_camera_bindings<CameraObservation>(m);
 }

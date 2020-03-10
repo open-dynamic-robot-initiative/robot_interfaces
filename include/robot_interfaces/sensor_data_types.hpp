@@ -29,27 +29,31 @@ namespace robot_interfaces
  * Refer to the docstrings of individual data types for more details.
  */
 
-struct SensorDataTypes
+struct CameraObservation
 {
     typedef cv::Mat Image;
-    typedef long double TimeStamp;
+    typedef double TimeStamp;
+    Image image;
+    TimeStamp time_stamp;
 
     /**
      * @brief Observation structure to store cv::Mat images with corresponding
      * timestamps.
      */
-    struct OpenCVObservation
-    {
-        Image image;
-        TimeStamp time_stamp;
-    };
+    // struct CameraObservation
+    // {
+    //     typedef cv::Mat Image;
+    //     typedef double TimeStamp;
+    //     Image image;
+    //     TimeStamp time_stamp;
+    // };
 
-    typedef SensorData<OpenCVObservation> Data;
+    typedef SensorData<CameraObservation> Data;
     typedef std::shared_ptr<Data> DataPtr;
-    typedef OpenCVDriver<OpenCVObservation> CVDriver;
+    typedef OpenCVDriver<CameraObservation> CVDriver;
     typedef std::shared_ptr<CVDriver> CVDriverPtr;
-    typedef SensorFrontend<OpenCVObservation> Frontend;
-    typedef SensorBackend<OpenCVObservation> Backend;
+    typedef SensorFrontend<CameraObservation> Frontend;
+    typedef SensorBackend<CameraObservation> Backend;
 };
 
 }  // namespace robot_interfaces

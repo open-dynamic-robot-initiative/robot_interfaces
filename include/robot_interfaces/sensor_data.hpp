@@ -26,7 +26,7 @@ using Timeseries = time_series::TimeSeries<Type>;
  * @tparam OpenCVObservation
  */
 
-template <typename OpenCVObservation>
+template <typename CameraObservation>
 class SensorData
 {
 public:
@@ -54,12 +54,12 @@ public:
         else
         {
             observation =
-                std::make_shared<Timeseries<OpenCVObservation>>(history_length);
+                std::make_shared<Timeseries<CameraObservation>>(history_length);
         }
     }
 
 public:
-    Ptr<Timeseries<OpenCVObservation>> observation;
+    Ptr<Timeseries<CameraObservation>> observation;
 };
 
 }  // namespace robot_interfaces

@@ -48,10 +48,10 @@ void create_camera_bindings(pybind11::module& m)
         .def("get_timestamp_ms", &Types::Frontend::get_timestamp_ms)
         .def("get_current_timeindex", &Types::Frontend::get_current_timeindex);
 
-    pybind11::class_<typename Types::OpenCVObservation>(m, "OpenCVObservation")
+    pybind11::class_<typename Types::CameraObservation>(m, "CameraObservation")
         .def(pybind11::init<>())
-        .def_readwrite("image", &Types::OpenCVObservation::image)
-        .def_readwrite("time_stamp", &Types::OpenCVObservation::time_stamp);
+        .def_readwrite("image", &Types::CameraObservation::image)
+        .def_readwrite("time_stamp", &Types::CameraObservation::time_stamp);
 
     // The following block of code for binding cv::Mat to np.ndarray is from
     // [here](https://alexsm.com/pybind11-buffer-protocol-opencv-to-numpy/).

@@ -63,8 +63,6 @@ private:
 
     bool destructor_was_called_;
 
-    std::vector<real_time_tools::Timer> timers_;
-
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 
     static void *loop(void *instance_pointer)
@@ -81,13 +79,13 @@ private:
     {
         for (long int t = 0; !destructor_was_called_; t++)
         {
-            OpenCVObservation camera_observation;
-
+            
             bool flag = sensor_driver_->is_grabbing_successful();
             if (flag)
             {
-                camera_observation = (sensor_driver_->grab_frame());
-                sensor_data_->observation->append(camera_observation);
+                OpenCVObservation sensor_observation;
+                sensor_observation = sensor_driver_->grab_frame();
+                sensor_data_->observation->append(sensor_observation);
             }
             else
             {

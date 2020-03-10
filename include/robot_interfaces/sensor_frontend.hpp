@@ -27,7 +27,7 @@ namespace robot_interfaces
  * @tparam OpenCVObservation
  */
 
-template <typename OpenCVObservation>
+template <typename CameraObservation>
 class SensorFrontend
 {
 public:
@@ -36,17 +36,17 @@ public:
     typedef time_series::Timestamp TimeStamp;
     typedef time_series::Index TimeIndex;
 
-    SensorFrontend(std::shared_ptr<SensorData<OpenCVObservation>> sensor_data)
+    SensorFrontend(std::shared_ptr<SensorData<CameraObservation>> sensor_data)
         : sensor_data_(sensor_data)
     {
     }
 
-    OpenCVObservation get_observation(const TimeIndex &t)
+    CameraObservation get_observation(const TimeIndex &t)
     {
         return (*sensor_data_->observation)[t];
     }
 
-    OpenCVObservation get_latest_observation()
+    CameraObservation get_latest_observation()
     {
         return sensor_data_->observation->newest_element();
     }
@@ -61,7 +61,7 @@ public:
     }
 
 private:
-    std::shared_ptr<SensorData<OpenCVObservation>> sensor_data_;
+    std::shared_ptr<SensorData<CameraObservation>> sensor_data_;
 };
 
 }  // namespace robot_interfaces
