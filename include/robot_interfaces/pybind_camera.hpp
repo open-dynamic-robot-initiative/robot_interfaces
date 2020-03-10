@@ -23,6 +23,7 @@ namespace robot_interfaces
  *
  * @tparam An instance of SensorDataTypes
  */
+
 template <typename Types>
 void create_camera_bindings(pybind11::module& m)
 {
@@ -47,7 +48,7 @@ void create_camera_bindings(pybind11::module& m)
         .def("get_timestamp_ms", &Types::Frontend::get_timestamp_ms)
         .def("get_current_timeindex", &Types::Frontend::get_current_timeindex);
 
-    pybind11::class_<typename Types::OpenCVObservation>(m, "Observation")
+    pybind11::class_<typename Types::OpenCVObservation>(m, "OpenCVObservation")
         .def(pybind11::init<>())
         .def_readwrite("image", &Types::OpenCVObservation::image)
         .def_readwrite("time_stamp", &Types::OpenCVObservation::time_stamp);

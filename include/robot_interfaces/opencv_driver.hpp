@@ -5,11 +5,15 @@
  *            reserved.
  * @license BSD 3-clause
  */
+
 #pragma once
 
 #include <ctime>
 #include <iostream>
 
+#include <real_time_tools/process_manager.hpp>
+#include <real_time_tools/thread.hpp>
+#include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
 #include <real_time_tools/timer.hpp>
 #include <opencv2/opencv.hpp>
 
@@ -18,16 +22,16 @@ namespace robot_interfaces
 /**
  * @brief Driver for interacting with any camera using OpenCV.
  */
+
 template <typename OpenCVObservation>
 class OpenCVDriver
 {
 public:
     cv::VideoCapture video_capture_;
-    float start_time_ = 0;
 
     OpenCVDriver()
     {
-        cv::VideoCapture cap(start_time_);
+        cv::VideoCapture cap(0);
         video_capture_ = cap;
     }
 
@@ -35,7 +39,8 @@ public:
      * @brief Find out if the camera can be accessed and
      * if the video capture has been started.
      */
-    bool is_grabbing_successful()
+
+    int is_grabbing_successful()
     {
         if (!video_capture_.isOpened())
         {
@@ -54,11 +59,12 @@ public:
     }
 
     /**
-     * @brief Grab a single frame along with its timestamp.
+     * @brief Grab frames along with their timestamps one by one.
      *
      * @return Image frame consisting of an image matrix and the time at
      * which it was grabbed.
      */
+
     OpenCVObservation grab_frame()
     {
         OpenCVObservation image_frame;

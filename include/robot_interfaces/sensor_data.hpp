@@ -1,3 +1,4 @@
+
 /**
  * @file
  * @brief To store all the data from all the sensors in use
@@ -16,19 +17,21 @@
 
 namespace robot_interfaces
 {
+template <typename Type>
+using Timeseries = time_series::TimeSeries<Type>;
 
 /**
  * @brief Contains all the data coming from the sensors.
  *
  * @tparam OpenCVObservation
  */
+
 template <typename OpenCVObservation>
 class SensorData
 {
 public:
     template <typename Type>
     using Ptr = std::shared_ptr<Type>;
-    using Timeseries = time_series::TimeSeries<Type>;
 
     SensorData(size_t history_length = 15000,
                bool use_shared_memory = false,

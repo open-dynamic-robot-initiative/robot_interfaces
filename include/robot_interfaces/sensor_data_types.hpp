@@ -28,6 +28,7 @@ namespace robot_interfaces
  *
  * Refer to the docstrings of individual data types for more details.
  */
+
 struct SensorDataTypes
 {
     typedef cv::Mat Image;
