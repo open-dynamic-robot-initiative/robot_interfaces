@@ -23,15 +23,14 @@ namespace robot_interfaces
  *
  * @tparam An instance of SensorDataTypes
  */
-
 template <typename Types>
 void create_camera_bindings(pybind11::module& m)
 {
     pybind11::class_<typename Types::Data, typename Types::DataPtr>(
-        m, "SensorData")
+        m, "Data")
         .def(pybind11::init<>());
 
-    pybind11::class_<typename Types::Backend>(m, "SensorBackend")
+    pybind11::class_<typename Types::Backend>(m, "Backend")
         .def(pybind11::init<typename Types::CVDriverPtr,
                             typename Types::DataPtr>());
 
@@ -41,21 +40,21 @@ void create_camera_bindings(pybind11::module& m)
         .def("is_grabbing_successful", &Types::CVDriver::is_grabbing_successful)
         .def("grab_frame", &Types::CVDriver::grab_frame);
 
-    pybind11::class_<typename Types::Frontend>(m, "SensorFrontend")
+    pybind11::class_<typename Types::Frontend>(m, "Frontend")
         .def(pybind11::init<typename Types::DataPtr>())
         .def("get_latest_observation", &Types::Frontend::get_latest_observation)
         .def("get_observation", &Types::Frontend::get_observation)
         .def("get_timestamp_ms", &Types::Frontend::get_timestamp_ms)
         .def("get_current_timeindex", &Types::Frontend::get_current_timeindex);
 
-    pybind11::class_<typename Types::OpenCVObservation>(m, "OpenCVObservation")
+    pybind11::class_<typename Types::OpenCVObservation>(m, "Observation")
         .def(pybind11::init<>())
         .def_readwrite("image", &Types::OpenCVObservation::image)
         .def_readwrite("time_stamp", &Types::OpenCVObservation::time_stamp);
 
     // The following block of code for binding cv::Mat to np.ndarray is from
     // [here](https://alexsm.com/pybind11-buffer-protocol-opencv-to-numpy/).
-    pybind11::class_<cv::Mat>(m, "Image", pybind11::buffer_protocol())
+    pybind11::class_<cv::Mat>(m, "image", pybind11::buffer_protocol())
         .def_buffer([](cv::Mat& im) -> pybind11::buffer_info {
             return pybind11::buffer_info(
                 // Pointer to buffer

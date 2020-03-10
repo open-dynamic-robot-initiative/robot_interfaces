@@ -35,13 +35,12 @@ class SensorBackend
 {
 public:
     /**
-     * @param opencv_driver  Driver instance for the camera dependent on
-     * opencv.
+     * @param sensor_driver  Driver instance of the sensor being
+     * used
      * @param sensor_data  Data is sent to/retrieved from here.
      */
-
     SensorBackend(
-        std::shared_ptr<OpenCVDriver<OpenCVObservation>> opencv_driver,
+        std::shared_ptr<OpenCVDriver<OpenCVObservation>> sensor_driver,
         std::shared_ptr<SensorData<OpenCVObservation>> sensor_data)
         : opencv_driver_(opencv_driver),
           sensor_data_(sensor_data),
@@ -63,8 +62,6 @@ private:
 
     bool destructor_was_called_;
 
-    std::vector<real_time_tools::Timer> timers_;
-
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 
     static void *loop(void *instance_pointer)
@@ -76,7 +73,6 @@ private:
     /**
      * @brief Main loop.
      */
-
     void loop()
     {
         for (long int t = 0; !destructor_was_called_; t++)
@@ -84,9 +80,9 @@ private:
             OpenCVObservation camera_observation;
 
             int flag = opencv_driver_->is_grabbing_successful();
-            if (flag == 1)
+            if (flag)
             {
-                camera_observation = (opencv_driver_->grab_frame());
+                camera_observation = opencv_driver_->grab_frame();
                 sensor_data_->observation->append(camera_observation);
             }
             else

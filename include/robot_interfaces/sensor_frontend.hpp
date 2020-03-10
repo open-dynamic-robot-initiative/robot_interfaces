@@ -18,9 +18,6 @@
 
 namespace robot_interfaces
 {
-template <typename Type>
-using Timeseries = time_series::TimeSeries<Type>;
-typedef time_series::Index TimeIndex;
 
 /**
  * @brief Communication link between SensorData and the user.
@@ -29,12 +26,14 @@ typedef time_series::Index TimeIndex;
  *
  * @tparam OpenCVObservation
  */
-
 template <typename OpenCVObservation>
 class SensorFrontend
 {
 public:
+    template <typename Type>
+    using Timeseries = time_series::TimeSeries<Type>;
     typedef time_series::Timestamp TimeStamp;
+    typedef time_series::Index TimeIndex;
 
     SensorFrontend(std::shared_ptr<SensorData<OpenCVObservation>> sensor_data)
         : sensor_data_(sensor_data)
@@ -48,7 +47,7 @@ public:
 
     OpenCVObservation get_latest_observation()
     {
-        return (*sensor_data_->observation)[get_current_timeindex()];
+        return sensor_data_->observation->newest_element();
     }
 
     TimeStamp get_timestamp_ms(const TimeIndex &t)
