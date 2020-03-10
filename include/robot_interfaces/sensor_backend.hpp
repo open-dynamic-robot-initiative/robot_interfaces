@@ -8,7 +8,7 @@
 #include <real_time_tools/thread.hpp>
 #include <real_time_tools/timer.hpp>
 
-#include <robot_interfaces/opencv_driver.hpp>
+#include <robot_interfaces/pylon_driver.hpp>
 #include <robot_interfaces/sensor_data.hpp>
 
 namespace robot_interfaces
@@ -33,9 +33,9 @@ public:
      */
 
     SensorBackend(
-        std::shared_ptr<OpenCVDriver<OpenCVObservation>> opencv_driver,
+        std::shared_ptr<PylonDriver<OpenCVObservation>> pylon_driver,
         std::shared_ptr<SensorData<OpenCVObservation>> sensor_data)
-        : opencv_driver_(opencv_driver),
+        : pylon_driver_(pylon_driver),
           sensor_data_(sensor_data),
           destructor_was_called_(false)
     {
@@ -50,7 +50,7 @@ public:
     }
 
 private:
-    std::shared_ptr<OpenCVDriver<OpenCVObservation>> opencv_driver_;
+    std::shared_ptr<PylonDriver<OpenCVObservation>> pylon_driver_;
     std::shared_ptr<SensorData<OpenCVObservation>> sensor_data_;
 
     bool destructor_was_called_;
@@ -74,17 +74,19 @@ private:
         for (long int t = 0; !destructor_was_called_; t++)
         {
             OpenCVObservation camera_observation;
+            camera_observation = (pylon_driver_->grab_frame());
+            sensor_data_->observation->append(camera_observation);
 
-            int flag = opencv_driver_->is_grabbing_successful();
-            if (flag == 1)
-            {
-                camera_observation = (opencv_driver_->grab_frame());
-                sensor_data_->observation->append(camera_observation);
-            }
-            else
-            {
-                std::cerr << "Cannot access the camera." << std::endl;
-            }
+            // int flag = opencv_driver_->is_grabbing_successful();
+            // if (flag == 1)
+            // {
+            //     camera_observation = (pylon_driver_->grab_frame());
+            //     sensor_data_->observation->append(camera_observation);
+            // }
+            // else
+            // {
+            //     std::cerr << "Cannot access the camera." << std::endl;
+            // }
         }
     }
 };

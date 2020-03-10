@@ -30,7 +30,7 @@ void create_camera_bindings(pybind11::module& m)
     pybind11::class_<typename Types::CVDriver, typename Types::CVDriverPtr>(
         m, "OpenCVDriver")
         .def(pybind11::init<>())
-        .def("is_grabbing_successful", &Types::CVDriver::is_grabbing_successful)
+        .def("pylon_init", &Types::CVDriver::pylon_init)
         .def("grab_frame", &Types::CVDriver::grab_frame);
 
     pybind11::class_<typename Types::Frontend>(m, "SensorFrontend")

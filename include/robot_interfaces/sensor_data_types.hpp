@@ -38,7 +38,7 @@ struct SensorDataTypes
 
     typedef SensorData<OpenCVObservation> Data;
     typedef std::shared_ptr<Data> DataPtr;
-    typedef OpenCVDriver<OpenCVObservation> CVDriver;
+    typedef PylonDriver<OpenCVObservation> CVDriver;
     typedef std::shared_ptr<CVDriver> CVDriverPtr;
     typedef SensorFrontend<OpenCVObservation> Frontend;
     typedef SensorBackend<OpenCVObservation> Backend;
