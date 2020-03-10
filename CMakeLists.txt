@@ -30,16 +30,12 @@ set(CATKIN_PKGS ${CATKIN_PKGS}
 )
 find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
 find_package(OpenCV 3)
-find_package(Pylon REQUIRED)
 
 get_cmake_property(_variableNames VARIABLES)
 list (SORT _variableNames)
 foreach (_variableName ${_variableNames})
     message(STATUS "${_variableName}=${${_variableName}}")
 endforeach()
-
-# include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindPylon.cmake")
-# message(FATAL_ERROR "XXXXXXXXXXXXX ${PYLON_INCLUDE_DIR}")
 
 search_for_eigen()
 
@@ -65,8 +61,6 @@ include_directories(
 #    ${Boost_INCLUDE_DIRS}
     ${OpenCV_INCLUDE_DIRS}
 )
-
-# link_directories(/opt/pylon/5/lib64)
 
 ########################################################
 # manage the creation of the libraries and executables #
