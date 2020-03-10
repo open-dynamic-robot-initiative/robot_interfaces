@@ -1,12 +1,3 @@
-/**
- * @file
- * @brief Consists of methods that are exposed to the user to interact
- * the sensors.
- * @copyright 2020, New York University, Max Planck Gesellschaft. All rights
- *            reserved.
- * @license BSD 3-clause
- */
-
 #pragma once
 
 #include <algorithm>

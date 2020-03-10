@@ -1,10 +1,3 @@
-/**
- * @file
- * @brief Driver to interface with the camera using OpenCV.
- * @copyright 2020, New York University, Max Planck Gesellschaft. All rights
- *            reserved.
- * @license BSD 3-clause
- */
 #pragma once
 
 #include <ctime>
