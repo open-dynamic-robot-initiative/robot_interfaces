@@ -1,3 +1,11 @@
+/**
+ * @file
+ * @brief Connects the driver with sensor data
+ * @copyright 2020, New York University, Max Planck Gesellschaft. All rights
+ *            reserved.
+ * @license BSD 3-clause
+ */
+
 #pragma once
 
 #include <algorithm>

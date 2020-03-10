@@ -1,3 +1,11 @@
+/**
+ * @file
+ * @brief To store all the data from all the sensors in use
+ * @copyright 2020, New York University, Max Planck Gesellschaft. All rights
+ *            reserved.
+ * @license BSD 3-clause
+ */
+
 #pragma once
 
 #include <iostream>
