@@ -21,7 +21,8 @@ namespace robot_interfaces
 /**
  * @brief Communication link between SensorData and the user.
  *
- * Exposes the sensor data to the user via hardware-friendly methods.
+ * Exposes the sensor data to the user to enable the user to get
+ * observations, timestamps, and timeindices from the timeseries.
  *
  * @tparam ObservationType
  */

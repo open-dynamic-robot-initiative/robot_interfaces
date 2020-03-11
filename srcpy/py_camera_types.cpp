@@ -31,7 +31,7 @@ PYBIND11_MODULE(py_camera_types, m)
 
     // The following block of code for binding cv::Mat to np.ndarray is from
     // [here](https://alexsm.com/pybind11-buffer-protocol-opencv-to-numpy/).
-    pybind11::class_<cv::Mat>(m, "image", pybind11::buffer_protocol())
+    pybind11::class_<cv::Mat>(m, "Image", pybind11::buffer_protocol())
         .def_buffer([](cv::Mat& im) -> pybind11::buffer_info {
             return pybind11::buffer_info(
                 // Pointer to buffer

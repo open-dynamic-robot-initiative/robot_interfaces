@@ -22,8 +22,7 @@ def main():
     while True:
         observation = camera_frontend.get_latest_observation()
         window_name = "Image Stream"
-        cv2.imshow(window_name, np.array(observation.image))
-        print("type", type(observation.image))
+        cv2.imshow(window_name, np.array(observation.image, copy=False))
         cv2.waitKey(3)
 
 
