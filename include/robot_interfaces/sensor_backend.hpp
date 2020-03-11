@@ -18,18 +18,18 @@
 #include <real_time_tools/thread.hpp>
 #include <real_time_tools/timer.hpp>
 
-#include <robot_interfaces/sensor_driver.hpp>
-#include <robot_interfaces/sensor_data.hpp>
 #include <robot_interfaces/opencv_driver.hpp>
+#include <robot_interfaces/sensor_data.hpp>
+#include <robot_interfaces/sensor_driver.hpp>
 
 namespace robot_interfaces
 {
 /**
  * @brief Communication link between SensorData and SensorDriver.
  *
- * At each instant, it checks if the camera can be accessed and
- * the video capture is running, if yes, then grabs an image and
- * stores it along with the timestamp at which it was grabbed.
+ * At each instant, it checks if the sensor can be accessed, and
+ * then gets the observation from it (the observation type depends
+ * on the sensor) and appends it to the sensor data.
  *
  * @tparam ObservationType
  */
@@ -42,17 +42,14 @@ public:
      * @param sensor_data  Data is sent to/retrieved from here.
      */
 
-    SensorBackend(
-        std::shared_ptr<SensorDriver<ObservationType>> sensor_driver,
-        std::shared_ptr<SensorData<ObservationType>> sensor_data
-        )
+    SensorBackend(std::shared_ptr<SensorDriver<ObservationType>> sensor_driver,
+                  std::shared_ptr<SensorData<ObservationType>> sensor_data)
         : sensor_driver_(sensor_driver),
           sensor_data_(sensor_data),
           destructor_was_called_(false)
     {
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
         thread_->create_realtime_thread(&SensorBackend::loop, this);
-
     }
 
     virtual ~SensorBackend()
@@ -83,7 +80,6 @@ private:
     {
         for (long int t = 0; !destructor_was_called_; t++)
         {
-            
             bool flag = sensor_driver_->is_access_successful();
             if (flag)
             {

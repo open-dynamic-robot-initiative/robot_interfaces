@@ -11,8 +11,8 @@
 #include <ctime>
 #include <iostream>
 
-#include <real_time_tools/timer.hpp>
 #include <opencv2/opencv.hpp>
+#include <real_time_tools/timer.hpp>
 #include <robot_interfaces/camera_observation.hpp>
 #include <robot_interfaces/sensor_driver.hpp>
 

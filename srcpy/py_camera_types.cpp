@@ -1,6 +1,14 @@
-#include <robot_interfaces/pybind_sensors.hpp>
+/**
+ * @file
+ * @brief Create bindings for camera sensors
+ * @copyright 2020, New York University, Max Planck Gesellschaft. All rights
+ *            reserved.
+ * @license BSD 3-clause
+ */
+
 #include <robot_interfaces/camera_observation.hpp>
 #include <robot_interfaces/opencv_driver.hpp>
+#include <robot_interfaces/pybind_sensors.hpp>
 #include <robot_interfaces/sensor_driver.hpp>
 
 using namespace robot_interfaces;
@@ -9,11 +17,12 @@ PYBIND11_MODULE(py_camera_types, m)
 {
     create_sensor_bindings<CameraObservation>(m);
 
-    pybind11::class_<OpenCVDriver, std::shared_ptr<OpenCVDriver>, SensorDriver<CameraObservation>>(
-    m, "OpenCVDriver")
+    pybind11::class_<OpenCVDriver,
+                     std::shared_ptr<OpenCVDriver>,
+                     SensorDriver<CameraObservation>>(m, "OpenCVDriver")
         .def(pybind11::init<int>())
         .def("is_access_successful", &OpenCVDriver::is_access_successful)
-        .def("get_observation", &OpenCVDriver::get_observation); 
+        .def("get_observation", &OpenCVDriver::get_observation);
 
     pybind11::class_<CameraObservation>(m, "CameraObservation")
         .def(pybind11::init<>())
@@ -39,5 +48,5 @@ PYBIND11_MODULE(py_camera_types, m)
                 {sizeof(uint8_t) * im.channels() * im.cols,
                  sizeof(uint8_t) * im.channels(),
                  sizeof(uint8_t)});
-        });    
+        });
 }

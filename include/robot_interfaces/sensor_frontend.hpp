@@ -18,7 +18,6 @@
 
 namespace robot_interfaces
 {
-
 /**
  * @brief Communication link between SensorData and the user.
  *
