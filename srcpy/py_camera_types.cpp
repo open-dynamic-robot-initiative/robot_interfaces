@@ -11,7 +11,7 @@ PYBIND11_MODULE(py_camera_types, m)
 
     pybind11::class_<OpenCVDriver, std::shared_ptr<OpenCVDriver>, SensorDriver<CameraObservation>>(
     m, "OpenCVDriver")
-        .def(pybind11::init<>())
+        .def(pybind11::init<int>())
         .def("is_access_successful", &OpenCVDriver::is_access_successful)
         .def("get_observation", &OpenCVDriver::get_observation); 
 

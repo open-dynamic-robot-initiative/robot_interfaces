@@ -25,10 +25,11 @@ class OpenCVDriver : public SensorDriver<CameraObservation>
 {
 public:
     cv::VideoCapture video_capture_;
+    // double device_id_;
 
-    OpenCVDriver()
+    OpenCVDriver(int device_id)
     {
-        cv::VideoCapture cap(0);
+        cv::VideoCapture cap(device_id);
         video_capture_ = cap;
     }
 
@@ -56,7 +57,7 @@ public:
     }
 
     /**
-     * @brief Grab frames along with their timestamps one by one.
+     * @brief Grab a single frame along with its timestamp.
      *
      * @return Image frame consisting of an image matrix and the time at
      * which it was grabbed.

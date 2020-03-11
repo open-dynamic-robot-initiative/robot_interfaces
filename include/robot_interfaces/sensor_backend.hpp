@@ -12,12 +12,15 @@
 #include <cmath>
 #include <cstdint>
 
+#include <thread>
+
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
 #include <real_time_tools/timer.hpp>
 
 #include <robot_interfaces/sensor_driver.hpp>
 #include <robot_interfaces/sensor_data.hpp>
+#include <robot_interfaces/opencv_driver.hpp>
 
 namespace robot_interfaces
 {
@@ -41,13 +44,15 @@ public:
 
     SensorBackend(
         std::shared_ptr<SensorDriver<ObservationType>> sensor_driver,
-        std::shared_ptr<SensorData<ObservationType>> sensor_data)
+        std::shared_ptr<SensorData<ObservationType>> sensor_data
+        )
         : sensor_driver_(sensor_driver),
           sensor_data_(sensor_data),
           destructor_was_called_(false)
     {
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
         thread_->create_realtime_thread(&SensorBackend::loop, this);
+
     }
 
     virtual ~SensorBackend()
