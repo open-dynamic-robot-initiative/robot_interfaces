@@ -76,11 +76,8 @@ public:
      */
     ~MonitoredRobotDriver()
     {
-	std::cout << "\t\tmonitored robot driver destructor called\n";
 	shutdown();
-	std::cout << "\t\tshutdown called\n";
 	thread_->join();
-	std::cout << "\t\tdone\n";
     }
 
     double get_max_inter_action_duration_s()
