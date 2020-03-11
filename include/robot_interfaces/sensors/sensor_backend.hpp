@@ -12,15 +12,13 @@
 #include <cmath>
 #include <cstdint>
 
-#include <thread>
-
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
 #include <real_time_tools/timer.hpp>
 
-#include <robot_interfaces/opencv_driver.hpp>
-#include <robot_interfaces/sensor_data.hpp>
-#include <robot_interfaces/sensor_driver.hpp>
+#include <robot_interfaces/sensors/opencv_driver.hpp>
+#include <robot_interfaces/sensors/sensor_data.hpp>
+#include <robot_interfaces/sensors/sensor_driver.hpp>
 
 namespace robot_interfaces
 {

@@ -14,7 +14,7 @@
 
 #include <time_series/time_series.hpp>
 
-#include <robot_interfaces/sensor_data.hpp>
+#include <robot_interfaces/sensors/sensor_data.hpp>
 
 namespace robot_interfaces
 {

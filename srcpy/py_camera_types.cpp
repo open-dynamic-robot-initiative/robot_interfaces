@@ -6,10 +6,10 @@
  * @license BSD 3-clause
  */
 
-#include <robot_interfaces/camera_observation.hpp>
-#include <robot_interfaces/opencv_driver.hpp>
-#include <robot_interfaces/pybind_sensors.hpp>
-#include <robot_interfaces/sensor_driver.hpp>
+#include <robot_interfaces/sensors/camera_observation.hpp>
+#include <robot_interfaces/sensors/opencv_driver.hpp>
+#include <robot_interfaces/sensors/pybind_sensors.hpp>
+#include <robot_interfaces/sensors/sensor_driver.hpp>
 
 using namespace robot_interfaces;
 

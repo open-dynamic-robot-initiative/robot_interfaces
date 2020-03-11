@@ -11,10 +11,10 @@
 #include <pybind11/stl_bind.h>
 
 #include <opencv2/opencv.hpp>
-#include <robot_interfaces/sensor_backend.hpp>
-#include <robot_interfaces/sensor_data.hpp>
-#include <robot_interfaces/sensor_driver.hpp>
-#include <robot_interfaces/sensor_frontend.hpp>
+#include <robot_interfaces/sensors/sensor_backend.hpp>
+#include <robot_interfaces/sensors/sensor_data.hpp>
+#include <robot_interfaces/sensors/sensor_driver.hpp>
+#include <robot_interfaces/sensors/sensor_frontend.hpp>
 
 namespace robot_interfaces
 {

@@ -13,8 +13,8 @@
 
 #include <opencv2/opencv.hpp>
 #include <real_time_tools/timer.hpp>
-#include <robot_interfaces/camera_observation.hpp>
-#include <robot_interfaces/sensor_driver.hpp>
+#include <robot_interfaces/sensors/camera_observation.hpp>
+#include <robot_interfaces/sensors/sensor_driver.hpp>
 
 namespace robot_interfaces
 {
@@ -25,7 +25,6 @@ class OpenCVDriver : public SensorDriver<CameraObservation>
 {
 public:
     cv::VideoCapture video_capture_;
-    // double device_id_;
 
     OpenCVDriver(int device_id)
     {
