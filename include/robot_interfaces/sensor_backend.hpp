@@ -16,7 +16,7 @@
 #include <real_time_tools/thread.hpp>
 #include <real_time_tools/timer.hpp>
 
-#include <robot_interfaces/opencv_driver.hpp>
+#include <robot_interfaces/sensor_driver.hpp>
 #include <robot_interfaces/sensor_data.hpp>
 
 namespace robot_interfaces
@@ -28,21 +28,20 @@ namespace robot_interfaces
  * the video capture is running, if yes, then grabs an image and
  * stores it along with the timestamp at which it was grabbed.
  *
- * @tparam OpenCVObservation
+ * @tparam ObservationType
  */
-template <typename OpenCVObservation>
+template <typename ObservationType>
 class SensorBackend
 {
 public:
     /**
-     * @param sensor_driver  Driver instance for the camera dependent on
-     * opencv.
+     * @param sensor_driver  Driver instance for the sensor.
      * @param sensor_data  Data is sent to/retrieved from here.
      */
 
     SensorBackend(
-        std::shared_ptr<OpenCVDriver<OpenCVObservation>> sensor_driver,
-        std::shared_ptr<SensorData<OpenCVObservation>> sensor_data)
+        std::shared_ptr<SensorDriver<ObservationType>> sensor_driver,
+        std::shared_ptr<SensorData<ObservationType>> sensor_data)
         : sensor_driver_(sensor_driver),
           sensor_data_(sensor_data),
           destructor_was_called_(false)
@@ -58,8 +57,8 @@ public:
     }
 
 private:
-    std::shared_ptr<OpenCVDriver<OpenCVObservation>> sensor_driver_;
-    std::shared_ptr<SensorData<OpenCVObservation>> sensor_data_;
+    std::shared_ptr<SensorDriver<ObservationType>> sensor_driver_;
+    std::shared_ptr<SensorData<ObservationType>> sensor_data_;
 
     bool destructor_was_called_;
 
@@ -80,11 +79,11 @@ private:
         for (long int t = 0; !destructor_was_called_; t++)
         {
             
-            bool flag = sensor_driver_->is_grabbing_successful();
+            bool flag = sensor_driver_->is_access_successful();
             if (flag)
             {
-                OpenCVObservation sensor_observation;
-                sensor_observation = sensor_driver_->grab_frame();
+                ObservationType sensor_observation;
+                sensor_observation = sensor_driver_->get_observation();
                 sensor_data_->observation->append(sensor_observation);
             }
             else

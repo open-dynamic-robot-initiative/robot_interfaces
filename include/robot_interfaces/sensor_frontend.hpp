@@ -24,10 +24,9 @@ namespace robot_interfaces
  *
  * Exposes the sensor data to the user via hardware-friendly methods.
  *
- * @tparam OpenCVObservation
+ * @tparam ObservationType
  */
-
-template <typename CameraObservation>
+template <typename ObservationType>
 class SensorFrontend
 {
 public:
@@ -36,17 +35,17 @@ public:
     typedef time_series::Timestamp TimeStamp;
     typedef time_series::Index TimeIndex;
 
-    SensorFrontend(std::shared_ptr<SensorData<CameraObservation>> sensor_data)
+    SensorFrontend(std::shared_ptr<SensorData<ObservationType>> sensor_data)
         : sensor_data_(sensor_data)
     {
     }
 
-    CameraObservation get_observation(const TimeIndex &t)
+    ObservationType get_observation(const TimeIndex &t)
     {
         return (*sensor_data_->observation)[t];
     }
 
-    CameraObservation get_latest_observation()
+    ObservationType get_latest_observation()
     {
         return sensor_data_->observation->newest_element();
     }
@@ -61,7 +60,7 @@ public:
     }
 
 private:
-    std::shared_ptr<SensorData<CameraObservation>> sensor_data_;
+    std::shared_ptr<SensorData<ObservationType>> sensor_data_;
 };
 
 }  // namespace robot_interfaces

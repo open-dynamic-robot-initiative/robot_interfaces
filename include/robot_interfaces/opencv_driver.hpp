@@ -13,15 +13,15 @@
 
 #include <real_time_tools/timer.hpp>
 #include <opencv2/opencv.hpp>
+#include <robot_interfaces/camera_observation.hpp>
+#include <robot_interfaces/sensor_driver.hpp>
 
 namespace robot_interfaces
 {
 /**
  * @brief Driver for interacting with any camera using OpenCV.
  */
-
-template <typename OpenCVObservation>
-class OpenCVDriver
+class OpenCVDriver : public SensorDriver<CameraObservation>
 {
 public:
     cv::VideoCapture video_capture_;
@@ -37,7 +37,7 @@ public:
      * if the video capture has been started.
      */
 
-    int is_grabbing_successful()
+    bool is_access_successful()
     {
         if (!video_capture_.isOpened())
         {
@@ -62,9 +62,9 @@ public:
      * which it was grabbed.
      */
 
-    OpenCVObservation grab_frame()
+    CameraObservation get_observation()
     {
-        OpenCVObservation image_frame;
+        CameraObservation image_frame;
         cv::Mat frame;
         double current_time = real_time_tools::Timer::get_current_time_sec();
         video_capture_ >> frame;

@@ -1,9 +1,43 @@
-#include <robot_interfaces/pybind_camera.hpp>
-#include <robot_interfaces/sensor_data_types.hpp>
+#include <robot_interfaces/pybind_sensors.hpp>
+#include <robot_interfaces/camera_observation.hpp>
+#include <robot_interfaces/opencv_driver.hpp>
+#include <robot_interfaces/sensor_driver.hpp>
 
 using namespace robot_interfaces;
 
 PYBIND11_MODULE(py_camera_types, m)
 {
-    create_camera_bindings<CameraObservation>(m);
+    create_sensor_bindings<CameraObservation>(m);
+
+    pybind11::class_<OpenCVDriver, std::shared_ptr<OpenCVDriver>, SensorDriver<CameraObservation>>(
+    m, "OpenCVDriver")
+        .def(pybind11::init<>())
+        .def("is_access_successful", &OpenCVDriver::is_access_successful)
+        .def("get_observation", &OpenCVDriver::get_observation); 
+
+    pybind11::class_<CameraObservation>(m, "CameraObservation")
+        .def(pybind11::init<>())
+        .def_readwrite("image", &CameraObservation::image)
+        .def_readwrite("time_stamp", &CameraObservation::time_stamp);
+
+    // The following block of code for binding cv::Mat to np.ndarray is from
+    // [here](https://alexsm.com/pybind11-buffer-protocol-opencv-to-numpy/).
+    pybind11::class_<cv::Mat>(m, "image", pybind11::buffer_protocol())
+        .def_buffer([](cv::Mat& im) -> pybind11::buffer_info {
+            return pybind11::buffer_info(
+                // Pointer to buffer
+                im.data,
+                // Size of one scalar
+                sizeof(uint8_t),
+                // Python struct-style format descriptor
+                pybind11::format_descriptor<uint8_t>::format(),
+                // Number of dimensions
+                3,
+                // Buffer dimensions
+                {im.rows, im.cols, im.channels()},
+                // Strides (in bytes) for each index
+                {sizeof(uint8_t) * im.channels() * im.cols,
+                 sizeof(uint8_t) * im.channels(),
+                 sizeof(uint8_t)});
+        });    
 }
