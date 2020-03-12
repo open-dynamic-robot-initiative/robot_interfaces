@@ -13,6 +13,8 @@
 
 #pragma once
 
+#include <cereal/types/string.hpp>
+
 #include <robot_interfaces/loggable.hpp>
 #include <string>
 #include <vector>
@@ -49,6 +51,12 @@ struct Status : public Loggable
      * Value is undefined if `error_status == NO_ERROR`.
      */
     std::string error_message;
+
+    template <class Archive>
+    void serialize(Archive& archive)
+    {
+        archive(action_repetitions, error_status, error_message);
+    }
 
     std::vector<std::string> get_name() override
     {
