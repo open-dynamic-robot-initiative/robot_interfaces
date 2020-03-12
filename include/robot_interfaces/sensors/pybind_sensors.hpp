@@ -23,7 +23,6 @@ namespace robot_interfaces
  *
  * @tparam The ObservationType
  */
-
 template <typename ObservationType>
 void create_sensor_bindings(pybind11::module& m)
 {
@@ -52,4 +51,5 @@ void create_sensor_bindings(pybind11::module& m)
         .def("get_current_timeindex",
              &SensorFrontend<ObservationType>::get_current_timeindex);
 }
+
 }  // namespace robot_interfaces

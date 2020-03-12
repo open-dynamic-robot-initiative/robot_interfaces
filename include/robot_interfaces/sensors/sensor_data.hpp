@@ -25,7 +25,6 @@ using Timeseries = time_series::TimeSeries<Type>;
  *
  * @tparam ObservationType
  */
-
 template <typename ObservationType>
 class SensorData
 {

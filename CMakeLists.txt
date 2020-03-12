@@ -57,7 +57,6 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/include
     ${catkin_INCLUDE_DIRS}
     ${Eigen_INCLUDE_DIRS}
-    ${PYLON_INCLUDE_DIRS}
 #    ${Boost_INCLUDE_DIRS}
     ${OpenCV_INCLUDE_DIRS}
 )

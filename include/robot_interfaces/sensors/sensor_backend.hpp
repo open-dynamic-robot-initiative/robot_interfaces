@@ -39,7 +39,6 @@ public:
      * @param sensor_driver  Driver instance for the sensor.
      * @param sensor_data  Data is sent to/retrieved from here.
      */
-
     SensorBackend(std::shared_ptr<SensorDriver<ObservationType>> sensor_driver,
                   std::shared_ptr<SensorData<ObservationType>> sensor_data)
         : sensor_driver_(sensor_driver),
@@ -73,7 +72,6 @@ private:
     /**
      * @brief Main loop.
      */
-
     void loop()
     {
         for (long int t = 0; !destructor_was_called_; t++)

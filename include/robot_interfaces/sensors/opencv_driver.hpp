@@ -35,8 +35,8 @@ public:
     /**
      * @brief Find out if the camera can be accessed and
      * if the video capture has been started.
+     * @return true/false
      */
-
     bool is_access_successful()
     {
         if (!video_capture_.isOpened())
@@ -61,7 +61,6 @@ public:
      * @return Image frame consisting of an image matrix and the time at
      * which it was grabbed.
      */
-
     CameraObservation get_observation()
     {
         CameraObservation image_frame;
