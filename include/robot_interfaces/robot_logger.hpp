@@ -24,6 +24,7 @@
 #include <real_time_tools/timer.hpp>
 
 #include <robot_interfaces/loggable.hpp>
+#include <robot_interfaces/status.hpp>
 
 namespace robot_interfaces
 {
@@ -37,9 +38,8 @@ namespace robot_interfaces
  *
  * @tparam Action
  * @tparam Observation
- * @tparam Status
  */
-template <typename Action, typename Observation, typename Status>
+template <typename Action, typename Observation>
 class RobotLogger
 {
 public:
@@ -59,7 +59,7 @@ public:
      * is to be logged- applied_action and desired_action (of type Action),
      * observation (of type Observation), and status (of type Status).
      */
-    std::shared_ptr<robot_interfaces::RobotData<Action, Observation, Status>>
+    std::shared_ptr<robot_interfaces::RobotData<Action, Observation>>
         logger_data_;
 
     int block_size_;
@@ -71,7 +71,7 @@ public:
     std::string output_file_name_;
 
     RobotLogger(std::shared_ptr<
-                    robot_interfaces::RobotData<Action, Observation, Status>>
+                    robot_interfaces::RobotData<Action, Observation>>
                     robot_data,
                 int block_size)
         : logger_data_(robot_data),

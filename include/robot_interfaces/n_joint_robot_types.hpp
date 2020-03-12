@@ -16,8 +16,9 @@
 #include <robot_interfaces/robot_backend.hpp>
 #include <robot_interfaces/robot_data.hpp>
 #include <robot_interfaces/robot_frontend.hpp>
-
 #include <robot_interfaces/robot_logger.hpp>
+#include <robot_interfaces/cereal_eigen.hpp>
+
 
 namespace robot_interfaces
 {
@@ -47,6 +48,12 @@ struct NJointRobotTypes
         Vector position_kp;
         //! D-gain for position controller.  If NaN, default is used.
         Vector position_kd;
+
+        template <class Archive>
+        void serialize(Archive& archive)
+        {
+            archive(torque, position, position_kp, position_kd);
+        }
 
         std::vector<std::string> get_name() override
         {
@@ -202,6 +209,12 @@ struct NJointRobotTypes
         Vector velocity;
         Vector torque;
 
+        template <class Archive>
+        void serialize(Archive& archive)
+        {
+            archive(position, velocity, torque);
+        }
+
         std::vector<std::string> get_name() override
         {
             return {"Position", "Velocity", "Torque"};
@@ -231,13 +244,17 @@ struct NJointRobotTypes
     typedef RobotBackend<Action, Observation> Backend;
     typedef std::shared_ptr<Backend> BackendPtr;
 
-    typedef RobotData<Action, Observation, Status> Data;
-    typedef std::shared_ptr<Data> DataPtr;
+    typedef RobotData<Action, Observation> BaseData;
+    typedef std::shared_ptr<BaseData> BaseDataPtr;
+    typedef SingleProcessRobotData<Action, Observation> SingleProcessData;
+    typedef std::shared_ptr<SingleProcessData> SingleProcessDataPtr;
+    typedef MultiProcessRobotData<Action, Observation> MultiProcessData;
+    typedef std::shared_ptr<MultiProcessData> MultiProcessDataPtr;
 
     typedef RobotFrontend<Action, Observation> Frontend;
     typedef std::shared_ptr<Frontend> FrontendPtr;
 
-    typedef RobotLogger<Action, Observation, Status> Logger;
+    typedef RobotLogger<Action, Observation> Logger;
 };
 
 }  // namespace robot_interfaces
