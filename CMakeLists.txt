@@ -16,7 +16,7 @@ set(CMAKE_SKIP_BUILD_RPATH  FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
-
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 ############################
 # Search for dependencies. #
@@ -29,6 +29,7 @@ set(CATKIN_PKGS ${CATKIN_PKGS}
   time_series
 )
 find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
+find_package(OpenCV 3 REQUIRED)
 
 search_for_eigen()
 
@@ -42,6 +43,7 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/include
     ${catkin_INCLUDE_DIRS}
     ${Eigen_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
 )
 
 ##########################################
@@ -79,6 +81,16 @@ target_link_libraries(py_generic PRIVATE ${catkin_LIBRARIES})
 set_target_properties(py_generic PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
 install(TARGETS py_generic DESTINATION ${CATKIN_PACKAGE_PYTHON_DESTINATION})
+
+# camera #
+set(py_camera_types_SRC_FILES
+  srcpy/py_camera_types.cpp
+)
+pybind11_add_module(py_camera_types ${py_camera_types_SRC_FILES})
+target_link_libraries(py_camera_types PRIVATE ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+set_target_properties(py_camera_types PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
+install(TARGETS py_camera_types DESTINATION ${CATKIN_PACKAGE_PYTHON_DESTINATION})
 
 # finger #
 set(py_finger_types_SRC_FILES

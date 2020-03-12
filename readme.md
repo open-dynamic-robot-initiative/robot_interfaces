@@ -17,5 +17,3 @@ Copyright(c) 2018-2019 Max Planck Gesellschaft
 ## License
 
 BSD 3-Clause License
-
-
