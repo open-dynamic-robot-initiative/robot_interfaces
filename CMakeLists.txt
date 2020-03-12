@@ -29,13 +29,7 @@ set(CATKIN_PKGS ${CATKIN_PKGS}
   time_series
 )
 find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
-find_package(OpenCV 3)
-
-get_cmake_property(_variableNames VARIABLES)
-list (SORT _variableNames)
-foreach (_variableName ${_variableNames})
-    message(STATUS "${_variableName}=${${_variableName}}")
-endforeach()
+find_package(OpenCV 3 REQUIRED)
 
 search_for_eigen()
 
