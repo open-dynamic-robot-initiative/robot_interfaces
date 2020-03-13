@@ -7,22 +7,22 @@
 #include <real_time_tools/thread.hpp>
 #include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
 #include <real_time_tools/timer.hpp>
-#include <Eigen/Eigen>
-#include "opencv2/opencv.hpp"
 
+#include <robot_interfaces/sensors/camera_observation.hpp>
+#include <opencv2/opencv.hpp>
 #include <pylon/PylonIncludes.h>
 
 namespace robot_interfaces
 {
 
-  template <typename OpenCVObservation>
-  class PylonDriver
+  class PylonDriver : public SensorDriver(CameraObservation)
   {
 
   public:
 
       Pylon::PylonAutoInitTerm auto_init_term;
       GenApi::CIntegerPtr width, height;
+      GenApi::INodeMap& nodemap;
       Pylon::CImageFormatConverter format_converter;
       Pylon::CPylonImage pylon_image;
       Pylon::CGrabResultPtr ptr_grab_result;
@@ -34,12 +34,13 @@ namespace robot_interfaces
 
       PylonDriver()
       {
+        pylon_init();
         // camera(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
       }
 
       void pylon_init()
       {
-        GenApi::INodeMap& nodemap = camera.GetNodeMap();
+        nodemap = camera.GetNodeMap();
         camera.Open();
         width = nodemap.GetNode("Width");
         height = nodemap.GetNode("Height");
@@ -49,9 +50,9 @@ namespace robot_interfaces
         format_converter.OutputPixelFormat = Pylon::PixelType_BGR8packed;
       }
 
-      OpenCVObservation grab_frame()
+      CameraObservation get_observation()
       {  
-          OpenCVObservation image_frame;
+          CameraObservation image_frame;
           cv::Mat frame;
           long double current_time = timer.get_current_time_sec();
 
