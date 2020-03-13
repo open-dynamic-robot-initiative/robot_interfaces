@@ -14,12 +14,15 @@ import robot_interfaces
 
 def main():
     camera_data = robot_interfaces.camera.Data()
+    print("1")
     camera_driver = robot_interfaces.camera.PylonDriver()
+    print("2")
     camera_backend = robot_interfaces.camera.Backend(
                                         camera_driver, camera_data)
     camera_frontend = robot_interfaces.camera.Frontend(camera_data)
 
     while True:
+
         observation = camera_frontend.get_latest_observation()
         window_name = "Image Stream"
         cv2.imshow(window_name, np.array(observation.image, copy=False))

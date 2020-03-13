@@ -27,6 +27,7 @@ public:
     Pylon::CImageFormatConverter format_converter;
     Pylon::CPylonImage pylon_image;
     Pylon::CGrabResultPtr ptr_grab_result;
+    
     Pylon::CInstantCamera camera;
 
     cv::VideoCapture video_capture;
@@ -34,7 +35,7 @@ public:
     static const uint32_t count_of_images_to_grab = 1;
 
     PylonDriver() : camera(Pylon::CTlFactory::GetInstance().CreateFirstDevice())
-    {
+    { 
       GenApi::INodeMap& nodemap = camera.GetNodeMap();
       camera.Open();
       width = nodemap.GetNode("Width");
@@ -42,23 +43,33 @@ public:
       
       camera.MaxNumBuffer = 5;
 
-      format_converter.OutputPixelFormat = Pylon::PixelType_BGR8packed;
+      format_converter.OutputPixelFormat = Pylon::PixelType_BGR8packed;  
     }
 
     bool is_access_successful()
     {
       return true;
+      // try
+      // {
+      //   pylon_init();
+      // }
+      // catch(const std::exception& e)
+      // {
+      //   std::cerr << e.what() << '\n';
+      // }
+      
     }
 
     CameraObservation get_observation()
-    {  
+    {          
         CameraObservation image_frame;
         cv::Mat frame;
         double current_time = timer.get_current_time_sec();
+        camera.StartGrabbing();
 
         while(camera.IsGrabbing())
         {
-          camera.RetrieveResult(5000, ptr_grab_result, Pylon::TimeoutHandling_ThrowException);
+          camera.RetrieveResult(15000, ptr_grab_result, Pylon::TimeoutHandling_ThrowException);
           image_frame.time_stamp = timer.get_current_time_sec();
           if(ptr_grab_result->GrabSucceeded())
           {
