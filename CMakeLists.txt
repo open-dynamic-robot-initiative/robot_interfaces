@@ -32,23 +32,9 @@ find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
 find_package(OpenCV 3)
 find_package(Pylon REQUIRED)
 
-get_cmake_property(_variableNames VARIABLES)
-list (SORT _variableNames)
-foreach (_variableName ${_variableNames})
-    message(STATUS "${_variableName}=${${_variableName}}")
-endforeach()
-
 search_for_eigen()
 
 catkin_python_setup()
-
-
-##set(Boost_USE_STATIC_LIBS OFF)
-##set(Boost_USE_MULTITHREADED ON)
-##set(Boost_USE_STATIC_RUNTIME OFF)
-#find_package(Boost 1.45.0 REQUIRED)
-
-#message(FATAL_ERROR ${Boost_INCLUDE_DIRS})
 
 
 ######################################################
