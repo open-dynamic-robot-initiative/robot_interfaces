@@ -13,11 +13,11 @@ import robot_interfaces
 
 
 def main():
-    camera_data = robot_interfaces.pylon.Data()
-    camera_driver = robot_interfaces.pylon.OpenCVDriver(0)
-    camera_backend = robot_interfaces.pylon.Backend(
+    camera_data = robot_interfaces.camera.Data()
+    camera_driver = robot_interfaces.camera.PylonDriver()
+    camera_backend = robot_interfaces.camera.Backend(
                                         camera_driver, camera_data)
-    camera_frontend = robot_interfaces.pylon.Frontend(camera_data)
+    camera_frontend = robot_interfaces.camera.Frontend(camera_data)
 
     while True:
         observation = camera_frontend.get_latest_observation()

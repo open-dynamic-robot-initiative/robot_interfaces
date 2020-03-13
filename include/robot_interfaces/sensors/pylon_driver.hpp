@@ -17,11 +17,6 @@
 namespace robot_interfaces
 {
 
-using namespace Pylon;
-using namespace cv;
-using namespace std;
-using namespace GenApi;
-
 class PylonDriver : public SensorDriver<CameraObservation>
 {
 public:
@@ -38,7 +33,7 @@ public:
     real_time_tools::Timer timer;
     static const uint32_t count_of_images_to_grab = 1;
 
-    PylonDriver() : camera(CTlFactory::GetInstance().CreateFirstDevice())
+    PylonDriver() : camera(Pylon::CTlFactory::GetInstance().CreateFirstDevice())
     {
       GenApi::INodeMap& nodemap = camera.GetNodeMap();
       camera.Open();
