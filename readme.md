@@ -37,3 +37,6 @@ BSD 3-Clause License
 singularity shell -B /opt/pylon5 containers/blmc_ei.sif
 ```
 
+### Exceptions and how to deal with them
+
+In case of a runtime exception, use a smaller USB 3.0 cable.
