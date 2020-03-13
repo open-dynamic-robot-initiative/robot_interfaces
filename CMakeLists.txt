@@ -38,9 +38,6 @@ foreach (_variableName ${_variableNames})
     message(STATUS "${_variableName}=${${_variableName}}")
 endforeach()
 
-# include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindPylon.cmake")
-# message(FATAL_ERROR "XXXXXXXXXXXXX ${PYLON_INCLUDE_DIR}")
-
 search_for_eigen()
 
 catkin_python_setup()

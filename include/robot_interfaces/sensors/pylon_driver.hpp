@@ -9,66 +9,71 @@
 #include <real_time_tools/timer.hpp>
 
 #include <robot_interfaces/sensors/camera_observation.hpp>
+#include <robot_interfaces/sensors/sensor_driver.hpp>
+
 #include <opencv2/opencv.hpp>
 #include <pylon/PylonIncludes.h>
 
 namespace robot_interfaces
 {
 
-  class PylonDriver : public SensorDriver(CameraObservation)
-  {
+using namespace Pylon;
+using namespace cv;
+using namespace std;
+using namespace GenApi;
 
-  public:
+class PylonDriver : public SensorDriver<CameraObservation>
+{
+public:
 
-      Pylon::PylonAutoInitTerm auto_init_term;
-      GenApi::CIntegerPtr width, height;
-      GenApi::INodeMap& nodemap;
-      Pylon::CImageFormatConverter format_converter;
-      Pylon::CPylonImage pylon_image;
-      Pylon::CGrabResultPtr ptr_grab_result;
-      Pylon::CInstantCamera camera(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
+    Pylon::PylonAutoInitTerm auto_init_term;
+    GenApi::CIntegerPtr width, height;
+    
+    Pylon::CImageFormatConverter format_converter;
+    Pylon::CPylonImage pylon_image;
+    Pylon::CGrabResultPtr ptr_grab_result;
+    Pylon::CInstantCamera camera;
 
-      cv::VideoCapture video_capture;
-      real_time_tools::Timer timer;
-      static const uint32_t count_of_images_to_grab = 1;
+    cv::VideoCapture video_capture;
+    real_time_tools::Timer timer;
+    static const uint32_t count_of_images_to_grab = 1;
 
-      PylonDriver()
-      {
-        pylon_init();
-        // camera(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
-      }
+    PylonDriver() : camera(CTlFactory::GetInstance().CreateFirstDevice())
+    {
+      GenApi::INodeMap& nodemap = camera.GetNodeMap();
+      camera.Open();
+      width = nodemap.GetNode("Width");
+      height = nodemap.GetNode("Height");
+      
+      camera.MaxNumBuffer = 5;
 
-      void pylon_init()
-      {
-        nodemap = camera.GetNodeMap();
-        camera.Open();
-        width = nodemap.GetNode("Width");
-        height = nodemap.GetNode("Height");
-        
-        camera.MaxNumBuffer = 5;
+      format_converter.OutputPixelFormat = Pylon::PixelType_BGR8packed;
+    }
 
-        format_converter.OutputPixelFormat = Pylon::PixelType_BGR8packed;
-      }
+    bool is_access_successful()
+    {
+      return true;
+    }
 
-      CameraObservation get_observation()
-      {  
-          CameraObservation image_frame;
-          cv::Mat frame;
-          long double current_time = timer.get_current_time_sec();
+    CameraObservation get_observation()
+    {  
+        CameraObservation image_frame;
+        cv::Mat frame;
+        double current_time = timer.get_current_time_sec();
 
-          while(camera.IsGrabbing())
+        while(camera.IsGrabbing())
+        {
+          camera.RetrieveResult(5000, ptr_grab_result, Pylon::TimeoutHandling_ThrowException);
+          image_frame.time_stamp = timer.get_current_time_sec();
+          if(ptr_grab_result->GrabSucceeded())
           {
-            camera.RetrieveResult(5000, ptr_grab_result, Pylon::TimeoutHandling_ThrowException);
-            image_frame.time_stamp = timer.get_current_time_sec();
-            if(ptr_grab_result->GrabSucceeded())
-            {
-              format_converter.Convert(pylon_image, ptr_grab_result);
-              image_frame.image = cv::Mat(ptr_grab_result->GetHeight(), ptr_grab_result->GetWidth(),
-                                          CV_8UC3, (uint8_t*)pylon_image.GetBuffer());
-            }
+            format_converter.Convert(pylon_image, ptr_grab_result);
+            image_frame.image = cv::Mat(ptr_grab_result->GetHeight(), ptr_grab_result->GetWidth(),
+                                        CV_8UC3, (uint8_t*)pylon_image.GetBuffer());
           }
-      }
+        }
+    }
 
-  };
+};
 
 } //namespace robot_interfaces
