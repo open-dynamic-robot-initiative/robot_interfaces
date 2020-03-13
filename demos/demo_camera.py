@@ -6,6 +6,7 @@ as a non-real time livestream.
 Basically illustrates what objects to create to interact with the
 camera, and the available methods for that.
 """
+import argparse
 import numpy as np
 import cv2
 
@@ -13,8 +14,21 @@ import robot_interfaces
 
 
 def main():
+    argparser = argparse.ArgumentParser(description=__doc__)
+    arg_action_group = argparser.add_mutually_exclusive_group(required=True)
+    arg_action_group.add_argument("--pylon",
+                                  type=int,
+                                  help="""Set this equal to 1 to access your
+                                  camera via Pylon, 0 if Pylon not needed.
+                                  """)
+    args = argparser.parse_args()
+
     camera_data = robot_interfaces.camera.Data()
-    camera_driver = robot_interfaces.camera.OpenCVDriver(0)
+    if args.pylon == 1:
+        camera_driver = robot_interfaces.camera.PylonDriver()
+    elif args.pylon == 0:
+        camera_driver = robot_interfaces.camera.OpenCVDriver(0)
+
     camera_backend = robot_interfaces.camera.Backend(
                                         camera_driver, camera_data)
     camera_frontend = robot_interfaces.camera.Frontend(camera_data)
