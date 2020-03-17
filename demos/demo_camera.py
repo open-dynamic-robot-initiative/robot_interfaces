@@ -15,11 +15,11 @@ import robot_interfaces
 
 def main():
     argparser = argparse.ArgumentParser(description=__doc__)
-    arg_action_group = argparser.add_mutually_exclusive_group(required=True)
+    arg_action_group = argparser.add_mutually_exclusive_group(required=False)
     arg_action_group.add_argument("--pylon",
-                                  type=int,
-                                  help="""Set this equal to 1 to access your
-                                  camera via Pylon, 0 if Pylon not needed.
+                                  action="store_false",
+                                  help="""Pass --pylon if you need to access
+                                  the camera via pylon.
                                   """)
     args = argparser.parse_args()
 

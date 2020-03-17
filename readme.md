@@ -18,7 +18,9 @@ Copyright(c) 2018-2019 Max Planck Gesellschaft
 
 BSD 3-Clause License
 
-## Steps to set up the pylon interface
+## Installing Dependencies
+
+### Steps to set up the pylon interface
 
 1. Get the pylon Camera Software Suite (5.0.12) from [here](https://www.baslerweb.com/en/sales-support/downloads/software-downloads/pylon-5-0-12-linux-x86-64-bit/). Then follow the instructions in the INSTALL file of the pylon suite. Pasted below for reference (2, 3, 4):-
 
@@ -36,6 +38,8 @@ BSD 3-Clause License
 ```bash
 singularity shell -B /opt/pylon5 containers/blmc_ei.sif
 ```
+
+-B binds the directory /opt/pylon5 to the container so that the directories and the files inside it are accessible from within the container
 
 ### Exceptions and how to deal with them
 

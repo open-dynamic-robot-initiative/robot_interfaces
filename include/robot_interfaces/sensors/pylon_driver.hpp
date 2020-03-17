@@ -30,15 +30,28 @@ class PylonDriver : public SensorDriver<CameraObservation>
 public:
     Pylon::PylonAutoInitTerm auto_init_term_;
     Pylon::CInstantCamera camera_;
+    Pylon::CTlFactory& tl_factory_;
+    Pylon::DeviceInfoList_t device_list_;
+    Pylon::DeviceInfoList_t::const_iterator device_iterator_;
     Pylon::CImageFormatConverter format_converter_;
     Pylon::CPylonImage pylon_image_;
+    int num_devices_;
 
     PylonDriver()
-        : camera_(Pylon::CTlFactory::GetInstance().CreateFirstDevice())
+        : tl_factory_(Pylon::CTlFactory::GetInstance())
     {
+        device_iterator_ = device_list_.begin();
+        camera_.Attach(tl_factory_.CreateDevice(*device_iterator_));
         camera_.Open();
         camera_.MaxNumBuffer = 5;
         format_converter_.OutputPixelFormat = Pylon::PixelType_BGR8packed;
+
+        camera_.StartGrabbing();
+    }
+
+    ~PylonDriver()
+    {
+        camera_.StopGrabbing();
     }
 
     /**
@@ -62,8 +75,7 @@ public:
         Pylon::CGrabResultPtr ptr_grab_result;
 
         try
-        {
-            camera_.StartGrabbing();
+        { 
             camera_.RetrieveResult(
                 5000, ptr_grab_result, Pylon::TimeoutHandling_ThrowException);
             image_frame.time_stamp =
@@ -76,7 +88,7 @@ public:
                                             CV_8UC3,
                                             (uint8_t*)pylon_image_.GetBuffer());
             }
-            camera_.StopGrabbing();
+            
         }
         catch (const std::exception& e)
         {
