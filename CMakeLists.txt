@@ -30,7 +30,11 @@ set(CATKIN_PKGS ${CATKIN_PKGS}
 )
 find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
 find_package(OpenCV 3 REQUIRED)
-find_package(Pylon REQUIRED)
+find_package(Pylon)
+
+if (${PYLON_FOUND})
+    add_definitions(-DPYLON_FOUND)
+endif()
 
 search_for_eigen()
 
