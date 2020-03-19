@@ -71,13 +71,26 @@ public:
                 format_converter_.OutputPixelFormat = Pylon::PixelType_BGR8packed;
 
                 camera_.StartGrabbing();
-            }    
+            }
+            else
+            {
+                camera_.Attach(tl_factory_.CreateFirstDevice());
+                // camera_.Attach(tl_factory_.CreateDevice(device_user_id_));
+                camera_.Open();
+                camera_.MaxNumBuffer = 5;
+                format_converter_.OutputPixelFormat = Pylon::PixelType_BGR8packed;
+
+                camera_.StartGrabbing();
+                
+            }
+                
         
     }
 
     ~PylonDriver()
     {
         camera_.StopGrabbing();
+        Pylon::PylonTerminate();
     }
 
     /**
