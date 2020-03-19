@@ -31,22 +31,48 @@ public:
     Pylon::PylonAutoInitTerm auto_init_term_;
     Pylon::CInstantCamera camera_;
     Pylon::CTlFactory& tl_factory_;
-    Pylon::DeviceInfoList_t device_list_;
-    Pylon::DeviceInfoList_t::const_iterator device_iterator_;
     Pylon::CImageFormatConverter format_converter_;
     Pylon::CPylonImage pylon_image_;
-    int num_devices_;
+    const std::string& device_user_id_to_open = "cam_1";
 
     PylonDriver()
         : tl_factory_(Pylon::CTlFactory::GetInstance())
     {
-        device_iterator_ = device_list_.begin();
-        camera_.Attach(tl_factory_.CreateDevice(*device_iterator_));
-        camera_.Open();
-        camera_.MaxNumBuffer = 5;
-        format_converter_.OutputPixelFormat = Pylon::PixelType_BGR8packed;
+        Pylon::PylonInitialize();
+        Pylon::DeviceInfoList_t device_list;
+        Pylon::DeviceInfoList_t::const_iterator device_iterator;
+        bool found_desired_device = false;
+        std::cout << "Check 1" <<std::endl;
+        for (device_iterator = device_list.begin(); device_iterator != device_list.end(); ++device_iterator )
+            {
+                std::cout << "Check 2" <<std::endl;
+                std::string device_user_id_found(device_iterator->GetUserDefinedName());
+                std::cout << "Check 3" <<std::endl;
+                if ( (0 == device_user_id_to_open.compare(device_user_id_found)) ||
+                     (device_user_id_to_open.length() < device_user_id_found.length() &&
+                     (0 == device_user_id_found.compare(device_user_id_found.length() -
+                                                         device_user_id_to_open.length(),
+                                                         device_user_id_to_open.length(),
+                                                         device_user_id_to_open) )
+                     )
+                   )
+                {
+                    found_desired_device = true;
+                    std::cout << device_user_id_found <<std::endl;
+                    break;
+                }
+            }
+        if ( found_desired_device )
+            {
+                camera_.Attach(tl_factory_.CreateDevice(*device_iterator));
+                // camera_.Attach(tl_factory_.CreateDevice(device_user_id_));
+                camera_.Open();
+                camera_.MaxNumBuffer = 5;
+                format_converter_.OutputPixelFormat = Pylon::PixelType_BGR8packed;
 
-        camera_.StartGrabbing();
+                camera_.StartGrabbing();
+            }    
+        
     }
 
     ~PylonDriver()
@@ -88,11 +114,16 @@ public:
                                             CV_8UC3,
                                             (uint8_t*)pylon_image_.GetBuffer());
             }
+            else
+            {
+                throw "Failed to access images from the camera.";
+            }
+            
             
         }
-        catch (const std::exception& e)
+        catch (const char* error_msg)
         {
-            std::cerr << "Failed to access images from the camera."
+            std::cerr << error_msg
                       << std::endl;
         }
         return image_frame;
