@@ -22,11 +22,6 @@ template <typename ObservationType>
 class SensorDriver
 {
 public:
-    /**
-     * @brief Check if the sensor can be accessed.
-     * @return true/false
-     */
-    virtual bool is_access_successful() = 0;
 
     /**
      * @brief return the observation

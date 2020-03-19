@@ -14,20 +14,20 @@ import robot_interfaces
 
 
 def main():
-    argparser = argparse.ArgumentParser(description=__doc__)
-    arg_action_group = argparser.add_mutually_exclusive_group(required=False)
-    arg_action_group.add_argument("--pylon",
-                                  action="store_false",
-                                  help="""Pass --pylon if you need to access
-                                  the camera via pylon.
-                                  """)
-    args = argparser.parse_args()
+    # argparser = argparse.ArgumentParser(description=__doc__)
+    # arg_action_group = argparser.add_mutually_exclusive_group(required=False)
+    # arg_action_group.add_argument("--pylon",
+    #                               action="store_false",
+    #                               help="""Pass --pylon if you need to access
+    #                               the camera via pylon.
+    #                               """)
+    # args = argparser.parse_args()
 
     camera_data = robot_interfaces.camera.Data()
-    if args.pylon == 1:
-        camera_driver = robot_interfaces.camera.PylonDriver()
-    elif args.pylon == 0:
-        camera_driver = robot_interfaces.camera.OpenCVDriver(0)
+    # if args.pylon == 1:
+    camera_driver = robot_interfaces.camera.PylonDriver("cam_1")
+    # elif args.pylon == 0:
+    #     camera_driver = robot_interfaces.camera.OpenCVDriver(0)
 
     camera_backend = robot_interfaces.camera.Backend(
                                         camera_driver, camera_data)
