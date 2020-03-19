@@ -40,47 +40,50 @@ public:
     {
         Pylon::PylonInitialize();
         Pylon::DeviceInfoList_t device_list;
-        Pylon::DeviceInfoList_t::const_iterator device_iterator;
-        bool found_desired_device = false;
-        for (device_iterator = device_list.begin(); device_iterator != device_list.end(); ++device_iterator )
+
+        if (tl_factory_.EnumerateDevices(device_list) == 0)
+        {
+            std::cerr << "No devices present, please connect one." << std::endl;
+            Pylon::PylonTerminate();
+        }
+        else
+        {
+            Pylon::DeviceInfoList_t::const_iterator device_iterator;
+            bool found_desired_device = false;
+
+            for(device_iterator = device_list.begin(); device_iterator != device_list.end(); ++device_iterator)
             {
                 std::string device_user_id_found(device_iterator->GetUserDefinedName());
-                if ( (0 == device_user_id_to_open.compare(device_user_id_found)) ||
-                     (device_user_id_to_open.length() < device_user_id_found.length() &&
-                     (0 == device_user_id_found.compare(device_user_id_found.length() -
-                                                         device_user_id_to_open.length(),
-                                                         device_user_id_to_open.length(),
-                                                         device_user_id_to_open) )
-                     )
-                   )
+                if((0 == device_user_id_to_open.compare(device_user_id_found)) ||
+                (device_user_id_to_open.length() < device_user_id_found.length() &&
+                (0 == device_user_id_found.compare(device_user_id_found.length() -
+                                                    device_user_id_to_open.length(),
+                                                    device_user_id_to_open.length(),
+                                                    device_user_id_to_open) )
+                )
+                )
                 {
                     found_desired_device = true;
-                    std::cout << device_user_id_found <<std::endl;
                     break;
                 }
             }
-        if ( found_desired_device )
+
+            if (found_desired_device)
             {
                 camera_.Attach(tl_factory_.CreateDevice(*device_iterator));
-                // camera_.Attach(tl_factory_.CreateDevice(device_user_id_));
-                camera_.Open();
-                camera_.MaxNumBuffer = 5;
-                format_converter_.OutputPixelFormat = Pylon::PixelType_BGR8packed;
-
-                camera_.StartGrabbing();
             }
             else
             {
-                camera_.Attach(tl_factory_.CreateFirstDevice());
-                // camera_.Attach(tl_factory_.CreateDevice(device_user_id_));
-                camera_.Open();
-                camera_.MaxNumBuffer = 5;
-                format_converter_.OutputPixelFormat = Pylon::PixelType_BGR8packed;
-
-                camera_.StartGrabbing();
-                
+                device_iterator = device_list.begin();
+                camera_.Attach(tl_factory_.CreateDevice(*device_iterator));
+                std::cout << "Desired device not found. Creating a camera object with the first device id in device list." << std::endl;                
             }
-                
+            camera_.Open();
+            camera_.MaxNumBuffer = 5;
+            format_converter_.OutputPixelFormat = Pylon::PixelType_BGR8packed;
+
+            camera_.StartGrabbing();
+        }              
         
     }
 
