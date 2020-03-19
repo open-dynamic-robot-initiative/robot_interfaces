@@ -43,4 +43,6 @@ singularity shell -B /opt/pylon5 containers/blmc_ei.sif
 
 ### Exceptions and how to deal with them
 
-In case of a runtime exception, use a smaller USB 3.0 cable.
+1. In case of a runtime exception, use a smaller USB 3.0 cable.
+
+2. In case you get the runtime_error: "Failed to access images from the camera.", try to disconnect and reconnect the camera first and see if that resolves the error.
