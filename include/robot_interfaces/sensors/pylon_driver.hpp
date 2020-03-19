@@ -42,12 +42,9 @@ public:
         Pylon::DeviceInfoList_t device_list;
         Pylon::DeviceInfoList_t::const_iterator device_iterator;
         bool found_desired_device = false;
-        std::cout << "Check 1" <<std::endl;
         for (device_iterator = device_list.begin(); device_iterator != device_list.end(); ++device_iterator )
             {
-                std::cout << "Check 2" <<std::endl;
                 std::string device_user_id_found(device_iterator->GetUserDefinedName());
-                std::cout << "Check 3" <<std::endl;
                 if ( (0 == device_user_id_to_open.compare(device_user_id_found)) ||
                      (device_user_id_to_open.length() < device_user_id_found.length() &&
                      (0 == device_user_id_found.compare(device_user_id_found.length() -
