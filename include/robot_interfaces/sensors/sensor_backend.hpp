@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <thread>
 
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
@@ -45,14 +46,13 @@ public:
           sensor_data_(sensor_data),
           destructor_was_called_(false)
     {
-        thread_ = std::make_shared<real_time_tools::RealTimeThread>();
-        thread_->create_realtime_thread(&SensorBackend::loop, this);
+        thread_ = std::thread(&SensorBackend<ObservationType>::loop, this);
     }
 
     virtual ~SensorBackend()
     {
         destructor_was_called_ = true;
-        thread_->join();
+        thread_.join();
     }
 
 private:
@@ -61,13 +61,7 @@ private:
 
     bool destructor_was_called_;
 
-    std::shared_ptr<real_time_tools::RealTimeThread> thread_;
-
-    static void *loop(void *instance_pointer)
-    {
-        ((SensorBackend *)(instance_pointer))->loop();
-        return nullptr;
-    }
+    std::thread thread_;
 
     /**
      * @brief Main loop.
