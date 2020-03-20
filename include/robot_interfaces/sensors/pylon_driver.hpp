@@ -4,6 +4,10 @@
  * @copyright 2020, New York University, Max Planck Gesellschaft. All rights
  *            reserved.
  * @license BSD 3-clause
+ * References-
+ * https://www.baslerweb.com/en/sales-support/downloads/document-downloads/pylon-sdk-samples-manual/
+ * https://github.com/basler/pylon-ros-camera/blob/9f3832127fc39a2c181cbeb5257054352e2ef7fe/pylon_camera/src/pylon_camera/pylon_camera.cpp#L132
+ *
  */
 
 #pragma once
