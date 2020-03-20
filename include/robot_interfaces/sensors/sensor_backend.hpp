@@ -46,13 +46,6 @@ public:
           sensor_data_(sensor_data),
           destructor_was_called_(false)
     {
-        // thread_ = std::shared_ptr<std::thread>;
-        // std::thread thread_([](void *instance_pointer) {
-        //     ((SensorBackend<CameraObservation>*)(instance_pointer)) -> loop();
-        //     return (void *)nullptr;
-        // },
-        // this);
-        // thread_ = std::thread(&SensorBackend<ObservationType>::loop, this);
         thread_ = std::thread(&SensorBackend<ObservationType>::loop, this);
     }
 
@@ -68,14 +61,7 @@ private:
 
     bool destructor_was_called_;
 
-    // std::shared_ptr<std::thread> thread_;
     std::thread thread_;
-
-    // static void *loop(void *instance_pointer)
-    // {
-    //     ((SensorBackend *)(instance_pointer))->loop();
-    //     return nullptr;
-    // }
 
     /**
      * @brief Main loop.
