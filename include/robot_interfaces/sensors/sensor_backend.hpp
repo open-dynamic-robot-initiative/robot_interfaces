@@ -47,11 +47,13 @@ public:
           destructor_was_called_(false)
     {
         // thread_ = std::shared_ptr<std::thread>;
-        std::thread thread_([](void *instance_pointer) {
-            ((SensorBackend<CameraObservation>*)(instance_pointer)) -> loop();
-            return (void *)nullptr;
-        },
-        this);
+        // std::thread thread_([](void *instance_pointer) {
+        //     ((SensorBackend<CameraObservation>*)(instance_pointer)) -> loop();
+        //     return (void *)nullptr;
+        // },
+        // this);
+        // thread_ = std::thread(&SensorBackend<ObservationType>::loop, this);
+        thread_ = std::thread(&SensorBackend<ObservationType>::loop, this);
     }
 
     virtual ~SensorBackend()
