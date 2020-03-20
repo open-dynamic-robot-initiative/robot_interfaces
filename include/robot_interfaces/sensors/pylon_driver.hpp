@@ -36,17 +36,14 @@ public:
     Pylon::CInstantCamera camera_;
     Pylon::CImageFormatConverter format_converter_;
     Pylon::CPylonImage pylon_image_;
-    Pylon::CTlFactory& tl_factory_;
-    const std::string& device_user_id_to_open_;
 
     /**
-     * @param device_user_id The id of the camera device to open and
+     * @param device_user_id_to_open The id of the camera device to open and
      * grab images from
      */
-    PylonDriver(const std::string& device_user_id)
-        : device_user_id_to_open_(device_user_id),
-          tl_factory_(Pylon::CTlFactory::GetInstance())
+    PylonDriver(const std::string& device_user_id_to_open)
     {
+        Pylon::CTlFactory& tl_factory_ = Pylon::CTlFactory::GetInstance();
         Pylon::PylonInitialize();
         Pylon::DeviceInfoList_t device_list;
         std::cout << tl_factory_.EnumerateDevices(device_list) << std::endl;
@@ -60,7 +57,7 @@ public:
         else
         {
             Pylon::DeviceInfoList_t::const_iterator device_iterator;
-            if (device_user_id_to_open_.empty())
+            if (device_user_id_to_open.empty())
             {
                 device_iterator = device_list.begin();
                 camera_.Attach(tl_factory_.CreateDevice(*device_iterator));
@@ -79,7 +76,7 @@ public:
                 {
                     std::string device_user_id_found(
                         device_iterator->GetUserDefinedName());
-                    if (device_user_id_to_open_ == device_user_id_found)
+                    if (device_user_id_to_open == device_user_id_found)
                     {
                         found_desired_device = true;
                         break;

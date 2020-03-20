@@ -41,6 +41,17 @@ singularity shell -B /opt/pylon5 containers/blmc_ei.sif
 
 -B binds the directory /opt/pylon5 to the container so that the directories and the files inside it are accessible from within the container
 
+### Demo instructions for the camera
+
+run as follows to use a camera that requires the pylon interface. 
+
+``` python
+python3 demo_camera.py --pylon
+```
+
+Not passing `--pylon` will create a camera object from the system's webcam, or any
+other camera connected (if there is one) that can be accessed via just OpenCV itself.
+
 ### Exceptions and how to deal with them
 
 1. In case of a runtime exception, use a smaller USB 3.0 cable.
