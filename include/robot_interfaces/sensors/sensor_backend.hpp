@@ -76,17 +76,16 @@ private:
     {
         for (long int t = 0; !destructor_was_called_; t++)
         {
-            bool flag = sensor_driver_->is_access_successful();
-            if (flag)
+            ObservationType sensor_observation;
+            try
             {
-                ObservationType sensor_observation;
                 sensor_observation = sensor_driver_->get_observation();
-                sensor_data_->observation->append(sensor_observation);
             }
-            else
+            catch (const std::runtime_error &e)
             {
-                std::cerr << "Cannot access the camera." << std::endl;
+                std::cerr << e.what() << std::endl;
             }
+            sensor_data_->observation->append(sensor_observation);
         }
     }
 };

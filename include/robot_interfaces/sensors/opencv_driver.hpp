@@ -33,29 +33,6 @@ public:
     }
 
     /**
-     * @brief Find out if the camera can be accessed and
-     * if the video capture has been started.
-     * @return true/false
-     */
-    bool is_access_successful()
-    {
-        if (!video_capture_.isOpened())
-        {
-#ifdef VERBOSE
-            std::cout << "Could not access camera stream :(" << std::endl;
-#endif
-            return false;
-        }
-        else
-        {
-#ifdef VERBOSE
-            std::cout << "Succeeded in accessing camera stream!" << std::endl;
-#endif
-            return true;
-        }
-    }
-
-    /**
      * @brief Grab a single frame along with its timestamp.
      *
      * @return Image frame consisting of an image matrix and the time at
@@ -63,13 +40,23 @@ public:
      */
     CameraObservation get_observation()
     {
-        CameraObservation image_frame;
-        cv::Mat frame;
-        double current_time = real_time_tools::Timer::get_current_time_sec();
-        video_capture_ >> frame;
-        image_frame.image = frame;
-        image_frame.time_stamp = current_time;
-        return image_frame;
+        if (!video_capture_.isOpened())
+        {
+            throw std::runtime_error("Could not access camera stream :(");
+        }
+        else
+        {
+ #ifdef VERBOSE
+            std::cout << "Succeeded in accessing camera stream!" << std::endl;
+#endif
+            CameraObservation image_frame;
+            cv::Mat frame;
+            double current_time = real_time_tools::Timer::get_current_time_sec();
+            video_capture_ >> frame;
+            image_frame.image = frame;
+            image_frame.time_stamp = current_time;
+            return image_frame;
+        }
     }
 };
 

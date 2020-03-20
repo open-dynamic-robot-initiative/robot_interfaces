@@ -30,6 +30,11 @@ set(CATKIN_PKGS ${CATKIN_PKGS}
 )
 find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
 find_package(OpenCV 3 REQUIRED)
+find_package(Pylon)
+
+if (${Pylon_FOUND})
+    add_definitions(-DPylon_FOUND)
+endif()
 
 search_for_eigen()
 
@@ -43,6 +48,7 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/include
     ${catkin_INCLUDE_DIRS}
     ${Eigen_INCLUDE_DIRS}
+    ${Pylon_INCLUDE_DIRS}
     ${OpenCV_INCLUDE_DIRS}
 )
 
@@ -87,7 +93,7 @@ set(py_camera_types_SRC_FILES
   srcpy/py_camera_types.cpp
 )
 pybind11_add_module(py_camera_types ${py_camera_types_SRC_FILES})
-target_link_libraries(py_camera_types PRIVATE ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(py_camera_types PRIVATE ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES})
 set_target_properties(py_camera_types PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
 install(TARGETS py_camera_types DESTINATION ${CATKIN_PACKAGE_PYTHON_DESTINATION})
