@@ -26,7 +26,7 @@
 namespace robot_interfaces
 {
 /**
- * @brief Driver for interacting with a camera via Pylon and store
+ * @brief Driver for interacting with a camera via Pylon and storing
  * images using OpenCV.
  */
 class PylonDriver : public SensorDriver<CameraObservation>
@@ -39,6 +39,10 @@ public:
     const std::string& device_user_id_to_open_;
     Pylon::CTlFactory& tl_factory_;
 
+    /**
+     * @param device_user_id The id of the camera device to open and
+     * grab images from
+     */
     PylonDriver(const std::string& device_user_id)
         : device_user_id_to_open_(device_user_id),
           tl_factory_(Pylon::CTlFactory::GetInstance())
@@ -134,6 +138,7 @@ public:
         }
         else
         {
+            Pylon::PylonTerminate();
             throw std::runtime_error(
                 "Failed to access images from the camera.");
         }
