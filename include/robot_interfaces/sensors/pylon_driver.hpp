@@ -43,12 +43,12 @@ public:
      */
     PylonDriver(const std::string& device_user_id_to_open)
     {
-        Pylon::CTlFactory& tl_factory_ = Pylon::CTlFactory::GetInstance();
+        Pylon::CTlFactory& tl_factory = Pylon::CTlFactory::GetInstance();
         Pylon::PylonInitialize();
         Pylon::DeviceInfoList_t device_list;
-        std::cout << tl_factory_.EnumerateDevices(device_list) << std::endl;
+        std::cout << tl_factory.EnumerateDevices(device_list) << std::endl;
 
-        if (tl_factory_.EnumerateDevices(device_list) == 0)
+        if (tl_factory.EnumerateDevices(device_list) == 0)
         {
             Pylon::PylonTerminate();
             throw std::runtime_error("No devices present, please connect one.");
@@ -60,7 +60,7 @@ public:
             if (device_user_id_to_open.empty())
             {
                 device_iterator = device_list.begin();
-                camera_.Attach(tl_factory_.CreateDevice(*device_iterator));
+                camera_.Attach(tl_factory.CreateDevice(*device_iterator));
                 std::cout
                     << "Desired device not found. Creating a camera object "
                        "with the first device id in the device list."
@@ -85,7 +85,7 @@ public:
 
                 if (found_desired_device)
                 {
-                    camera_.Attach(tl_factory_.CreateDevice(*device_iterator));
+                    camera_.Attach(tl_factory.CreateDevice(*device_iterator));
                 }
                 else
                 {
