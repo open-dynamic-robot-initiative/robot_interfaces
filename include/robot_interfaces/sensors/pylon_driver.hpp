@@ -36,8 +36,8 @@ public:
     Pylon::CInstantCamera camera_;
     Pylon::CImageFormatConverter format_converter_;
     Pylon::CPylonImage pylon_image_;
-    const std::string& device_user_id_to_open_;
     Pylon::CTlFactory& tl_factory_;
+    const std::string& device_user_id_to_open_;
 
     /**
      * @param device_user_id The id of the camera device to open and
@@ -138,7 +138,6 @@ public:
         }
         else
         {
-            Pylon::PylonTerminate();
             throw std::runtime_error(
                 "Failed to access images from the camera.");
         }

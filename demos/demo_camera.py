@@ -33,7 +33,7 @@ def main():
                                         camera_driver, camera_data)
     camera_frontend = robot_interfaces.camera.Frontend(camera_data)
 
-    for _ in range(10):
+    while True:
         observation = camera_frontend.get_latest_observation()
         window_name = "Image Stream"
         cv2.imshow(window_name, np.array(observation.image, copy=False))
