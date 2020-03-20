@@ -9,7 +9,7 @@ camera, and the available methods for that.
 import argparse
 import numpy as np
 import cv2
-import pickle
+
 import robot_interfaces
 
 
@@ -33,16 +33,11 @@ def main():
                                         camera_driver, camera_data)
     camera_frontend = robot_interfaces.camera.Frontend(camera_data)
 
-    img_list = []
-
     for _ in range(10):
         observation = camera_frontend.get_latest_observation()
-        img_list.append(observation)
-        # print("image dimensions", np.array(observation.image, copy=False).shape[0], np.array(observation.image, copy=False).shape[1], np.array(observation.image, copy=False).shape[2])
         window_name = "Image Stream"
         cv2.imshow(window_name, np.array(observation.image, copy=False))
         cv2.waitKey(3)
-    pickle.dump(img_list, open("save.p", "wb"))
 
 if __name__ == "__main__":
     main()
