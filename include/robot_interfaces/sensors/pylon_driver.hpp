@@ -30,10 +30,10 @@ class PylonDriver : public SensorDriver<CameraObservation>
 public:
     Pylon::PylonAutoInitTerm auto_init_term_;
     Pylon::CInstantCamera camera_;
-    Pylon::CTlFactory& tl_factory_;
     Pylon::CImageFormatConverter format_converter_;
     Pylon::CPylonImage pylon_image_;
     const std::string& device_user_id_to_open_;
+    Pylon::CTlFactory& tl_factory_;
 
     PylonDriver(const std::string& device_user_id)
         : device_user_id_to_open_(device_user_id),
@@ -45,8 +45,8 @@ public:
 
         if (tl_factory_.EnumerateDevices(device_list) == 0)
         {
-            throw std::runtime_error("No devices present, please connect one.");
             Pylon::PylonTerminate();
+            throw std::runtime_error("No devices present, please connect one.");
         }
 
         else
@@ -84,10 +84,10 @@ public:
                 }
                 else
                 {
+                    Pylon::PylonTerminate();
                     throw std::runtime_error(
                         "Device id specified doesn't correspond to any "
                         "connected devices, please retry with a valid id.");
-                    Pylon::PylonTerminate();
                 }
 
                 camera_.Open();
@@ -116,30 +116,22 @@ public:
         CameraObservation image_frame;
         Pylon::CGrabResultPtr ptr_grab_result;
 
-        try
-        {
-            camera_.RetrieveResult(
-                5000, ptr_grab_result, Pylon::TimeoutHandling_ThrowException);
-            image_frame.time_stamp =
-                real_time_tools::Timer::get_current_time_sec();
+        camera_.RetrieveResult(
+            5000, ptr_grab_result, Pylon::TimeoutHandling_ThrowException);
+        image_frame.time_stamp = real_time_tools::Timer::get_current_time_sec();
 
-            if (ptr_grab_result->GrabSucceeded())
-            {
-                format_converter_.Convert(pylon_image_, ptr_grab_result);
-                image_frame.image = cv::Mat(ptr_grab_result->GetHeight(),
-                                            ptr_grab_result->GetWidth(),
-                                            CV_8UC3,
-                                            (uint8_t*)pylon_image_.GetBuffer());
-            }
-            else
-            {
-                throw std::runtime_error(
-                    "Failed to access images from the camera.");
-            }
-        }
-        catch (std::runtime_error& e)
+        if (ptr_grab_result->GrabSucceeded())
         {
-            std::cerr << e.what() << std::endl;
+            format_converter_.Convert(pylon_image_, ptr_grab_result);
+            image_frame.image = cv::Mat(ptr_grab_result->GetHeight(),
+                                        ptr_grab_result->GetWidth(),
+                                        CV_8UC3,
+                                        (uint8_t*)pylon_image_.GetBuffer());
+        }
+        else
+        {
+            throw std::runtime_error(
+                "Failed to access images from the camera.");
         }
         return image_frame;
     }

@@ -77,7 +77,14 @@ private:
         for (long int t = 0; !destructor_was_called_; t++)
         {
             ObservationType sensor_observation;
-            sensor_observation = sensor_driver_->get_observation();
+            try
+            {
+                sensor_observation = sensor_driver_->get_observation();
+            }
+            catch (const std::runtime_error &e)
+            {
+                std::cerr << e.what() << std::endl;
+            }
             sensor_data_->observation->append(sensor_observation);
         }
     }

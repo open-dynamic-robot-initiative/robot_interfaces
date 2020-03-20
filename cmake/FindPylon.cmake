@@ -26,6 +26,8 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+# 
+# This file is from https://github.com/basler/pylon-ros-camera/blob/master/pylon_camera/cmake/FindPylon.cmake
 #
 
 set(PYLON_ROOT $ENV{PYLON_ROOT})
@@ -35,17 +37,17 @@ endif()
 
 set(_PYLON_CONFIG "${PYLON_ROOT}/bin/pylon-config")
 if (EXISTS "${_PYLON_CONFIG}")
-    set(PYLON_FOUND TRUE)
+    set(Pylon_FOUND TRUE)
     execute_process(COMMAND ${_PYLON_CONFIG} --cflags-only-I OUTPUT_VARIABLE HEADERS_OUT)
     execute_process(COMMAND ${_PYLON_CONFIG} --libs-only-l OUTPUT_VARIABLE LIBS_OUT)
     execute_process(COMMAND ${_PYLON_CONFIG} --libs-only-L OUTPUT_VARIABLE LIBDIRS_OUT)
     string(REPLACE " " ";" HEADERS_OUT "${HEADERS_OUT}")
     string(REPLACE "-I" "" HEADERS_OUT "${HEADERS_OUT}")
-    string(REPLACE "\n" "" PYLON_INCLUDE_DIRS "${HEADERS_OUT}")
+    string(REPLACE "\n" "" Pylon_INCLUDE_DIRS "${HEADERS_OUT}")
 
     string(REPLACE " " ";" LIBS_OUT "${LIBS_OUT}")
     string(REPLACE "-l" "" LIBS_OUT "${LIBS_OUT}")
-    string(REPLACE "\n" "" PYLON_LIBRARIES "${LIBS_OUT}")
+    string(REPLACE "\n" "" Pylon_LIBRARIES "${LIBS_OUT}")
 
     string(REPLACE " " ";" LIBDIRS_OUT "${LIBDIRS_OUT}")
     string(REPLACE "-L" "" LIBDIRS_OUT "${LIBDIRS_OUT}")
@@ -56,5 +58,5 @@ if (EXISTS "${_PYLON_CONFIG}")
         link_directories(${LIBDIR})
     endforeach()
 else()
-    set(PYLON_FOUND FALSE)
+    set(Pylon_FOUND FALSE)
 endif()
