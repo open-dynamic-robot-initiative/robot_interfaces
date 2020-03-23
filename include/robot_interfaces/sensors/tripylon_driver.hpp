@@ -37,7 +37,7 @@ public:
     Pylon::CImageFormatConverter format_converter_;
     Pylon::CPylonImage pylon_image_;
 
-    PylonDriver(const std::vector<std::string&> device_user_ids_to_open)
+    TripylonDriver(std::vector<const std::string&> device_user_ids_to_open)
     {
         Pylon::CTlFactory& tl_factory = Pylon::CTlFactory::GetInstance();
         Pylon::PylonInitialize();
