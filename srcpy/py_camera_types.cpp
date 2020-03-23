@@ -10,6 +10,7 @@
 #include <robot_interfaces/sensors/opencv_driver.hpp>
 #ifdef Pylon_FOUND
 #include <robot_interfaces/sensors/pylon_driver.hpp>
+#include <robot_interfaces/sensors/tripylon_driver.hpp>
 #endif
 
 #include <robot_interfaces/sensors/pybind_sensors.hpp>
@@ -32,6 +33,12 @@ PYBIND11_MODULE(py_camera_types, m)
                      std::shared_ptr<PylonDriver>,
                      SensorDriver<CameraObservation>>(m, "PylonDriver")
         .def(pybind11::init<const std::string&>())
+        .def("get_observation", &PylonDriver::get_observation); 
+
+        pybind11::class_<TripylonDriver,
+                     std::shared_ptr<TripylonDriver>,
+                     SensorDriver<CameraObservation>>(m, "TripylonDriver")
+        .def(pybind11::init<std::vector<const std::string&>>())
         .def("get_observation", &PylonDriver::get_observation); 
 #endif       
 
