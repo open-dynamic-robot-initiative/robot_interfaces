@@ -60,7 +60,12 @@ void create_python_bindings(pybind11::module &m)
 
     pybind11::class_<typename Types::Backend, typename Types::BackendPtr>(
         m, "Backend")
-        .def("initialize", &Types::Backend::initialize);
+        .def("initialize",
+             &Types::Backend::initialize,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("wait_until_terminated",
+             &Types::Backend::wait_until_terminated,
+             pybind11::call_guard<pybind11::gil_scoped_release>());
 
     pybind11::class_<typename Types::Action>(m, "Action")
         .def_readwrite("torque", &Types::Action::torque)
@@ -82,6 +87,9 @@ void create_python_bindings(pybind11::module &m)
         .def_readwrite("velocity", &Types::Observation::velocity)
         .def_readwrite("torque", &Types::Observation::torque);
 
+    // Release the GIL when calling any of the front-end functions, so in case
+    // there are subthreads running Python, they have a chance to acquire the
+    // GIL.
     pybind11::class_<typename Types::Frontend, typename Types::FrontendPtr>(
         m, "Frontend")
         .def(pybind11::init<typename Types::BaseDataPtr>())

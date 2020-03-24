@@ -13,10 +13,11 @@
 #include <cmath>
 #include <cstdint>
 
+#include <real_time_tools/checkpoint_timer.hpp>
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
-#include <real_time_tools/checkpoint_timer.hpp>
 
+#include <robot_interfaces/global_signal_handler.hpp>
 #include <robot_interfaces/loggable.hpp>
 #include <robot_interfaces/monitored_robot_driver.hpp>
 #include <robot_interfaces/robot_data.hpp>
@@ -25,7 +26,6 @@
 
 namespace robot_interfaces
 {
-
 /**
  * @brief Communication link between RobotDriver and RobotData.
  *
@@ -48,17 +48,19 @@ public:
      * @param max_action_duration_s  See MonitoredRobotDriver.
      * @param max_inter_action_duration_s  See MonitoredRobotDriver.
      */
-    RobotBackend(
-        std::shared_ptr<RobotDriver<Action, Observation>> robot_driver,
-        std::shared_ptr<RobotData<Action, Observation>> robot_data,
-        const double max_action_duration_s,
-        const double max_inter_action_duration_s)
+    RobotBackend(std::shared_ptr<RobotDriver<Action, Observation>> robot_driver,
+                 std::shared_ptr<RobotData<Action, Observation>> robot_data,
+                 const double max_action_duration_s,
+                 const double max_inter_action_duration_s)
         : robot_driver_(
               robot_driver, max_action_duration_s, max_inter_action_duration_s),
           robot_data_(robot_data),
           destructor_was_called_(false),
           max_action_repetitions_(0)
     {
+        GlobalSignalHandler::initialize();
+
+        loop_is_running_ = true;
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
         thread_->create_realtime_thread(&RobotBackend::loop, this);
     }
@@ -98,10 +100,22 @@ public:
         robot_driver_.initialize();
     }
 
+    /**
+     * @brief Wait until the backend loop terminates.
+     */
+    void wait_until_terminated() const
+    {
+        while (loop_is_running_)
+        {
+            real_time_tools::Timer::sleep_microseconds(100000);
+        }
+    }
+
 private:
     MonitoredRobotDriver<Action, Observation> robot_driver_;
     std::shared_ptr<RobotData<Action, Observation>> robot_data_;
     std::atomic<bool> destructor_was_called_;
+    std::atomic<bool> loop_is_running_;
 
     /**
      * @brief Number of times the previous action is repeated if no new one
@@ -112,6 +126,12 @@ private:
     real_time_tools::CheckpointTimer<6, false> timer_;
 
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
+
+    bool has_shutdown_request() const
+    {
+        return destructor_was_called_ ||
+               GlobalSignalHandler::has_received_sigint();
+    }
 
     // control loop
     // ------------------------------------------------------------
@@ -134,12 +154,12 @@ private:
 
         // wait until first desired_action was received
         // ----------------------------
-        while (!destructor_was_called_ &&
+        while (!has_shutdown_request() &&
                !robot_data_->desired_action->wait_for_timeindex(0, 0.1))
         {
         }
 
-        for (long int t = 0; !destructor_was_called_; t++)
+        for (long int t = 0; !has_shutdown_request(); t++)
         {
             // TODO: figure out latency stuff!!
 
@@ -203,19 +223,21 @@ private:
                 std::cerr << "Error: " << status.error_message
                           << "\nRobot is shut down." << std::endl;
                 robot_driver_.shutdown();
-                return;
+                break;
             }
             timer_.checkpoint("status");
 
             // early exit if destructor has been called
-            while (!robot_data_->desired_action->wait_for_timeindex(t, 0.1))
+            while (!has_shutdown_request() &&
+                   !robot_data_->desired_action->wait_for_timeindex(t, 0.1))
             {
-                if (destructor_was_called_)
-                {
-                    // TODO should shut down robot?
-                    return;
-                }
             }
+            if (has_shutdown_request())
+            {
+                // TODO should shut down robot?
+                break;
+            }
+
             Action desired_action = (*robot_data_->desired_action)[t];
             timer_.checkpoint("get action");
 
@@ -230,6 +252,8 @@ private:
                 timer_.print_statistics();
             }
         }
+
+        loop_is_running_ = false;
     }
 };
 
