@@ -33,9 +33,11 @@ class TripylonDriver : public SensorDriver<CameraObservation>
 {
 public:
     Pylon::PylonAutoInitTerm auto_init_term_;
-    Pylon::CInstantCameraArray cameras_;
+    // Pylon::CInstantCameraArray cameras_;
+    std::array<Pylon::CInstantCamera> cameras_[3];
     Pylon::CImageFormatConverter format_converter_;
     Pylon::CPylonImage pylon_image_;
+    int index = 0;
 
     TripylonDriver(std::vector<const std::string&> device_user_ids_to_open)
     {
@@ -59,14 +61,13 @@ public:
 
             else
             {
-                cameras_(3);
+                
                 //TODO: check this initialization, and add a check here- (min(len(device_list)), 3), but then we don't want to creat an array with no. of cameras other than 3
 
                 int found_desired_device = 0;
                 Pylon::DeviceInfoList_t::const_iterator device_iterator;
-                const std::string& device_user_id_to_open;
 
-                for (index = 0; index < device_user_ids_to_open.size(); ++index)
+                for (index = 0; index < device_user_ids_to_open.size(); index++)
                 {
                     for (device_iterator = device_list.begin();
                      device_iterator != device_list.end();
@@ -77,43 +78,36 @@ public:
                         if(device_user_id_found == device_user_ids_to_open[index])
                         {
                             found_desired_device +=1;
+                            cameras_[index].Attach(tl_factory.CreateDevice(*device_iterator));
+                            cameras_[index].Open();
+                            cameras_[index].MaxNumBuffer = 5;
+                            cameras_[index].StartGrabbing(); // TODO: Pylon::GrabStrategy_OneByOne, Pylon::GrabLoop_ProvidedByInstantCamera
                             break;
                         }
                     }
                 }
-                if (found_desired_device == 3)
-                {
-                    index = 0;
-                    for (device_iterator = device_list.begin();
-                     device_iterator != device_list.end();
-                     ++device_iterator)
-                    {
-                        cameras_[index].Attach(tl_factory.CreateDevice(*device_iterator));
-                        index +=1;
-                    }
-                }
-                else
+                if (found_desired_device != 3)
                 {
                     Pylon::PylonTerminate();
                     throw std::runtime_error("Device ids specified do not correspond to the ids given to the connected devices. Please specify a valid vector of ids, and retry.")
                 }
-                cameras_.Open();
-                cameras_.MaxNumBuffer = 5;
+
                 format_converter_.OutputPixelFormat =
                     Pylon::PixelType_BGR8packed;
-
-                cameras_.StartGrabbing(Pylon::GrabStrategy_OneByOne, Pylon::GrabLoop_ProvidedByInstantCamera);
             }
         }
     }
 
     ~TripylonDriver()
     {
-        cameras_.StopGrabbing();
+        for (index = 0; index < 3; index++)
+        {
+            cameras_[index].StopGrabbing();
+        }
         Pylon::PylonTerminate();
     }
 
-    std::vector<CameraObservation> get_observation()
+    CameraObservation get_observation()
     {
         std::vector<CameraObservation> image_frames;
         Pylon::CGrabResultPtr ptr_grab_result;
