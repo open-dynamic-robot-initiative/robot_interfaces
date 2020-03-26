@@ -23,19 +23,28 @@ namespace robot_interfaces
 class SyncDriver : public SensorDriver<TricameraObservation>
 {
 public:
+    // PylonDriver camera_1("cam_1");
 
-    PylonDriver camera_1("cam_1");
-    PylonDriver camera_2("cam_2");
-    PylonDriver camera_3("cam_3");
+    SyncDriver(const std::array<std::string, 3> device_ids) : cam_1(device_ids[0]), cam_2(device_ids[1]), cam_3(device_ids[3])
+    {
+        
+    }
 
     TricameraObservation get_observation()
     {
         int index;
         TricameraObservation tricam_obs;
-        for (index = 0; index < 3; index++)
-        {
-            tricam_obs.cam_array[index] = camera_1.get_observation();
-        }
+
+        tricam_obs.cam_array[0] = cam_1.get_observation();
+        tricam_obs.cam_array[1] = cam_2.get_observation();
+        tricam_obs.cam_array[2] = cam_3.get_observation();
+
+        return tricam_obs;
     }
+
+private:
+    PylonDriver cam_1, cam_2, cam_3;    
     
-}
+};
+
+} //namespace robot_interfaces

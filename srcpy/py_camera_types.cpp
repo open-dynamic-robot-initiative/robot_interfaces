@@ -36,8 +36,10 @@ PYBIND11_MODULE(py_camera_types, m)
         .def(pybind11::init<const std::string&>())
         .def("get_observation", &PylonDriver::get_observation); 
 
-    pybind11::class_<SyncDriver>(m, "SyncDriver")
-        .def(pybind11::init<>());
+    pybind11::class_<SyncDriver, std::shared_ptr<SyncDriver>,
+                     SensorDriver<TricameraObservation>>(m, "SyncDriver")
+        .def(pybind11::init<const std::array<std::string, 3>>())
+        .def("get_observation", &SyncDriver::get_observation);     
 #endif
 
     pybind11::class_<CameraObservation>(m, "CameraObservation")
