@@ -222,7 +222,6 @@ private:
             {
                 std::cerr << "Error: " << status.error_message
                           << "\nRobot is shut down." << std::endl;
-                robot_driver_.shutdown();
                 break;
             }
             timer_.checkpoint("status");
@@ -234,7 +233,6 @@ private:
             }
             if (has_shutdown_request())
             {
-                // TODO should shut down robot?
                 break;
             }
 
@@ -253,6 +251,7 @@ private:
             }
         }
 
+        robot_driver_.shutdown();
         loop_is_running_ = false;
     }
 };
