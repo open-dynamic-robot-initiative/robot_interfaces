@@ -7,10 +7,11 @@
  */
 
 #include <robot_interfaces/sensors/camera_observation.hpp>
+#include <robot_interfaces/sensors/tricamera_observation.hpp>
 #include <robot_interfaces/sensors/opencv_driver.hpp>
 #ifdef Pylon_FOUND
 #include <robot_interfaces/sensors/pylon_driver.hpp>
-#include <robot_interfaces/sensors/tripylon_driver.hpp>
+#include <robot_interfaces/sensors/sync_driver.hpp>
 #endif
 
 #include <robot_interfaces/sensors/pybind_sensors.hpp>
@@ -35,17 +36,18 @@ PYBIND11_MODULE(py_camera_types, m)
         .def(pybind11::init<const std::string&>())
         .def("get_observation", &PylonDriver::get_observation); 
 
-        pybind11::class_<TripylonDriver,
-                     std::shared_ptr<TripylonDriver>,
-                     SensorDriver<CameraObservation>>(m, "TripylonDriver")
-        .def(pybind11::init<std::vector<const std::string&>>())
-        .def("get_observation", &PylonDriver::get_observation); 
-#endif       
+    pybind11::class_<SyncDriver>(m, "SyncDriver")
+        .def(pybind11::init<>());
+#endif
 
     pybind11::class_<CameraObservation>(m, "CameraObservation")
         .def(pybind11::init<>())
         .def_readwrite("image", &CameraObservation::image)
         .def_readwrite("time_stamp", &CameraObservation::time_stamp);
+
+    pybind11::class_<TricameraObservation>(m, "TricameraObservation")
+        .def(pybind11::init<>())
+        .def_readwrite("cam_array", &TricameraObservation::cam_array);
 
     // The following block of code for binding cv::Mat to np.ndarray is from
     // [here](https://alexsm.com/pybind11-buffer-protocol-opencv-to-numpy/).
