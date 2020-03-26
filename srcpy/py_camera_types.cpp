@@ -34,22 +34,13 @@ PYBIND11_MODULE(py_camera_types, m)
                      std::shared_ptr<PylonDriver>,
                      SensorDriver<CameraObservation>>(m, "PylonDriver")
         .def(pybind11::init<const std::string&>())
-        .def("get_observation", &PylonDriver::get_observation); 
-
-    pybind11::class_<SyncDriver, std::shared_ptr<SyncDriver>,
-                     SensorDriver<TricameraObservation>>(m, "SyncDriver")
-        .def(pybind11::init<const std::array<std::string, 3>>())
-        .def("get_observation", &SyncDriver::get_observation);     
+        .def("get_observation", &PylonDriver::get_observation);     
 #endif
 
     pybind11::class_<CameraObservation>(m, "CameraObservation")
         .def(pybind11::init<>())
         .def_readwrite("image", &CameraObservation::image)
         .def_readwrite("time_stamp", &CameraObservation::time_stamp);
-
-    pybind11::class_<TricameraObservation>(m, "TricameraObservation")
-        .def(pybind11::init<>())
-        .def_readwrite("cam_array", &TricameraObservation::cam_array);
 
     // The following block of code for binding cv::Mat to np.ndarray is from
     // [here](https://alexsm.com/pybind11-buffer-protocol-opencv-to-numpy/).

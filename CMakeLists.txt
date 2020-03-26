@@ -98,6 +98,15 @@ set_target_properties(py_camera_types PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
 install(TARGETS py_camera_types DESTINATION ${CATKIN_PACKAGE_PYTHON_DESTINATION})
 
+set(py_tricamera_types_SRC_FILES
+  srcpy/py_tricamera_types.cpp
+)
+pybind11_add_module(py_tricamera_types ${py_tricamera_types_SRC_FILES})
+target_link_libraries(py_tricamera_types PRIVATE ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES})
+set_target_properties(py_tricamera_types PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
+install(TARGETS py_tricamera_types DESTINATION ${CATKIN_PACKAGE_PYTHON_DESTINATION})
+
 # finger #
 set(py_finger_types_SRC_FILES
   srcpy/py_finger_types.cpp

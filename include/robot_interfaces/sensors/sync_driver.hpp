@@ -25,7 +25,7 @@ class SyncDriver : public SensorDriver<TricameraObservation>
 public:
     // PylonDriver camera_1("cam_1");
 
-    SyncDriver(const std::array<std::string, 3> device_ids) : cam_1(device_ids[0]), cam_2(device_ids[1]), cam_3(device_ids[3])
+    SyncDriver(const std::string& device_id_1, const std::string& device_id_2, const std::string& device_id_3) : cam_1(device_id_1), cam_2(device_id_2), cam_3(device_id_3)
     {
         
     }
