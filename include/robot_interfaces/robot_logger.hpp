@@ -116,17 +116,16 @@ public:
 
         std::vector<std::string> header;
 
-        header.push_back("#");
-        header.push_back("[Timestamp]");
-        header.push_back("Time_Index");
+        header.push_back("#time_index");
+        header.push_back("timestamp");
 
-        append_name_to_header("(S)", status_name, status_data, header);
+        append_name_to_header("status", status_name, status_data, header);
         append_name_to_header(
-            "(O)", observation_name, observation_data, header);
+            "observation", observation_name, observation_data, header);
         append_name_to_header(
-            "(AA)", applied_action_name, applied_action_data, header);
+            "applied_action", applied_action_name, applied_action_data, header);
         append_name_to_header(
-            "(DA)", desired_action_name, desired_action_data, header);
+            "desired_action", desired_action_name, desired_action_data, header);
 
         return header;
     }
@@ -212,8 +211,8 @@ public:
                 std::vector<std::vector<double>> desired_action_data =
                     desired_action.get_data();
 
-                output_file_ << logger_data_->observation->timestamp_s(j) << " "
-                             << j << " ";
+                output_file_ << j << " "
+                    << logger_data_->observation->timestamp_s(j) << " ";
 
                 append_field_data_to_file(status_data);
                 append_field_data_to_file(observation_data);
