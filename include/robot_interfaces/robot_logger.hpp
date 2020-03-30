@@ -70,10 +70,10 @@ public:
     std::ofstream output_file_;
     std::string output_file_name_;
 
-    RobotLogger(std::shared_ptr<
-                    robot_interfaces::RobotData<Action, Observation>>
-                    robot_data,
-                int block_size)
+    RobotLogger(
+        std::shared_ptr<robot_interfaces::RobotData<Action, Observation>>
+            robot_data,
+        int block_size)
         : logger_data_(robot_data),
           block_size_(block_size),
           stop_was_called_(false)
@@ -212,7 +212,8 @@ public:
                     desired_action.get_data();
 
                 output_file_ << j << " "
-                    << logger_data_->observation->timestamp_s(j) << " ";
+                             << logger_data_->observation->timestamp_s(j)
+                             << " ";
 
                 append_field_data_to_file(status_data);
                 append_field_data_to_file(observation_data);
@@ -311,13 +312,15 @@ public:
     }
 
     /**
-     * @brief Call start() to create the thread for the RobotLogger and start logging!
+     * @brief Call start() to create the thread for the RobotLogger and start
+     * logging!
      *
      * \note
-     * Every time you start the logger with the same file name, it will obviously
-     * append newer data to the same file. This shouldn't be a problem. But for
-     * different log files, specify different file names while starting the logger.
-     * 
+     * Every time you start the logger with the same file name, it will
+     * obviously append newer data to the same file. This shouldn't be a
+     * problem. But for different log files, specify different file names while
+     * starting the logger.
+     *
      * @param filename The name of the log file.
      */
     void start(std::string filename)
