@@ -89,11 +89,6 @@ public:
         thread_->join();
     }
 
-    double get_max_inter_action_duration_s()
-    {
-        return max_inter_action_duration_s_;
-    }
-
     /**
      * @brief Apply desired action on the robot.
      *
