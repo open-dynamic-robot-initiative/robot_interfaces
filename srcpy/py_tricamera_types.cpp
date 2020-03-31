@@ -21,10 +21,13 @@ PYBIND11_MODULE(py_tricamera_types, m)
     create_sensor_bindings<TricameraObservation>(m);
 
 #ifdef Pylon_FOUND
-    pybind11::class_<SyncDriver, std::shared_ptr<SyncDriver>,
+    pybind11::class_<SyncDriver,
+                     std::shared_ptr<SyncDriver>,
                      SensorDriver<TricameraObservation>>(m, "SyncDriver")
-        .def(pybind11::init<const std::string&, const std::string&, const std::string&>())
-        .def("get_observation", &SyncDriver::get_observation);     
+        .def(pybind11::init<const std::string&,
+                            const std::string&,
+                            const std::string&>())
+        .def("get_observation", &SyncDriver::get_observation);
 #endif
 
     pybind11::class_<TricameraObservation>(m, "TricameraObservation")

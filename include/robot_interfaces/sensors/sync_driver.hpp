@@ -1,6 +1,7 @@
 /**
  * @file
- * @brief Wrapper on the Pylon Driver to synchronise three pylon dependent cameras.
+ * @brief Wrapper on the Pylon Driver to synchronise three pylon dependent
+ * cameras.
  * @copyright 2020, New York University, Max Planck Gesellschaft. All rights
  *            reserved.
  * @license BSD 3-clause
@@ -13,10 +14,10 @@
 
 #include <real_time_tools/timer.hpp>
 
-#include <robot_interfaces/sensors/tricamera_observation.hpp>
-#include <robot_interfaces/sensors/sensor_driver.hpp>
-#include <robot_interfaces/sensors/pylon_driver.hpp>
 #include <pylon/PylonIncludes.h>
+#include <robot_interfaces/sensors/pylon_driver.hpp>
+#include <robot_interfaces/sensors/sensor_driver.hpp>
+#include <robot_interfaces/sensors/tricamera_observation.hpp>
 
 namespace robot_interfaces
 {
@@ -34,11 +35,10 @@ public:
      */
     SyncDriver(const std::string& device_id_1,
                const std::string& device_id_2,
-               const std::string& device_id_3) :
-               cam_1(device_id_1),
-               cam_2(device_id_2),
-               cam_3(device_id_3)
-    {}
+               const std::string& device_id_3)
+        : cam_1(device_id_1), cam_2(device_id_2), cam_3(device_id_3)
+    {
+    }
     /**
      * @brief Get the latest observation from the three cameras
      * @return TricameraObservation
@@ -56,8 +56,7 @@ public:
     }
 
 private:
-    PylonDriver cam_1, cam_2, cam_3;    
-    
+    PylonDriver cam_1, cam_2, cam_3;
 };
 
-} //namespace robot_interfaces
+}  // namespace robot_interfaces
