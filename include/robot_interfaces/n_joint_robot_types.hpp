@@ -57,7 +57,7 @@ struct NJointRobotTypes
 
         std::vector<std::string> get_name() override
         {
-            return {"Torque", "Position", "Position_kp", "Position_kd"};
+            return {"torque", "position", "position_kp", "position_kd"};
         }
 
         std::vector<std::vector<double>> get_data() override
@@ -217,7 +217,7 @@ struct NJointRobotTypes
 
         std::vector<std::string> get_name() override
         {
-            return {"Position", "Velocity", "Torque"};
+            return {"position", "velocity", "torque"};
         }
 
         std::vector<std::vector<double>> get_data() override
