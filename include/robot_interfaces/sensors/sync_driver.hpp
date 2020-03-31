@@ -20,16 +20,29 @@
 
 namespace robot_interfaces
 {
+/**
+ * @brief Driver to create three instances of the PylonDriver
+ * and get observations from them.
+ */
 class SyncDriver : public SensorDriver<TricameraObservation>
 {
 public:
-    // PylonDriver camera_1("cam_1");
-
-    SyncDriver(const std::string& device_id_1, const std::string& device_id_2, const std::string& device_id_3) : cam_1(device_id_1), cam_2(device_id_2), cam_3(device_id_3)
-    {
-        
-    }
-
+    /**
+     * @param device_id_1 device user id of first camera
+     * @param device_id_2 likewise, the 2nd's
+     * @param device_id_3 and the 3rd's
+     */
+    SyncDriver(const std::string& device_id_1,
+               const std::string& device_id_2,
+               const std::string& device_id_3) :
+               cam_1(device_id_1),
+               cam_2(device_id_2),
+               cam_3(device_id_3)
+    {}
+    /**
+     * @brief Get the latest observation from the three cameras
+     * @return TricameraObservation
+     */
     TricameraObservation get_observation()
     {
         int index;

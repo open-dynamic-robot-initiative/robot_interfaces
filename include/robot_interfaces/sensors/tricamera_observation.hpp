@@ -22,7 +22,6 @@ namespace robot_interfaces
 /**
  * @brief Observation structure to store cv::Mat images with corresponding
  * timestamps.
- *
  */
 struct TricameraObservation
 {
