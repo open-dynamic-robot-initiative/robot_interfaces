@@ -7,13 +7,10 @@
  */
 
 #include <robot_interfaces/sensors/camera_observation.hpp>
-#include <robot_interfaces/sensors/tricamera_observation.hpp>
 #include <robot_interfaces/sensors/opencv_driver.hpp>
 #ifdef Pylon_FOUND
 #include <robot_interfaces/sensors/pylon_driver.hpp>
-#include <robot_interfaces/sensors/sync_driver.hpp>
 #endif
-
 #include <robot_interfaces/sensors/pybind_sensors.hpp>
 #include <robot_interfaces/sensors/sensor_driver.hpp>
 
