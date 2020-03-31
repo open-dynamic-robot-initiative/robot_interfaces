@@ -39,5 +39,6 @@ def main():
         cv2.imshow(window_name, np.array(observation.image, copy=False))
         cv2.waitKey(3)
 
+
 if __name__ == "__main__":
     main()

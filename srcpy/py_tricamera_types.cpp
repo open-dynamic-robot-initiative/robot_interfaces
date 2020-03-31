@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief Create bindings for camera sensors
+ * @brief Create bindings for three pylon dependent camera sensors
  * @copyright 2020, New York University, Max Planck Gesellschaft. All rights
  *            reserved.
  * @license BSD 3-clause
@@ -26,7 +26,6 @@ PYBIND11_MODULE(py_tricamera_types, m)
         .def(pybind11::init<const std::string&, const std::string&, const std::string&>())
         .def("get_observation", &SyncDriver::get_observation);     
 #endif
-
 
     pybind11::class_<TricameraObservation>(m, "TricameraObservation")
         .def(pybind11::init<>())
