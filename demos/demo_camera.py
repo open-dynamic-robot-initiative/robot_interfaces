@@ -25,7 +25,7 @@ def main():
 
     camera_data = robot_interfaces.camera.Data()
     if args.pylon:
-        camera_driver = robot_interfaces.camera.PylonDriver("cam_1")
+        camera_driver = robot_interfaces.camera.PylonDriver("cam_1", True)
     else:
         camera_driver = robot_interfaces.camera.OpenCVDriver(0)
 
@@ -35,9 +35,9 @@ def main():
 
     while True:
         observation = camera_frontend.get_latest_observation()
-        window_name = "Image Stream"
-        cv2.imshow(window_name, np.array(observation.image, copy=False))
-        cv2.waitKey(3)
+        # window_name = "Image Stream"
+        # cv2.imshow(window_name, np.array(observation.image, copy=False))
+        # cv2.waitKey(3)
 
 if __name__ == "__main__":
     main()

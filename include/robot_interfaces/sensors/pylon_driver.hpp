@@ -36,12 +36,13 @@ public:
     Pylon::CInstantCamera camera_;
     Pylon::CImageFormatConverter format_converter_;
     Pylon::CPylonImage pylon_image_;
+    bool store_;
 
     /**
      * @param device_user_id_to_open The id of the camera device to open and
      * grab images from
      */
-    PylonDriver(const std::string& device_user_id_to_open)
+    PylonDriver(const std::string& device_user_id_to_open, bool store) : store_(store)
     {
         Pylon::CTlFactory& tl_factory = Pylon::CTlFactory::GetInstance();
         Pylon::PylonInitialize();
@@ -96,9 +97,16 @@ public:
 
                 camera_.Open();
                 camera_.MaxNumBuffer = 5;
-                format_converter_.OutputPixelFormat =
+                if (store_)
+                {
+                    format_converter_.OutputPixelFormat =
+                    Pylon::PixelType_BayerBG8;
+                }
+                else
+                {
+                    format_converter_.OutputPixelFormat =
                     Pylon::PixelType_BGR8packed;
-
+                }
                 camera_.StartGrabbing();
             }
         }
@@ -127,10 +135,20 @@ public:
         if (ptr_grab_result->GrabSucceeded())
         {
             format_converter_.Convert(pylon_image_, ptr_grab_result);
-            image_frame.image = cv::Mat(ptr_grab_result->GetHeight(),
+            if (store_)
+            {
+                image_frame.image = cv::Mat(ptr_grab_result->GetHeight(),
+                                        ptr_grab_result->GetWidth(),
+                                        CV_8UC1,
+                                        (uint8_t*)pylon_image_.GetBuffer());
+            }
+            else
+            {
+                image_frame.image = cv::Mat(ptr_grab_result->GetHeight(),
                                         ptr_grab_result->GetWidth(),
                                         CV_8UC3,
                                         (uint8_t*)pylon_image_.GetBuffer());
+            }     
         }
         else
         {

@@ -31,7 +31,7 @@ PYBIND11_MODULE(py_camera_types, m)
     pybind11::class_<PylonDriver,
                      std::shared_ptr<PylonDriver>,
                      SensorDriver<CameraObservation>>(m, "PylonDriver")
-        .def(pybind11::init<const std::string&>())
+        .def(pybind11::init<const std::string&, bool>())
         .def("get_observation", &PylonDriver::get_observation); 
 #endif       
 
