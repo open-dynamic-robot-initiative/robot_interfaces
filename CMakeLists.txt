@@ -29,7 +29,7 @@ set(CATKIN_PKGS ${CATKIN_PKGS}
   time_series
 )
 find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
-find_package(OpenCV 3 REQUIRED)
+find_package(OpenCV REQUIRED)
 find_package(Pylon)
 
 if (${Pylon_FOUND})
