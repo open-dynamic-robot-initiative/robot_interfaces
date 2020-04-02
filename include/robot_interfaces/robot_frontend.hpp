@@ -120,8 +120,8 @@ public:
         robot_data_->observation->timestamp_ms(t);
     }
 
-private:
-    std::shared_ptr<RobotData<Action, Observation>> robot_data_;
+protected:
+    std::shared_ptr<RobotData<Action, Observation, Status>> robot_data_;
 };
 
 }  // namespace robot_interfaces

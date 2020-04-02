@@ -178,6 +178,12 @@ private:
     {
         real_time_tools::set_cpu_dma_latency(0);
 
+        // there is no timing constrain
+        if (std::isinf(max_action_duration_s_))
+        {
+            return;
+        }
+
         // wait for the first data
         while (!is_shutdown_ &&
                !action_start_logger_.wait_for_timeindex(0, 0.1))
@@ -197,7 +203,6 @@ private:
                 shutdown();
                 return;
             }
-
             bool action_has_started_on_time =
                 action_start_logger_.wait_for_timeindex(
                     t + 1, max_inter_action_duration_s_);
