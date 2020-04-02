@@ -8,7 +8,7 @@
 
 #include <robot_interfaces/sensors/tricamera_observation.hpp>
 #ifdef Pylon_FOUND
-#include <robot_interfaces/sensors/sync_driver.hpp>
+#include <robot_interfaces/sensors/tricamera_driver.hpp>
 #endif
 
 #include <robot_interfaces/sensors/pybind_sensors.hpp>
@@ -21,13 +21,13 @@ PYBIND11_MODULE(py_tricamera_types, m)
     create_sensor_bindings<TricameraObservation>(m);
 
 #ifdef Pylon_FOUND
-    pybind11::class_<SyncDriver,
-                     std::shared_ptr<SyncDriver>,
-                     SensorDriver<TricameraObservation>>(m, "SyncDriver")
+    pybind11::class_<TriCameraDriver,
+                     std::shared_ptr<TriCameraDriver>,
+                     SensorDriver<TricameraObservation>>(m, "TriCameraDriver")
         .def(pybind11::init<const std::string&,
                             const std::string&,
                             const std::string&>())
-        .def("get_observation", &SyncDriver::get_observation);
+        .def("get_observation", &TriCameraDriver::get_observation);
 #endif
 
     pybind11::class_<TricameraObservation>(m, "TricameraObservation")
