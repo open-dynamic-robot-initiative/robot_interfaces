@@ -6,6 +6,11 @@
  * @license BSD 3-clause
  */
 
+#include <pybind11/eigen.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl_bind.h> 
+#include <pybind11/stl.h>
+
 #include <robot_interfaces/sensors/tricamera_observation.hpp>
 #ifdef Pylon_FOUND
 #include <robot_interfaces/sensors/tricamera_driver.hpp>
