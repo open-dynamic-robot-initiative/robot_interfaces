@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <cmath>
 #include <iostream>
 
 #include <real_time_tools/process_manager.hpp>
@@ -69,7 +70,14 @@ public:
           action_end_logger_(1000)
     {
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
-        thread_->create_realtime_thread(&MonitoredRobotDriver::loop, this);
+
+        // if both timeouts are infinite, there is no need to start the loop at
+        // all
+        if (!std::isinf(max_action_duration_s_) ||
+            !std::isinf(max_inter_action_duration_s_))
+        {
+            thread_->create_realtime_thread(&MonitoredRobotDriver::loop, this);
+        }
     }
 
     /**
@@ -79,11 +87,6 @@ public:
     {
         shutdown();
         thread_->join();
-    }
-
-    double get_max_inter_action_duration_s()
-    {
-        return max_inter_action_duration_s_;
     }
 
     /**
@@ -189,7 +192,8 @@ private:
                                                       max_action_duration_s_);
             if (!action_has_ended_on_time)
             {
-                error_message_.set("Action did not end on time, shutting down.");
+                error_message_.set(
+                    "Action did not end on time, shutting down.");
                 shutdown();
                 return;
             }
@@ -199,7 +203,8 @@ private:
                     t + 1, max_inter_action_duration_s_);
             if (!action_has_started_on_time)
             {
-                error_message_.set("Action did not start on time, shutting down.");
+                error_message_.set(
+                    "Action did not start on time, shutting down.");
                 shutdown();
                 return;
             }

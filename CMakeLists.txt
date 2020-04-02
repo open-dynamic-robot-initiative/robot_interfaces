@@ -58,19 +58,26 @@ include_directories(
 catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS ${CATKIN_PKGS}
+  LIBRARIES global_signal_handler
 )
+
+
+add_library(global_signal_handler src/global_signal_handler.cpp)
+target_link_libraries(global_signal_handler ${catkin_LIBRARIES})
 
 ####################
 # manage the demos #
 ####################
 add_executable(demo demos/demo.cpp)
-target_link_libraries(demo ${catkin_LIBRARIES})
+target_link_libraries(demo ${catkin_LIBRARIES} global_signal_handler)
 
 add_executable(demo_multiprocess_backend demos/demo_multiprocess_backend.cpp)
-target_link_libraries(demo_multiprocess_backend ${catkin_LIBRARIES} rt pthread)
+target_link_libraries(demo_multiprocess_backend ${catkin_LIBRARIES}
+    global_signal_handler rt pthread)
 
 add_executable(demo_multiprocess_frontend demos/demo_multiprocess_frontend.cpp)
-target_link_libraries(demo_multiprocess_frontend ${catkin_LIBRARIES} rt pthread)
+target_link_libraries(demo_multiprocess_frontend ${catkin_LIBRARIES}
+    global_signal_handler rt pthread)
 
 #########################
 # manage the unit tests #
@@ -146,6 +153,21 @@ target_link_libraries(py_two_joint_types PRIVATE ${catkin_LIBRARIES})
 set_target_properties(py_two_joint_types PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
 install(TARGETS py_two_joint_types DESTINATION ${CATKIN_PACKAGE_PYTHON_DESTINATION})
+macro(add_python_bindings module_name)
+    pybind11_add_module(${module_name} srcpy/${module_name}.cpp)
+    target_link_libraries(${module_name} PRIVATE
+        ${catkin_LIBRARIES} global_signal_handler ${ARGN})
+    set_target_properties(${module_name} PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
+    install(TARGETS ${module_name} DESTINATION ${CATKIN_PACKAGE_PYTHON_DESTINATION})
+endmacro()
+
+add_python_bindings(py_generic)
+add_python_bindings(py_camera_types ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES})
+add_python_bindings(py_finger_types)
+add_python_bindings(py_trifinger_types)
+add_python_bindings(py_one_joint_types)
+add_python_bindings(py_two_joint_types)
 
 
 ##########################

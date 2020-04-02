@@ -46,7 +46,6 @@ public:
         Pylon::CTlFactory& tl_factory = Pylon::CTlFactory::GetInstance();
         Pylon::PylonInitialize();
         Pylon::DeviceInfoList_t device_list;
-        std::cout << tl_factory.EnumerateDevices(device_list) << std::endl;
 
         if (tl_factory.EnumerateDevices(device_list) == 0)
         {

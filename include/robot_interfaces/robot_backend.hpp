@@ -13,10 +13,11 @@
 #include <cmath>
 #include <cstdint>
 
+#include <real_time_tools/checkpoint_timer.hpp>
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
-#include <real_time_tools/checkpoint_timer.hpp>
 
+#include <robot_interfaces/global_signal_handler.hpp>
 #include <robot_interfaces/loggable.hpp>
 #include <robot_interfaces/monitored_robot_driver.hpp>
 #include <robot_interfaces/robot_data.hpp>
@@ -25,7 +26,6 @@
 
 namespace robot_interfaces
 {
-
 /**
  * @brief Communication link between RobotDriver and RobotData.
  *
@@ -47,18 +47,27 @@ public:
      * @param robot_data  Data is send to/retrieved from here.
      * @param max_action_duration_s  See MonitoredRobotDriver.
      * @param max_inter_action_duration_s  See MonitoredRobotDriver.
+     * @param real_time_mode  Enable/disable real-time mode.  In real-time mode,
+     *     the backend will repeat previous actions if the new one is not
+     *     provided in time or fail with an error if the allowed number of
+     *     repetitions is exceeded.  In non-real-time mode, it will simply block
+     *     and wait until the action is provided.
      */
-    RobotBackend(
-        std::shared_ptr<RobotDriver<Action, Observation>> robot_driver,
-        std::shared_ptr<RobotData<Action, Observation>> robot_data,
-        const double max_action_duration_s,
-        const double max_inter_action_duration_s)
+    RobotBackend(std::shared_ptr<RobotDriver<Action, Observation>> robot_driver,
+                 std::shared_ptr<RobotData<Action, Observation>> robot_data,
+                 const double max_action_duration_s,
+                 const double max_inter_action_duration_s,
+                 const bool real_time_mode = true)
         : robot_driver_(
               robot_driver, max_action_duration_s, max_inter_action_duration_s),
           robot_data_(robot_data),
+          real_time_mode_(real_time_mode),
           destructor_was_called_(false),
           max_action_repetitions_(0)
     {
+        GlobalSignalHandler::initialize();
+
+        loop_is_running_ = true;
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
         thread_->create_realtime_thread(&RobotBackend::loop, this);
     }
@@ -86,6 +95,8 @@ public:
      * repeated (default is 0, i.e. no repetition at all).  If this limit is
      * exceeded, the robot will be shut down and the RobotBackend stops.
      *
+     * **Note:** This is ignored in non-real-time mode.
+     *
      * @param max_action_repetitions
      */
     void set_max_action_repetitions(const uint32_t &max_action_repetitions)
@@ -98,10 +109,46 @@ public:
         robot_driver_.initialize();
     }
 
+    /**
+     * @brief Wait until the backend loop terminates.
+     */
+    void wait_until_terminated() const
+    {
+        while (loop_is_running_)
+        {
+            real_time_tools::Timer::sleep_microseconds(100000);
+        }
+    }
+
 private:
     MonitoredRobotDriver<Action, Observation> robot_driver_;
     std::shared_ptr<RobotData<Action, Observation>> robot_data_;
+
+    /**
+     * @brief Enable/disable real time mode.
+     *
+     * If real time mode is enabled (true), the back end expects new actions to
+     * be provided in time by the user.  If this does not happen, the last
+     * received action is repeated until the configured number of repetitions is
+     * exceeded in which case it stops with an error.
+     *
+     * If real time mode is disabled (false), the back-end loop blocks and waits
+     * for the next action if it is not provided in time.
+     *
+     * @see max_action_repetitions_
+     */
+    const bool real_time_mode_;
+
+    /**
+     * @brief Set to true when the destructor is called
+     *
+     * This is used to notify the background loop about the destruction, so it
+     * terminates itself.
+     */
     std::atomic<bool> destructor_was_called_;
+
+    //! @brief Indicates if the background loop is still running.
+    std::atomic<bool> loop_is_running_;
 
     /**
      * @brief Number of times the previous action is repeated if no new one
@@ -112,6 +159,12 @@ private:
     real_time_tools::CheckpointTimer<6, false> timer_;
 
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
+
+    bool has_shutdown_request() const
+    {
+        return destructor_was_called_ ||
+               GlobalSignalHandler::has_received_sigint();
+    }
 
     // control loop
     // ------------------------------------------------------------
@@ -134,12 +187,12 @@ private:
 
         // wait until first desired_action was received
         // ----------------------------
-        while (!destructor_was_called_ &&
+        while (!has_shutdown_request() &&
                !robot_data_->desired_action->wait_for_timeindex(0, 0.1))
         {
         }
 
-        for (long int t = 0; !destructor_was_called_; t++)
+        for (long int t = 0; !has_shutdown_request(); t++)
         {
             // TODO: figure out latency stuff!!
 
@@ -159,14 +212,11 @@ private:
             // writing back and forth
             timer_.checkpoint("append observation");
 
-            // if the robot has a finite max_inter_action_duration_s (not
-            // NAN or infinite, meaning it requires receiving actions in
-            // fixed time intervals), but robot_data_ has not received yet
-            // the next action to apply, we optionally repeat the previous
-            // action.
             Status status;
-            if (std::isfinite(
-                    robot_driver_.get_max_inter_action_duration_s()) &&
+            // If real time mode is enabled the next action needs to be provided
+            // in time.  If this is not the case, optionally repeat the previous
+            // action or raise an error.
+            if (real_time_mode_ &&
                 robot_data_->desired_action->newest_timeindex() < t)
             {
                 uint32_t action_repetitions =
@@ -202,20 +252,20 @@ private:
             {
                 std::cerr << "Error: " << status.error_message
                           << "\nRobot is shut down." << std::endl;
-                robot_driver_.shutdown();
-                return;
+                break;
             }
             timer_.checkpoint("status");
 
             // early exit if destructor has been called
-            while (!robot_data_->desired_action->wait_for_timeindex(t, 0.1))
+            while (!has_shutdown_request() &&
+                   !robot_data_->desired_action->wait_for_timeindex(t, 0.1))
             {
-                if (destructor_was_called_)
-                {
-                    // TODO should shut down robot?
-                    return;
-                }
             }
+            if (has_shutdown_request())
+            {
+                break;
+            }
+
             Action desired_action = (*robot_data_->desired_action)[t];
             timer_.checkpoint("get action");
 
@@ -230,6 +280,9 @@ private:
                 timer_.print_statistics();
             }
         }
+
+        robot_driver_.shutdown();
+        loop_is_running_ = false;
     }
 };
 

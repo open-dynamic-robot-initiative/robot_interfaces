@@ -70,10 +70,10 @@ public:
     std::ofstream output_file_;
     std::string output_file_name_;
 
-    RobotLogger(std::shared_ptr<
-                    robot_interfaces::RobotData<Action, Observation>>
-                    robot_data,
-                int block_size)
+    RobotLogger(
+        std::shared_ptr<robot_interfaces::RobotData<Action, Observation>>
+            robot_data,
+        int block_size)
         : logger_data_(robot_data),
           block_size_(block_size),
           stop_was_called_(false)
@@ -116,17 +116,16 @@ public:
 
         std::vector<std::string> header;
 
-        header.push_back("#");
-        header.push_back("[Timestamp]");
-        header.push_back("Time_Index");
+        header.push_back("#time_index");
+        header.push_back("timestamp");
 
-        append_name_to_header("(S)", status_name, status_data, header);
+        append_name_to_header("status", status_name, status_data, header);
         append_name_to_header(
-            "(O)", observation_name, observation_data, header);
+            "observation", observation_name, observation_data, header);
         append_name_to_header(
-            "(AA)", applied_action_name, applied_action_data, header);
+            "applied_action", applied_action_name, applied_action_data, header);
         append_name_to_header(
-            "(DA)", desired_action_name, desired_action_data, header);
+            "desired_action", desired_action_name, desired_action_data, header);
 
         return header;
     }
@@ -212,8 +211,9 @@ public:
                 std::vector<std::vector<double>> desired_action_data =
                     desired_action.get_data();
 
-                output_file_ << logger_data_->observation->timestamp_s(j) << " "
-                             << j << " ";
+                output_file_ << j << " "
+                             << logger_data_->observation->timestamp_s(j)
+                             << " ";
 
                 append_field_data_to_file(status_data);
                 append_field_data_to_file(observation_data);
@@ -312,13 +312,15 @@ public:
     }
 
     /**
-     * @brief Call start() to create the thread for the RobotLogger and start logging!
+     * @brief Call start() to create the thread for the RobotLogger and start
+     * logging!
      *
      * \note
-     * Every time you start the logger with the same file name, it will obviously
-     * append newer data to the same file. This shouldn't be a problem. But for
-     * different log files, specify different file names while starting the logger.
-     * 
+     * Every time you start the logger with the same file name, it will
+     * obviously append newer data to the same file. This shouldn't be a
+     * problem. But for different log files, specify different file names while
+     * starting the logger.
+     *
      * @param filename The name of the log file.
      */
     void start(std::string filename)
