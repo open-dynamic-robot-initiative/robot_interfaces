@@ -8,12 +8,14 @@
 
 #pragma once
 
+#include <cmath>
 #include <iostream>
 
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
-#include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
+#include <real_time_tools/threadsafe/threadsafe_object.hpp>
 #include <real_time_tools/timer.hpp>
+#include <time_series/time_series.hpp>
 
 #include <robot_interfaces/robot_driver.hpp>
 
@@ -68,7 +70,14 @@ public:
           action_end_logger_(1000)
     {
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
-        thread_->create_realtime_thread(&MonitoredRobotDriver::loop, this);
+
+        // if both timeouts are infinite, there is no need to start the loop at
+        // all
+        if (!std::isinf(max_action_duration_s_) ||
+            !std::isinf(max_inter_action_duration_s_))
+        {
+            thread_->create_realtime_thread(&MonitoredRobotDriver::loop, this);
+        }
     }
 
     /**
@@ -78,11 +87,6 @@ public:
     {
         shutdown();
         thread_->join();
-    }
-
-    double get_max_inter_action_duration_s()
-    {
-        return max_inter_action_duration_s_;
     }
 
     /**
@@ -121,7 +125,15 @@ public:
 
     virtual std::string get_error()
     {
-        return robot_driver_->get_error();
+        const std::string driver_error = robot_driver_->get_error();
+        if (driver_error.empty())
+        {
+            return error_message_.get();
+        }
+        else
+        {
+            return driver_error;
+        }
     }
 
     /**
@@ -147,12 +159,14 @@ private:
     double max_inter_action_duration_s_;
 
     //! \brief Whether shutdown was initiated.
-    bool is_shutdown_;  // TODO: should be atomic
+    std::atomic<bool> is_shutdown_;
 
-    real_time_tools::ThreadsafeTimeseries<bool> action_start_logger_;
-    real_time_tools::ThreadsafeTimeseries<bool> action_end_logger_;
+    time_series::TimeSeries<bool> action_start_logger_;
+    time_series::TimeSeries<bool> action_end_logger_;
 
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
+
+    real_time_tools::SingletypeThreadsafeObject<std::string, 1> error_message_;
 
     /**
      * @brief Monitor the timing of action execution.
@@ -184,10 +198,8 @@ private:
                                                       max_action_duration_s_);
             if (!action_has_ended_on_time)
             {
-                std::cout
-                    << "Action did not end on time, shutting down. Any further "
-                       "actions will be ignored."
-                    << std::endl;
+                error_message_.set(
+                    "Action did not end on time, shutting down.");
                 shutdown();
                 return;
             }
@@ -196,9 +208,8 @@ private:
                     t + 1, max_inter_action_duration_s_);
             if (!action_has_started_on_time)
             {
-                std::cout << "Action did not start on time, shutting down. Any "
-                             "further actions will be ignored."
-                          << std::endl;
+                error_message_.set(
+                    "Action did not start on time, shutting down.");
                 shutdown();
                 return;
             }

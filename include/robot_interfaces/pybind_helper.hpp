@@ -20,13 +20,11 @@
  * \brief Helper functions for creating Python bindings.
  */
 #include <pybind11/eigen.h>
-#include <pybind11/stl_bind.h>
 #include <pybind11/pybind11.h>
-
+#include <pybind11/stl_bind.h>
 
 namespace robot_interfaces
 {
-
 /**
  * \brief Create Python bindings for the specified robot Types.
  *
@@ -44,13 +42,30 @@ namespace robot_interfaces
 template <typename Types>
 void create_python_bindings(pybind11::module &m)
 {
-    pybind11::class_<typename Types::Data,
-        typename Types::DataPtr>(m, "Data")
-            .def(pybind11::init<>());
+    pybind11::class_<typename Types::BaseData, typename Types::BaseDataPtr>(
+        m, "BaseData");
 
-    pybind11::class_<typename Types::Backend,
-        typename Types::BackendPtr>(m, "Backend")
-            .def("initialize", &Types::Backend::initialize);
+    pybind11::class_<typename Types::SingleProcessData,
+                     typename Types::SingleProcessDataPtr,
+                     typename Types::BaseData>(m, "SingleProcessData")
+        .def(pybind11::init<size_t>(), pybind11::arg("history_size") = 1000);
+
+    pybind11::class_<typename Types::MultiProcessData,
+                     typename Types::MultiProcessDataPtr,
+                     typename Types::BaseData>(m, "MultiProcessData")
+        .def(pybind11::init<std::string, bool, size_t>(),
+             pybind11::arg("shared_memory_id_prefix"),
+             pybind11::arg("is_master"),
+             pybind11::arg("history_size") = 1000);
+
+    pybind11::class_<typename Types::Backend, typename Types::BackendPtr>(
+        m, "Backend")
+        .def("initialize",
+             &Types::Backend::initialize,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("wait_until_terminated",
+             &Types::Backend::wait_until_terminated,
+             pybind11::call_guard<pybind11::gil_scoped_release>());
 
     pybind11::class_<typename Types::Action>(m, "Action")
         .def_readwrite("torque", &Types::Action::torque)
@@ -72,21 +87,41 @@ void create_python_bindings(pybind11::module &m)
         .def_readwrite("velocity", &Types::Observation::velocity)
         .def_readwrite("torque", &Types::Observation::torque);
 
-    pybind11::class_<typename Types::Frontend, typename Types::FrontendPtr>(m, "Frontend")
-        .def(pybind11::init<typename Types::DataPtr>())
-        .def("get_observation", &Types::Frontend::get_observation)
-        .def("get_desired_action", &Types::Frontend::get_desired_action)
-        .def("get_applied_action", &Types::Frontend::get_applied_action)
-        .def("get_status", &Types::Frontend::get_status)
-        .def("get_time_stamp_ms", &Types::Frontend::get_time_stamp_ms)
-        .def("append_desired_action", &Types::Frontend::append_desired_action)
-        .def("wait_until_time_index", &Types::Frontend::wait_until_timeindex)
-        .def("get_current_time_index", &Types::Frontend::get_current_timeindex);
+    // Release the GIL when calling any of the front-end functions, so in case
+    // there are subthreads running Python, they have a chance to acquire the
+    // GIL.
+    pybind11::class_<typename Types::Frontend, typename Types::FrontendPtr>(
+        m, "Frontend")
+        .def(pybind11::init<typename Types::BaseDataPtr>())
+        .def("get_observation",
+             &Types::Frontend::get_observation,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("get_desired_action",
+             &Types::Frontend::get_desired_action,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("get_applied_action",
+             &Types::Frontend::get_applied_action,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("get_status",
+             &Types::Frontend::get_status,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("get_time_stamp_ms",
+             &Types::Frontend::get_time_stamp_ms,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("append_desired_action",
+             &Types::Frontend::append_desired_action,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("wait_until_time_index",
+             &Types::Frontend::wait_until_timeindex,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("get_current_time_index",
+             &Types::Frontend::get_current_timeindex,
+             pybind11::call_guard<pybind11::gil_scoped_release>());
 
     pybind11::class_<typename Types::Logger>(m, "Logger")
-        .def(pybind11::init<typename Types::DataPtr, int>())
+        .def(pybind11::init<typename Types::BaseDataPtr, int>())
         .def("start", &Types::Logger::start)
         .def("stop", &Types::Logger::stop);
 }
 
-}  // namespace
+}  // namespace robot_interfaces
