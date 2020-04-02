@@ -107,16 +107,7 @@ int main()
     auto data_ptr =
         std::make_shared<MultiProcessData>("multiprocess_demo", true);
 
-    // max time allowed for the robot to apply an action.
-    double max_action_duration_s = 0.02;
-
-    // max time allowed for 2 successive actions
-    double max_inter_action_duration_s = 0.05;
-
-    Backend backend(driver_ptr,
-                    data_ptr,
-                    max_action_duration_s,
-                    max_inter_action_duration_s);
+    Backend backend(driver_ptr, data_ptr);
     backend.initialize();
 
     // TODO would be nicer to check if backend loop is still running
