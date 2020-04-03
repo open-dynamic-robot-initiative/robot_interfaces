@@ -42,21 +42,21 @@ def main():
         window_180 = "Image Stream camera180"
         window_300 = "Image Stream camera300"
         cv2.imshow(
-            window_180, np.array(observation.cam_array[0].image, copy=False)
+            window_180, np.array(observation.cameras[0].image, copy=False)
         )
         cv2.imshow(
-            window_300, np.array(observation.cam_array[1].image, copy=False)
+            window_300, np.array(observation.cameras[1].image, copy=False)
         )
         cv2.imshow(
-            window_60, np.array(observation.cam_array[2].image, copy=False)
+            window_60, np.array(observation.cameras[2].image, copy=False)
         )
         cv2.waitKey(3)
 
         observations_timestamps_list.append(
             [
-                observation.cam_array[0].time_stamp,
-                observation.cam_array[1].time_stamp,
-                observation.cam_array[2].time_stamp,
+                observation.cameras[0].time_stamp,
+                observation.cameras[1].time_stamp,
+                observation.cameras[2].time_stamp,
             ]
         )
 
