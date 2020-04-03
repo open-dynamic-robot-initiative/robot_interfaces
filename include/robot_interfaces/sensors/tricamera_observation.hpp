@@ -1,6 +1,7 @@
 /**
  * @file
- * @brief Defines the observation structure to be used by any camera.
+ * @brief Defines the observation structure to be used for using
+ * three pylon dependent cameras together.
  * @copyright 2020, New York University, Max Planck Gesellschaft. All rights
  *            reserved.
  * @license BSD 3-clause
@@ -13,8 +14,7 @@
 namespace robot_interfaces
 {
 /**
- * @brief Observation structure to store cv::Mat images with corresponding
- * timestamps.
+ * @brief An array of three CameraObservation(s)
  */
 struct TriCameraObservation
 {
