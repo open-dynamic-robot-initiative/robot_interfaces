@@ -75,10 +75,19 @@ public:
 
         // if both timeouts are infinite, there is no need to start the loop at
         // all
-        if (!std::isinf(max_action_duration_s_) ||
-            !std::isinf(max_inter_action_duration_s_))
+        if (std::isfinite(max_action_duration_s_) &&
+            std::isfinite(max_inter_action_duration_s_))
         {
             thread_->create_realtime_thread(&MonitoredRobotDriver::loop, this);
+        }
+        else
+        {
+            std::cerr
+                << "WARNING: MonitoredRobotDriver was created with a "
+                   "non-finite timeout.  The monitoring loop is NOT executed.  "
+                   "If monitoring is not needed, consider using the driver "
+                   "directly without the MonitoredRobotDriver-wrapper."
+                << std::endl;
         }
     }
 
@@ -181,12 +190,6 @@ private:
     void loop()
     {
         real_time_tools::set_cpu_dma_latency(0);
-
-        // there is no timing constrain
-        if (std::isinf(max_action_duration_s_))
-        {
-            return;
-        }
 
         // wait for the first data
         while (!is_shutdown_ &&
