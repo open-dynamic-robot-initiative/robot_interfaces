@@ -7,6 +7,7 @@
  * @brief Minimal demo of robot driver, backend and frontend
  */
 
+#include "robot_interfaces/monitored_robot_driver.hpp"
 #include "robot_interfaces/robot.hpp"
 #include "robot_interfaces/robot_backend.hpp"
 #include "robot_interfaces/robot_driver.hpp"
@@ -122,9 +123,7 @@ private:
 int main()
 {
     typedef robot_interfaces::RobotBackend<Action, Observation> Backend;
-    typedef robot_interfaces::SingleProcessRobotData<Action,
-                                        Observation>
-        Data;
+    typedef robot_interfaces::SingleProcessRobotData<Action, Observation> Data;
     typedef robot_interfaces::RobotFrontend<Action, Observation> Frontend;
 
     // max time allowed for the robot to apply an action.
@@ -138,12 +137,18 @@ int main()
         std::cout << "\n -- * -- Frontend and Backend -- * --\n" << std::endl;
 
         std::shared_ptr<Driver> driver_ptr = std::make_shared<Driver>(0, 1000);
+        // Wrap the driver in a MonitoredRobotDriver to automatically run a
+        // timing watchdog.  If timing is violated, the robot will immediately
+        // be shut down.
+        // If no time monitoring is needed in your application, you can simply
+        // use the `driver_ptr` directly, without the wrapper.
+        auto monitored_driver_ptr = std::make_shared<
+            robot_interfaces::MonitoredRobotDriver<Action, Observation>>(
+            driver_ptr, max_action_duration_s, max_inter_action_duration_s);
+
         std::shared_ptr<Data> data_ptr = std::make_shared<Data>();
 
-        Backend backend(driver_ptr,
-                        data_ptr,
-                        max_action_duration_s,
-                        max_inter_action_duration_s);
+        Backend backend(monitored_driver_ptr, data_ptr);
         backend.initialize();
 
         Frontend frontend(data_ptr);
