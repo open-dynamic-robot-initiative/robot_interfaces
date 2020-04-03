@@ -30,7 +30,7 @@ PYBIND11_MODULE(py_tricamera_types, m)
         .def("get_observation", &TriCameraDriver::get_observation);
 #endif
 
-    pybind11::class_<TricameraObservation>(m, "TricameraObservation")
+    pybind11::class_<TriCameraObservation>(m, "TriCameraObservation")
         .def(pybind11::init<>())
-        .def_readwrite("cam_array", &TricameraObservation::cam_array);
+        .def_readwrite("cameras", &TriCameraObservation::cameras);
 }

@@ -8,14 +8,7 @@
 
 #pragma once
 
-#include <cmath>
-#include <ctime>
-#include <real_time_tools/threadsafe/threadsafe_timeseries.hpp>
-#include <time_series/time_series.hpp>
-
 #include <robot_interfaces/sensors/camera_observation.hpp>
-
-#include <opencv2/opencv.hpp>
 
 namespace robot_interfaces
 {
@@ -23,10 +16,10 @@ namespace robot_interfaces
  * @brief Observation structure to store cv::Mat images with corresponding
  * timestamps.
  */
-struct TricameraObservation
+struct TriCameraObservation
 {
     typedef std::array<CameraObservation, 3> CameraArray;
-    CameraArray cam_array;
+    CameraArray cameras;
 };
 
 }  // namespace robot_interfaces

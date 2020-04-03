@@ -9,12 +9,6 @@
  */
 #pragma once
 
-#include <ctime>
-#include <iostream>
-
-#include <real_time_tools/timer.hpp>
-
-#include <pylon/PylonIncludes.h>
 #include <robot_interfaces/sensors/pylon_driver.hpp>
 #include <robot_interfaces/sensors/sensor_driver.hpp>
 #include <robot_interfaces/sensors/tricamera_observation.hpp>
@@ -25,7 +19,7 @@ namespace robot_interfaces
  * @brief Driver to create three instances of the PylonDriver
  * and get observations from them.
  */
-class TriCameraDriver : public SensorDriver<TricameraObservation>
+class TriCameraDriver : public SensorDriver<TriCameraObservation>
 {
 public:
     /**
@@ -43,13 +37,13 @@ public:
      * @brief Get the latest observation from the three cameras
      * @return TricameraObservation
      */
-    TricameraObservation get_observation()
+    TriCameraObservation get_observation()
     {
-        TricameraObservation tricam_obs;
+        TriCameraObservation tricam_obs;
 
-        tricam_obs.cam_array[0] = cam_1.get_observation();
-        tricam_obs.cam_array[1] = cam_2.get_observation();
-        tricam_obs.cam_array[2] = cam_3.get_observation();
+        tricam_obs.cameras[0] = cam_1.get_observation();
+        tricam_obs.cameras[1] = cam_2.get_observation();
+        tricam_obs.cameras[2] = cam_3.get_observation();
 
         return tricam_obs;
     }
