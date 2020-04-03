@@ -68,6 +68,11 @@ target_link_libraries(global_signal_handler ${catkin_LIBRARIES})
 ####################
 # manage the demos #
 ####################
+
+# to be replaced by a unit test
+add_executable(demo_infinite_wait demos/demo_infinite_wait.cpp)
+target_link_libraries(demo_infinite_wait ${catkin_LIBRARIES} global_signal_handler)
+
 add_executable(demo demos/demo.cpp)
 target_link_libraries(demo ${catkin_LIBRARIES} global_signal_handler)
 
