@@ -18,7 +18,7 @@ using namespace robot_interfaces;
 
 PYBIND11_MODULE(py_tricamera_types, m)
 {
-    create_sensor_bindings<TricameraObservation>(m);
+    create_sensor_bindings<TriCameraObservation>(m);
 
 #ifdef Pylon_FOUND
     pybind11::class_<TriCameraDriver,

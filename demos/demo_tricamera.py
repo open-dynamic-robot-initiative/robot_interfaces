@@ -14,8 +14,7 @@ import robot_interfaces
 
 def main():
     argparser = argparse.ArgumentParser(description=__doc__)
-    arg_action_group = argparser.add_mutually_exclusive_group(required=False)
-    arg_action_group.add_argument(
+    argparser.add_argument(
         "--store_timestamps",
         type=str,
         help="""Pass --store_timestamps to dump the timestamps from the observations
@@ -61,7 +60,9 @@ def main():
         )
 
     if args.store_timestamps:
-        pickle.dump(observations_timestamps_list, open("time_stamps.p", "wb"))
+        pickle.dump(
+            observations_timestamps_list, open(args.store_timestamps, "wb")
+        )
 
 
 if __name__ == "__main__":
