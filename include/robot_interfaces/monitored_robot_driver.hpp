@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <cmath>
 #include <iostream>
 
@@ -44,11 +45,12 @@ namespace robot_interfaces
  * @tparam Action
  * @tparam Observation
  */
-template <typename Action, typename Observation>
-class MonitoredRobotDriver : public RobotDriver<Action, Observation>
+template <typename Driver>
+class MonitoredRobotDriver
+    : public RobotDriver<typename Driver::Action, typename Driver::Observation>
 {
 public:
-    typedef std::shared_ptr<RobotDriver<Action, Observation>> RobotDriverPtr;
+    typedef std::shared_ptr<Driver> RobotDriverPtr;
 
     /**
      * @brief Starts a thread for monitoring timing of action execution.
@@ -99,7 +101,8 @@ public:
      * @return  The action that is actually applied on the robot (may differ
      *     from desired action due to safety limitations).
      */
-    virtual Action apply_action(const Action &desired_action) final
+    virtual typename Driver::Action apply_action(
+        const typename Driver::Action &desired_action) final
     {
         if (is_shutdown_)
         {
@@ -108,7 +111,8 @@ public:
             return desired_action;
         }
         action_start_logger_.append(true);
-        Action applied_action = robot_driver_->apply_action(desired_action);
+        typename Driver::Action applied_action =
+            robot_driver_->apply_action(desired_action);
         action_end_logger_.append(true);
         return applied_action;
     }
@@ -118,7 +122,7 @@ public:
         robot_driver_->initialize();
     }
 
-    virtual Observation get_latest_observation()
+    virtual typename Driver::Observation get_latest_observation()
     {
         return robot_driver_->get_latest_observation();
     }

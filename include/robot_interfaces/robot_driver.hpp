@@ -27,10 +27,13 @@ namespace robot_interfaces
  * @tparam Action
  * @tparam Observation
  */
-template <typename Action, typename Observation>
+template <typename TAction, typename TObservation>
 class RobotDriver
 {
 public:
+    typedef TAction Action;
+    typedef TObservation Observation;
+
     /**
      * @brief Initialize the robot.
      *

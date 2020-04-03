@@ -143,7 +143,7 @@ int main()
         // If no time monitoring is needed in your application, you can simply
         // use the `driver_ptr` directly, without the wrapper.
         auto monitored_driver_ptr = std::make_shared<
-            robot_interfaces::MonitoredRobotDriver<Action, Observation>>(
+            robot_interfaces::MonitoredRobotDriver<Driver>>(
             driver_ptr, max_action_duration_s, max_inter_action_duration_s);
 
         std::shared_ptr<Data> data_ptr = std::make_shared<Data>();
