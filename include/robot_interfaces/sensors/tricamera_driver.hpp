@@ -28,8 +28,8 @@ public:
      * @param device_id_3 and the 3rd's
      */
     TriCameraDriver(const std::string& device_id_1,
-               const std::string& device_id_2,
-               const std::string& device_id_3)
+                    const std::string& device_id_2,
+                    const std::string& device_id_3)
         : cam_1(device_id_1), cam_2(device_id_2), cam_3(device_id_3)
     {
     }
