@@ -20,10 +20,10 @@ namespace robot_interfaces
  * its related RobotBackend. It also construct and starts
  * the robot driver.
  */
-template <typename Action, typename Observation, typename Driver>
+    template <typename Action, typename Observation, typename Driver,
+	      typename Data=SingleProcessRobotData<Action,Observation>>
 class Robot : public RobotFrontend<Action, Observation>
 {
-    typedef RobotData<Action, Observation, Status> Data;
     typedef std::shared_ptr<Data> DataPtr;
     typedef std::shared_ptr<Driver> RobotDriverPtr;
 

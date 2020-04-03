@@ -122,9 +122,8 @@ private:
 int main()
 {
     typedef robot_interfaces::RobotBackend<Action, Observation> Backend;
-    typedef robot_interfaces::RobotData<Action,
-                                        Observation,
-                                        robot_interfaces::Status>
+    typedef robot_interfaces::SingleProcessRobotData<Action,
+                                        Observation>
         Data;
     typedef robot_interfaces::RobotFrontend<Action, Observation> Frontend;
 

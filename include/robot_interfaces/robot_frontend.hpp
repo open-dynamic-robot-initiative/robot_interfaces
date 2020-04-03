@@ -121,7 +121,7 @@ public:
     }
 
 protected:
-    std::shared_ptr<RobotData<Action, Observation, Status>> robot_data_;
+    std::shared_ptr<RobotData<Action, Observation>> robot_data_;
 };
 
 }  // namespace robot_interfaces
