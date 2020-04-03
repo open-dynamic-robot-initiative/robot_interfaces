@@ -45,7 +45,6 @@ public:
      */
     TricameraObservation get_observation()
     {
-        int index;
         TricameraObservation tricam_obs;
 
         tricam_obs.cam_array[0] = cam_1.get_observation();
