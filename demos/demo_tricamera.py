@@ -13,11 +13,13 @@ import robot_interfaces
 def main():
 
     camera_data = robot_interfaces.tricamera.Data()
-    camera_driver = robot_interfaces.tricamera.TriCameraDriver("cam_1", "cam_2", "cam_3")
-
+    camera_driver = robot_interfaces.tricamera.TriCameraDriver(
+        "cam_1", "cam_2", "cam_3"
+    )
 
     camera_backend = robot_interfaces.tricamera.Backend(
-                                        camera_driver, camera_data)
+        camera_driver, camera_data
+    )
     camera_frontend = robot_interfaces.tricamera.Frontend(camera_data)
     img_list = []
 
