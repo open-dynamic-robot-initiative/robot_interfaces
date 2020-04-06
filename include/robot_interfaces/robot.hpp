@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <robot_interfaces/monitored_robot_driver.hpp>
 #include <robot_interfaces/robot_backend.hpp>
 #include <robot_interfaces/robot_data.hpp>
 #include <robot_interfaces/robot_frontend.hpp>
@@ -20,8 +21,10 @@ namespace robot_interfaces
  * its related RobotBackend. It also construct and starts
  * the robot driver.
  */
-    template <typename Action, typename Observation, typename Driver,
-	      typename Data=SingleProcessRobotData<Action,Observation>>
+template <typename Action,
+          typename Observation,
+          typename Driver,
+          typename Data = SingleProcessRobotData<Action, Observation>>
 class Robot : public RobotFrontend<Action, Observation>
 {
     typedef std::shared_ptr<Data> DataPtr;
@@ -40,10 +43,13 @@ public:
           Args... args)
         : RobotFrontend<Action, Observation>(std::make_shared<Data>()),
           driver_ptr_(std::make_shared<Driver>(args...)),
-          backend_(driver_ptr_,
-                   this->robot_data_,
-                   max_action_duration_s,
-                   max_inter_action_duration_s)
+          backend_(
+              std::make_shared<
+                  robot_interfaces::MonitoredRobotDriver<Driver>>(
+                  driver_ptr_,
+                  max_action_duration_s,
+                  max_inter_action_duration_s),
+              this->robot_data_)
     {
         // compile time checking template Driver inherate from RobotDriver
         static_assert(
@@ -72,4 +78,4 @@ private:
     RobotDriverPtr driver_ptr_;
     RobotBackend<Action, Observation> backend_;
 };
-}
+}  // namespace robot_interfaces

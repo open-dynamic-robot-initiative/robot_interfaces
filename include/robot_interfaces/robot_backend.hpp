@@ -19,7 +19,6 @@
 
 #include <robot_interfaces/global_signal_handler.hpp>
 #include <robot_interfaces/loggable.hpp>
-#include <robot_interfaces/monitored_robot_driver.hpp>
 #include <robot_interfaces/robot_data.hpp>
 #include <robot_interfaces/robot_driver.hpp>
 #include <robot_interfaces/status.hpp>
@@ -41,12 +40,8 @@ class RobotBackend
 {
 public:
     /**
-     * @param robot_driver  Driver instance for the actual robot.  This is
-     *     internally wrapped in a MonitoredRobotDriver for increased
-     * safety.
+     * @param robot_driver  Driver instance for the actual robot.
      * @param robot_data  Data is send to/retrieved from here.
-     * @param max_action_duration_s  See MonitoredRobotDriver.
-     * @param max_inter_action_duration_s  See MonitoredRobotDriver.
      * @param real_time_mode  Enable/disable real-time mode.  In real-time mode,
      *     the backend will repeat previous actions if the new one is not
      *     provided in time or fail with an error if the allowed number of
@@ -55,11 +50,8 @@ public:
      */
     RobotBackend(std::shared_ptr<RobotDriver<Action, Observation>> robot_driver,
                  std::shared_ptr<RobotData<Action, Observation>> robot_data,
-                 const double max_action_duration_s,
-                 const double max_inter_action_duration_s,
                  const bool real_time_mode = true)
-        : robot_driver_(
-              robot_driver, max_action_duration_s, max_inter_action_duration_s),
+        : robot_driver_(robot_driver),
           robot_data_(robot_data),
           real_time_mode_(real_time_mode),
           destructor_was_called_(false),
@@ -106,7 +98,7 @@ public:
 
     void initialize()
     {
-        robot_driver_.initialize();
+        robot_driver_->initialize();
     }
 
     /**
@@ -121,7 +113,7 @@ public:
     }
 
 private:
-    MonitoredRobotDriver<Action, Observation> robot_driver_;
+    std::shared_ptr<RobotDriver<Action, Observation>> robot_driver_;
     std::shared_ptr<RobotData<Action, Observation>> robot_data_;
 
     /**
@@ -201,7 +193,7 @@ private:
             // get latest observation from robot and append it to
             // robot_data_
             // --------
-            Observation observation = robot_driver_.get_latest_observation();
+            Observation observation = robot_driver_->get_latest_observation();
             timer_.checkpoint("get observation");
 
             robot_data_->observation->append(observation);
@@ -238,7 +230,7 @@ private:
                 }
             }
 
-            std::string driver_error_msg = robot_driver_.get_error();
+            std::string driver_error_msg = robot_driver_->get_error();
             if (!driver_error_msg.empty())
             {
                 status.error_status = Status::ErrorStatus::DRIVER_ERROR;
@@ -269,7 +261,7 @@ private:
             Action desired_action = (*robot_data_->desired_action)[t];
             timer_.checkpoint("get action");
 
-            Action applied_action = robot_driver_.apply_action(desired_action);
+            Action applied_action = robot_driver_->apply_action(desired_action);
             timer_.checkpoint("apply action");
 
             robot_data_->applied_action->append(applied_action);
@@ -281,7 +273,7 @@ private:
             }
         }
 
-        robot_driver_.shutdown();
+        robot_driver_->shutdown();
         loop_is_running_ = false;
     }
 };

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <cmath>
 #include <iostream>
 
@@ -44,11 +45,12 @@ namespace robot_interfaces
  * @tparam Action
  * @tparam Observation
  */
-template <typename Action, typename Observation>
-class MonitoredRobotDriver : public RobotDriver<Action, Observation>
+template <typename Driver>
+class MonitoredRobotDriver
+    : public RobotDriver<typename Driver::Action, typename Driver::Observation>
 {
 public:
-    typedef std::shared_ptr<RobotDriver<Action, Observation>> RobotDriverPtr;
+    typedef std::shared_ptr<Driver> RobotDriverPtr;
 
     /**
      * @brief Starts a thread for monitoring timing of action execution.
@@ -73,10 +75,19 @@ public:
 
         // if both timeouts are infinite, there is no need to start the loop at
         // all
-        if (!std::isinf(max_action_duration_s_) ||
-            !std::isinf(max_inter_action_duration_s_))
+        if (std::isfinite(max_action_duration_s_) &&
+            std::isfinite(max_inter_action_duration_s_))
         {
             thread_->create_realtime_thread(&MonitoredRobotDriver::loop, this);
+        }
+        else
+        {
+            std::cerr
+                << "WARNING: MonitoredRobotDriver was created with a "
+                   "non-finite timeout.  The monitoring loop is NOT executed.  "
+                   "If monitoring is not needed, consider using the driver "
+                   "directly without the MonitoredRobotDriver-wrapper."
+                << std::endl;
         }
     }
 
@@ -99,7 +110,8 @@ public:
      * @return  The action that is actually applied on the robot (may differ
      *     from desired action due to safety limitations).
      */
-    virtual Action apply_action(const Action &desired_action) final
+    virtual typename Driver::Action apply_action(
+        const typename Driver::Action &desired_action) final
     {
         if (is_shutdown_)
         {
@@ -108,7 +120,8 @@ public:
             return desired_action;
         }
         action_start_logger_.append(true);
-        Action applied_action = robot_driver_->apply_action(desired_action);
+        typename Driver::Action applied_action =
+            robot_driver_->apply_action(desired_action);
         action_end_logger_.append(true);
         return applied_action;
     }
@@ -118,7 +131,7 @@ public:
         robot_driver_->initialize();
     }
 
-    virtual Observation get_latest_observation()
+    virtual typename Driver::Observation get_latest_observation()
     {
         return robot_driver_->get_latest_observation();
     }
@@ -177,12 +190,6 @@ private:
     void loop()
     {
         real_time_tools::set_cpu_dma_latency(0);
-
-        // there is no timing constrain
-        if (std::isinf(max_action_duration_s_))
-        {
-            return;
-        }
 
         // wait for the first data
         while (!is_shutdown_ &&
