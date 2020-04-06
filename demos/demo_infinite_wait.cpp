@@ -114,7 +114,8 @@ int main()
     Backend backend(driver_ptr,
 		    data_ptr,
 		    max_action_duration_s,
-		    max_inter_action_duration_s);
+		    max_inter_action_duration_s,
+            false);
     backend.initialize();
     
     Frontend frontend(data_ptr);
