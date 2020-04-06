@@ -99,6 +99,7 @@ endmacro()
 
 add_python_bindings(py_generic)
 add_python_bindings(py_camera_types ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES})
+add_python_bindings(py_tricamera_types ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES})
 add_python_bindings(py_finger_types)
 add_python_bindings(py_trifinger_types)
 add_python_bindings(py_one_joint_types)
