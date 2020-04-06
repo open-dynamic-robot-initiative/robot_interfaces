@@ -23,7 +23,7 @@ PYBIND11_MODULE(py_tricamera_types, m)
 #ifdef Pylon_FOUND
     pybind11::class_<TriCameraDriver,
                      std::shared_ptr<TriCameraDriver>,
-                     SensorDriver<TricameraObservation>>(m, "TriCameraDriver")
+                     SensorDriver<TriCameraObservation>>(m, "TriCameraDriver")
         .def(pybind11::init<const std::string&,
                             const std::string&,
                             const std::string&>())
