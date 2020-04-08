@@ -58,7 +58,7 @@ public:
           robot_data_(robot_data),
           real_time_mode_(real_time_mode),
           first_action_timeout_(first_action_timeout),
-          destructor_was_called_(false),
+          shutdown_was_called_(false),
           max_action_repetitions_(0)
     {
         GlobalSignalHandler::initialize();
@@ -70,8 +70,19 @@ public:
 
     virtual ~RobotBackend()
     {
-        destructor_was_called_ = true;
-        thread_->join();
+        shutdown();
+    }
+
+    /**
+     * @brief Shut down the backend loop and wait until it terminated.
+     */
+    void shutdown()
+    {
+        if (!shutdown_was_called_)
+        {
+            shutdown_was_called_ = true;
+            thread_->join();
+        }
     }
 
     uint32_t get_max_action_repetitions()
@@ -147,10 +158,10 @@ private:
     /**
      * @brief Set to true when the destructor is called
      *
-     * This is used to notify the background loop about the destruction, so it
-     * terminates itself.
+     * This is used to notify the background loop about requested shutdown, so
+     * it terminates itself.
      */
-    std::atomic<bool> destructor_was_called_;
+    std::atomic<bool> shutdown_was_called_;
 
     //! @brief Indicates if the background loop is still running.
     std::atomic<bool> loop_is_running_;
@@ -167,7 +178,7 @@ private:
 
     bool has_shutdown_request() const
     {
-        return destructor_was_called_ ||
+        return shutdown_was_called_ ||
                GlobalSignalHandler::has_received_sigint();
     }
 
@@ -208,10 +219,8 @@ private:
                 std::cerr << "Error: " << status.error_message
                           << "\nRobot is shut down." << std::endl;
 
-                // FIXME implement a this->shutdown(); in stead
-                robot_driver_->shutdown();
-                loop_is_running_ = false;
-                return;
+                this->shutdown();
+                break;
             }
         }
 
