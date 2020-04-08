@@ -47,13 +47,17 @@ public:
      *     provided in time or fail with an error if the allowed number of
      *     repetitions is exceeded.  In non-real-time mode, it will simply block
      *     and wait until the action is provided.
+     * @param first_action_timeout  See RobotBackend::first_action_timeout_
      */
     RobotBackend(std::shared_ptr<RobotDriver<Action, Observation>> robot_driver,
                  std::shared_ptr<RobotData<Action, Observation>> robot_data,
-                 const bool real_time_mode = true)
+                 const bool real_time_mode = true,
+                 const double first_action_timeout =
+                     std::numeric_limits<double>::infinity())
         : robot_driver_(robot_driver),
           robot_data_(robot_data),
           real_time_mode_(real_time_mode),
+          first_action_timeout_(first_action_timeout),
           destructor_was_called_(false),
           max_action_repetitions_(0)
     {
@@ -132,6 +136,15 @@ private:
     const bool real_time_mode_;
 
     /**
+     * @brief Timeout for the first action to arrive.
+     *
+     * Timeout for the time between starting the backend loop and receiving the
+     * first action from the user.  If exceeded, the backend shuts down.
+     * Set to infinity to disable the timeout.
+     */
+    const double first_action_timeout_;
+
+    /**
      * @brief Set to true when the destructor is called
      *
      * This is used to notify the background loop about the destruction, so it
@@ -175,11 +188,31 @@ private:
      */
     void loop()
     {
+        const double start_time =
+            real_time_tools::Timer::get_current_time_sec();
+
         // wait until first desired_action was received
         // ----------------------------
         while (!has_shutdown_request() &&
                !robot_data_->desired_action->wait_for_timeindex(0, 0.1))
         {
+            const double now = real_time_tools::Timer::get_current_time_sec();
+            if (now - start_time > first_action_timeout_)
+            {
+                Status status;
+                status.error_status = Status::ErrorStatus::BACKEND_ERROR;
+                status.error_message = "First action was not provided in time";
+
+                robot_data_->status->append(status);
+
+                std::cerr << "Error: " << status.error_message
+                          << "\nRobot is shut down." << std::endl;
+
+                // FIXME implement a this->shutdown(); in stead
+                robot_driver_->shutdown();
+                loop_is_running_ = false;
+                return;
+            }
         }
 
         for (long int t = 0; !has_shutdown_request(); t++)
