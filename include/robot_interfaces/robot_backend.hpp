@@ -58,7 +58,7 @@ public:
           robot_data_(robot_data),
           real_time_mode_(real_time_mode),
           first_action_timeout_(first_action_timeout),
-          shutdown_was_called_(false),
+          is_shutdown_requested_(false),
           max_action_repetitions_(0)
     {
         GlobalSignalHandler::initialize();
@@ -70,19 +70,8 @@ public:
 
     virtual ~RobotBackend()
     {
-        shutdown();
-    }
-
-    /**
-     * @brief Shut down the backend loop and wait until it terminated.
-     */
-    void shutdown()
-    {
-        if (!shutdown_was_called_)
-        {
-            shutdown_was_called_ = true;
-            thread_->join();
-        }
+        request_shutdown();
+        thread_->join();
     }
 
     uint32_t get_max_action_repetitions()
@@ -114,6 +103,17 @@ public:
     void initialize()
     {
         robot_driver_->initialize();
+    }
+
+    /**
+     * @brief Request shutdown of the backend loop.
+     *
+     * The loop may take some time to actually terminate after calling this
+     * function. Use wait_until_terminated() to ensure it has really terminated.
+     */
+    void request_shutdown()
+    {
+        is_shutdown_requested_ = true;
     }
 
     /**
@@ -156,12 +156,12 @@ private:
     const double first_action_timeout_;
 
     /**
-     * @brief Set to true when the destructor is called
+     * @brief Set to true when shutdown is requested.
      *
      * This is used to notify the background loop about requested shutdown, so
      * it terminates itself.
      */
-    std::atomic<bool> shutdown_was_called_;
+    std::atomic<bool> is_shutdown_requested_;
 
     //! @brief Indicates if the background loop is still running.
     std::atomic<bool> loop_is_running_;
@@ -178,7 +178,7 @@ private:
 
     bool has_shutdown_request() const
     {
-        return shutdown_was_called_ ||
+        return is_shutdown_requested_ ||
                GlobalSignalHandler::has_received_sigint();
     }
 
@@ -219,7 +219,7 @@ private:
                 std::cerr << "Error: " << status.error_message
                           << "\nRobot is shut down." << std::endl;
 
-                this->shutdown();
+                this->request_shutdown();
                 break;
             }
         }
