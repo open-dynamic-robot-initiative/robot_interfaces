@@ -47,14 +47,18 @@ public:
      *     provided in time or fail with an error if the allowed number of
      *     repetitions is exceeded.  In non-real-time mode, it will simply block
      *     and wait until the action is provided.
+     * @param first_action_timeout  See RobotBackend::first_action_timeout_
      */
     RobotBackend(std::shared_ptr<RobotDriver<Action, Observation>> robot_driver,
                  std::shared_ptr<RobotData<Action, Observation>> robot_data,
-                 const bool real_time_mode = true)
+                 const bool real_time_mode = true,
+                 const double first_action_timeout =
+                     std::numeric_limits<double>::infinity())
         : robot_driver_(robot_driver),
           robot_data_(robot_data),
           real_time_mode_(real_time_mode),
-          destructor_was_called_(false),
+          first_action_timeout_(first_action_timeout),
+          is_shutdown_requested_(false),
           max_action_repetitions_(0)
     {
         GlobalSignalHandler::initialize();
@@ -66,7 +70,7 @@ public:
 
     virtual ~RobotBackend()
     {
-        destructor_was_called_ = true;
+        request_shutdown();
         thread_->join();
     }
 
@@ -102,6 +106,17 @@ public:
     }
 
     /**
+     * @brief Request shutdown of the backend loop.
+     *
+     * The loop may take some time to actually terminate after calling this
+     * function. Use wait_until_terminated() to ensure it has really terminated.
+     */
+    void request_shutdown()
+    {
+        is_shutdown_requested_ = true;
+    }
+
+    /**
      * @brief Wait until the backend loop terminates.
      */
     void wait_until_terminated() const
@@ -132,12 +147,21 @@ private:
     const bool real_time_mode_;
 
     /**
-     * @brief Set to true when the destructor is called
+     * @brief Timeout for the first action to arrive.
      *
-     * This is used to notify the background loop about the destruction, so it
-     * terminates itself.
+     * Timeout for the time between starting the backend loop and receiving the
+     * first action from the user.  If exceeded, the backend shuts down.
+     * Set to infinity to disable the timeout.
      */
-    std::atomic<bool> destructor_was_called_;
+    const double first_action_timeout_;
+
+    /**
+     * @brief Set to true when shutdown is requested.
+     *
+     * This is used to notify the background loop about requested shutdown, so
+     * it terminates itself.
+     */
+    std::atomic<bool> is_shutdown_requested_;
 
     //! @brief Indicates if the background loop is still running.
     std::atomic<bool> loop_is_running_;
@@ -154,7 +178,7 @@ private:
 
     bool has_shutdown_request() const
     {
-        return destructor_was_called_ ||
+        return is_shutdown_requested_ ||
                GlobalSignalHandler::has_received_sigint();
     }
 
@@ -175,11 +199,29 @@ private:
      */
     void loop()
     {
+        const double start_time =
+            real_time_tools::Timer::get_current_time_sec();
+
         // wait until first desired_action was received
         // ----------------------------
         while (!has_shutdown_request() &&
                !robot_data_->desired_action->wait_for_timeindex(0, 0.1))
         {
+            const double now = real_time_tools::Timer::get_current_time_sec();
+            if (now - start_time > first_action_timeout_)
+            {
+                Status status;
+                status.error_status = Status::ErrorStatus::BACKEND_ERROR;
+                status.error_message = "First action was not provided in time";
+
+                robot_data_->status->append(status);
+
+                std::cerr << "Error: " << status.error_message
+                          << "\nRobot is shut down." << std::endl;
+
+                request_shutdown();
+                break;
+            }
         }
 
         for (long int t = 0; !has_shutdown_request(); t++)
