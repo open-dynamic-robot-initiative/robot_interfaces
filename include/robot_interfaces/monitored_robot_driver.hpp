@@ -189,8 +189,6 @@ private:
      */
     void loop()
     {
-        real_time_tools::set_cpu_dma_latency(0);
-
         // wait for the first data
         while (!is_shutdown_ &&
                !action_start_logger_.wait_for_timeindex(0, 0.1))

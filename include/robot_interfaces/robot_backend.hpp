@@ -175,8 +175,6 @@ private:
      */
     void loop()
     {
-        real_time_tools::set_cpu_dma_latency(0);
-
         // wait until first desired_action was received
         // ----------------------------
         while (!has_shutdown_request() &&
