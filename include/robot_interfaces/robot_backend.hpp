@@ -219,7 +219,7 @@ private:
                 std::cerr << "Error: " << status.error_message
                           << "\nRobot is shut down." << std::endl;
 
-                this->request_shutdown();
+                request_shutdown();
                 break;
             }
         }
