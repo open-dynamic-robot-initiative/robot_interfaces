@@ -13,6 +13,8 @@
 #include <cmath>
 #include <cstdint>
 
+#include <pybind11/embed.h>
+
 #include <real_time_tools/checkpoint_timer.hpp>
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
@@ -70,6 +72,11 @@ public:
 
     virtual ~RobotBackend()
     {
+        // Release the GIL when destructing the backend, as otherwise the
+        // program will get stuck in a dead lock in case the driver needs to run
+        // some Python code.
+        pybind11::gil_scoped_release release;
+
         request_shutdown();
         thread_->join();
     }
