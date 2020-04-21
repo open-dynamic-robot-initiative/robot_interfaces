@@ -49,17 +49,20 @@ public:
      *     provided in time or fail with an error if the allowed number of
      *     repetitions is exceeded.  In non-real-time mode, it will simply block
      *     and wait until the action is provided.
-     * @param first_action_timeout  See RobotBackend::first_action_timeout_
+     * @param first_action_timeout  See RobotBackend::first_action_timeout_.
+     * @param max_number_of_actions  See RobotBackend::max_number_of_actions_.
      */
     RobotBackend(std::shared_ptr<RobotDriver<Action, Observation>> robot_driver,
                  std::shared_ptr<RobotData<Action, Observation>> robot_data,
                  const bool real_time_mode = true,
                  const double first_action_timeout =
-                     std::numeric_limits<double>::infinity())
+                     std::numeric_limits<double>::infinity(),
+                 const uint32_t max_number_of_actions = 0)
         : robot_driver_(robot_driver),
           robot_data_(robot_data),
           real_time_mode_(real_time_mode),
           first_action_timeout_(first_action_timeout),
+          max_number_of_actions_(max_number_of_actions),
           is_shutdown_requested_(false),
           max_action_repetitions_(0)
     {
@@ -163,6 +166,14 @@ private:
     const double first_action_timeout_;
 
     /**
+     * @brief Maximum number of actions that are executed by the backend.
+     *
+     * If set to a value greater than zero, the backend will automatically shut
+     * down after the specified number of actions is executed.
+     */
+    const uint32_t max_number_of_actions_;
+
+    /**
      * @brief Set to true when shutdown is requested.
      *
      * This is used to notify the background loop about requested shutdown, so
@@ -235,11 +246,18 @@ private:
         {
             // TODO: figure out latency stuff!!
 
+            Status status;
+
+            if (max_number_of_actions_ > 0 && t >= max_number_of_actions_)
+            {
+                // TODO this is not really an error
+                status.error_status = Status::ErrorStatus::BACKEND_ERROR;
+                status.error_message = "Maximum number of actions reached.";
+            }
+
             timer_.start();
 
-            // get latest observation from robot and append it to
-            // robot_data_
-            // --------
+            // get latest observation from robot and append it to robot_data_
             Observation observation = robot_driver_->get_latest_observation();
             timer_.checkpoint("get observation");
 
@@ -251,7 +269,6 @@ private:
             // writing back and forth
             timer_.checkpoint("append observation");
 
-            Status status;
             // If real time mode is enabled the next action needs to be provided
             // in time.  If this is not the case, optionally repeat the previous
             // action or raise an error.
