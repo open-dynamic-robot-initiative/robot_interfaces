@@ -72,13 +72,26 @@ public:
 
     virtual ~RobotBackend()
     {
-        // Release the GIL when destructing the backend, as otherwise the
-        // program will get stuck in a dead lock in case the driver needs to run
-        // some Python code.
-        pybind11::gil_scoped_release release;
+        // pybind11::gil_scoped_release causes a segfault when the class is used
+        // directly from C++ (i.e. no Python interpreter running).
+        // Best workaround found so far is to explicitly check if Python is
+        // initialized or not...
+        // See https://github.com/pybind/pybind11/issues/2177
+        if (Py_IsInitialized())
+        {
+            // Release the GIL when destructing the backend, as otherwise the
+            // program will get stuck in a dead lock in case the driver needs to
+            // run some Python code.
+            pybind11::gil_scoped_release release;
 
-        request_shutdown();
-        thread_->join();
+            request_shutdown();
+            thread_->join();
+        }
+        else
+        {
+            request_shutdown();
+            thread_->join();
+        }
     }
 
     uint32_t get_max_action_repetitions()
