@@ -35,7 +35,7 @@ def main():
     camera_frontend = robot_interfaces.tricamera.Frontend(camera_data)
     observations_timestamps_list = []
 
-    for _ in range(100):
+    for _ in range(300):
         observation = camera_frontend.get_latest_observation()
         window_60 = "Image Stream camera60"
         window_180 = "Image Stream camera180"
