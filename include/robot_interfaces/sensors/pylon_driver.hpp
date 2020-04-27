@@ -31,6 +31,7 @@ namespace robot_interfaces
  */
 class PylonDriver : public SensorDriver<CameraObservation>
 {
+// TODO implementations should be moved to cpp file
 public:
     Pylon::PylonAutoInitTerm auto_init_term_;
     Pylon::CInstantCamera camera_;
@@ -99,6 +100,8 @@ public:
                 format_converter_.OutputPixelFormat =
                     Pylon::PixelType_BGR8packed;
 
+                set_camera_configuration(camera_.GetNodeMap());
+
                 camera_.StartGrabbing();
             }
         }
@@ -138,6 +141,25 @@ public:
                 "Failed to access images from the camera.");
         }
         return image_frame;
+    }
+
+private:
+    void set_camera_configuration(GenApi::INodeMap &nodemap)
+    {
+        Pylon::CFloatParameter exposure_time(nodemap, "ExposureTime");
+        exposure_time.SetValue(1500);
+
+        //Pylon::CBooleanParameter enable_frame_rate(nodemap, "EnableAcquisitionFrameRate");
+        //enable_frame_rate.SetValue(true);
+
+        Pylon::CFloatParameter frame_rate(nodemap, "AcquisitionFrameRate");
+        frame_rate.SetValue(100);
+
+        Pylon::CEnumParameter(nodemap, "BalanceWhiteAuto").SetValue("Once");
+
+
+        //Pylon::CFeaturePersistence::Save("/tmp/camera_settings.xml", &camera_.GetNodeMap() );
+        //Pylon::CFeaturePersistence::Load( Filename, &camera.GetNodeMap(), true );
     }
 };
 
