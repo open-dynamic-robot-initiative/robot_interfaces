@@ -13,7 +13,6 @@
 #include <cstdint>
 #include <thread>
 
-#include <robot_interfaces/sensors/opencv_driver.hpp>
 #include <robot_interfaces/sensors/sensor_data.hpp>
 #include <robot_interfaces/sensors/sensor_driver.hpp>
 

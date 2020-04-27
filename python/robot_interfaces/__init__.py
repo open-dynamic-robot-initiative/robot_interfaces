@@ -5,5 +5,3 @@ import robot_interfaces.py_finger_types as finger  # noqa: F401
 import robot_interfaces.py_trifinger_types as trifinger  # noqa: F401
 import robot_interfaces.py_one_joint_types as one_joint  # noqa: F401
 import robot_interfaces.py_two_joint_types as two_joint  # noqa: F401
-import robot_interfaces.py_camera_types as camera  # noqa: F401
-import robot_interfaces.py_tricamera_types as tricamera  # noqa: F401

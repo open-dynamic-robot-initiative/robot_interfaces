@@ -16,7 +16,6 @@ set(CMAKE_SKIP_BUILD_RPATH  FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 ############################
 # Search for dependencies. #
@@ -29,12 +28,6 @@ set(CATKIN_PKGS ${CATKIN_PKGS}
   time_series
 )
 find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
-find_package(OpenCV REQUIRED)
-find_package(Pylon)
-
-if (${Pylon_FOUND})
-    add_definitions(-DPylon_FOUND)
-endif()
 
 search_for_eigen()
 
@@ -48,8 +41,6 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/include
     ${catkin_INCLUDE_DIRS}
     ${Eigen_INCLUDE_DIRS}
-    ${Pylon_INCLUDE_DIRS}
-    ${OpenCV_INCLUDE_DIRS}
 )
 
 ##########################################
@@ -88,22 +79,11 @@ add_subdirectory(tests)
 # python bindings #
 ###################
 
-macro(add_python_bindings module_name)
-    pybind11_add_module(${module_name} srcpy/${module_name}.cpp)
-    target_link_libraries(${module_name} PRIVATE
-        ${catkin_LIBRARIES} global_signal_handler ${ARGN})
-    set_target_properties(${module_name} PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
-    install(TARGETS ${module_name} DESTINATION ${CATKIN_PACKAGE_PYTHON_DESTINATION})
-endmacro()
-
-add_python_bindings(py_generic)
-add_python_bindings(py_camera_types ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES})
-add_python_bindings(py_tricamera_types ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES})
-add_python_bindings(py_finger_types)
-add_python_bindings(py_trifinger_types)
-add_python_bindings(py_one_joint_types)
-add_python_bindings(py_two_joint_types)
+catkin_add_pybind11_module(py_generic)
+catkin_add_pybind11_module(py_finger_types global_signal_handler)
+catkin_add_pybind11_module(py_trifinger_types global_signal_handler)
+catkin_add_pybind11_module(py_one_joint_types global_signal_handler)
+catkin_add_pybind11_module(py_two_joint_types global_signal_handler)
 
 
 ##########################
