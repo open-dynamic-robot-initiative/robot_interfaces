@@ -10,7 +10,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <opencv2/opencv.hpp>
 #include <robot_interfaces/sensors/sensor_backend.hpp>
 #include <robot_interfaces/sensors/sensor_data.hpp>
 #include <robot_interfaces/sensors/sensor_driver.hpp>
