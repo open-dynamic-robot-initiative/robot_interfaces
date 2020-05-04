@@ -208,34 +208,32 @@ struct NJointRobotTypes
         Vector position;
         Vector velocity;
         Vector torque;
+        double tip_force = 0;
 
         template <class Archive>
         void serialize(Archive& archive)
         {
-            archive(position, velocity, torque);
+            archive(position, velocity, torque, tip_force);
         }
 
         std::vector<std::string> get_name() override
         {
-            return {"position", "velocity", "torque"};
+            return {"position", "velocity", "torque", "tip_force"};
         }
 
         std::vector<std::vector<double>> get_data() override
         {
-            std::vector<double> position_;
-            position_.resize(position.size());
-            Vector::Map(&position_[0], position.size()) = position;
+            typedef std::vector<double> vecd;
 
-            std::vector<double> velocity_;
-            velocity_.resize(velocity.size());
-            Vector::Map(&velocity_[0], velocity.size()) = velocity;
+            std::vector<vecd> result = {vecd(position.size()),
+                                        vecd(velocity.size()),
+                                        vecd(torque.size()),
+                                        vecd(1)};
 
-            std::vector<double> torque_;
-            torque_.resize(torque.size());
-            Vector::Map(&torque_[0], torque.size()) = torque;
-
-            std::vector<std::vector<double>> result;
-            result = {position_, velocity_, torque_};
+            Vector::Map(&result[0][0], position.size()) = position;
+            Vector::Map(&result[1][0], velocity.size()) = velocity;
+            Vector::Map(&result[2][0], torque.size()) = torque;
+            result[3][0] = tip_force;
 
             return result;
         }
