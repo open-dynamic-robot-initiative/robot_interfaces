@@ -242,8 +242,8 @@ private:
             if (now - start_time > first_action_timeout_)
             {
                 Status status;
-                status.error_status = Status::ErrorStatus::BACKEND_ERROR;
-                status.error_message = "First action was not provided in time";
+                status.set_error(Status::ErrorStatus::BACKEND_ERROR,
+                                 "First action was not provided in time");
 
                 robot_data_->status->append(status);
 
@@ -264,8 +264,8 @@ private:
             if (max_number_of_actions_ > 0 && t >= max_number_of_actions_)
             {
                 // TODO this is not really an error
-                status.error_status = Status::ErrorStatus::BACKEND_ERROR;
-                status.error_message = "Maximum number of actions reached.";
+                status.set_error(Status::ErrorStatus::BACKEND_ERROR,
+                                 "Maximum number of actions reached.");
             }
 
             timer_.start();
@@ -301,17 +301,16 @@ private:
                 {
                     // No action provided and number of allowed repetitions
                     // of the previous action is exceeded --> Error
-                    status.error_status = Status::ErrorStatus::BACKEND_ERROR;
-                    status.error_message =
-                        "Next action was not provided in time";
+                    status.set_error(Status::ErrorStatus::BACKEND_ERROR,
+                                     "Next action was not provided in time");
                 }
             }
 
             std::string driver_error_msg = robot_driver_->get_error();
             if (!driver_error_msg.empty())
             {
-                status.error_status = Status::ErrorStatus::DRIVER_ERROR;
-                status.error_message = driver_error_msg;
+                status.set_error(Status::ErrorStatus::DRIVER_ERROR,
+                                 driver_error_msg);
             }
 
             robot_data_->status->append(status);

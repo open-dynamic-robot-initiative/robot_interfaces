@@ -52,6 +52,35 @@ struct Status : public Loggable
      */
     std::string error_message;
 
+    /**
+     * @brief Set error.
+     *
+     * If another error was set before, the old one is kept and the new one
+     * ignored.
+     *
+     * @param error_type  The type of the error.
+     * @param message  Error message.
+     */
+    void set_error(ErrorStatus error_type, const std::string& message)
+    {
+        // do not overwrite existing errors
+        if (!has_error())
+        {
+            this->error_status = error_type;
+            this->error_message = message;
+        }
+    }
+
+    /**
+     * @brief Check if an error is set.
+     *
+     * See error_status and error_message for more details on the error.
+     */
+    bool has_error() const
+    {
+        return this->error_status != Status::ErrorStatus::NO_ERROR;
+    }
+
     template <class Archive>
     void serialize(Archive& archive)
     {
