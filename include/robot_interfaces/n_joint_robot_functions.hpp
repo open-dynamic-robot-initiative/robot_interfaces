@@ -67,9 +67,9 @@ struct NJointRobotFunctions
         const typename Types::Action &desired_action,
         const typename Types::Observation &latest_observation,
         const double max_torque_Nm,
-        const typename Types::Vector &safety_kd,
-        const typename Types::Vector &default_position_control_kp,
-        const typename Types::Vector &default_position_control_kd)
+        const typename Types::Action::Vector &safety_kd,
+        const typename Types::Action::Vector &default_position_control_kp,
+        const typename Types::Action::Vector &default_position_control_kd)
     {
         typename Types::Action processed_action;
 
@@ -92,11 +92,11 @@ struct NJointRobotFunctions
                 desired_action.position_kd.array().isNaN().select(
                     default_position_control_kd, desired_action.position_kd);
 
-            typename Types::Vector position_error =
+            typename Types::Action::Vector position_error =
                 processed_action.position - latest_observation.position;
 
             // simple PD controller
-            typename Types::Vector position_control_torque =
+            typename Types::Action::Vector position_control_torque =
                 processed_action.position_kp.cwiseProduct(position_error) -
                 processed_action.position_kd.cwiseProduct(
                     latest_observation.velocity);

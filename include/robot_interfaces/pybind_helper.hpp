@@ -72,11 +72,11 @@ void create_python_bindings(pybind11::module &m)
         .def_readwrite("position", &Types::Action::position)
         .def_readwrite("position_kp", &Types::Action::position_kp)
         .def_readwrite("position_kd", &Types::Action::position_kd)
-        .def(pybind11::init<typename Types::Vector,
-                            typename Types::Vector,
-                            typename Types::Vector,
-                            typename Types::Vector>(),
-             pybind11::arg("torque") = Types::Vector::Zero(),
+        .def(pybind11::init<typename Types::Action::Vector,
+                            typename Types::Action::Vector,
+                            typename Types::Action::Vector,
+                            typename Types::Action::Vector>(),
+             pybind11::arg("torque") = Types::Action::Vector::Zero(),
              pybind11::arg("position") = Types::Action::None(),
              pybind11::arg("position_kp") = Types::Action::None(),
              pybind11::arg("position_kd") = Types::Action::None());
