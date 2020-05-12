@@ -14,6 +14,9 @@
 #include <thread>
 #include <vector>
 
+#include <cereal/archives/binary.hpp>
+#include <cereal/types/vector.hpp>
+
 #include "sensor_data.hpp"
 
 namespace robot_interfaces
@@ -56,8 +59,10 @@ public:
         buffer_.clear();
     }
 
-    void save(const std::string &filename) const
+    void stop_and_save(const std::string &filename)
     {
+        stop();
+
         std::ofstream outfile(filename, std::ios::binary);
         cereal::BinaryOutputArchive archive(outfile);
 
@@ -75,7 +80,7 @@ private:
     {
         auto t = sensor_data_->observation->newest_timeindex();
 
-        while (enabled_)  // TODO: termination criterion?
+        while (enabled_)
         {
             buffer_.push_back((*sensor_data_->observation)[t]);
             t++;
