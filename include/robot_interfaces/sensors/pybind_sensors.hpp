@@ -14,6 +14,7 @@
 #include <robot_interfaces/sensors/sensor_data.hpp>
 #include <robot_interfaces/sensors/sensor_driver.hpp>
 #include <robot_interfaces/sensors/sensor_frontend.hpp>
+#include <robot_interfaces/sensors/sensor_logger.hpp>
 
 namespace robot_interfaces
 {
@@ -29,6 +30,7 @@ void create_sensor_bindings(pybind11::module& m)
     typedef SensorData<ObservationType> BaseData;
     typedef SingleProcessSensorData<ObservationType> SingleProcData;
     typedef MultiProcessSensorData<ObservationType> MultiProcData;
+    typedef SensorLogger<ObservationType> Logger;
 
     pybind11::class_<BaseData, std::shared_ptr<BaseData>>(m, "BaseData");
 
@@ -52,11 +54,11 @@ void create_sensor_bindings(pybind11::module& m)
     pybind11::class_<SensorBackend<ObservationType>>(m, "Backend")
         .def(pybind11::init<
              typename std::shared_ptr<SensorDriver<ObservationType>>,
-             typename std::shared_ptr<SensorData<ObservationType>>>());
+             typename std::shared_ptr<BaseData>>());
 
     pybind11::class_<SensorFrontend<ObservationType>>(m, "Frontend")
         .def(pybind11::init<
-             typename std::shared_ptr<SensorData<ObservationType>>>())
+             typename std::shared_ptr<BaseData>>())
         .def("get_latest_observation",
              &SensorFrontend<ObservationType>::get_latest_observation)
         .def("get_observation",
@@ -65,6 +67,14 @@ void create_sensor_bindings(pybind11::module& m)
              &SensorFrontend<ObservationType>::get_timestamp_ms)
         .def("get_current_timeindex",
              &SensorFrontend<ObservationType>::get_current_timeindex);
+
+    pybind11::class_<Logger, std::shared_ptr<Logger>>(m, "Logger")
+        .def(pybind11::init<
+             typename std::shared_ptr<BaseData>, size_t>())
+        .def("start", &Logger::start)
+        .def("stop", &Logger::stop)
+        .def("reset", &Logger::reset)
+        .def("save", &Logger::save);
 }
 
 }  // namespace robot_interfaces
