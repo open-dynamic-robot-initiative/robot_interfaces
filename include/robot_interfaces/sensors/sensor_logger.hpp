@@ -82,9 +82,16 @@ private:
 
         while (enabled_)
         {
-            buffer_.push_back((*sensor_data_->observation)[t]);
+            try
+            {
+                buffer_.push_back((*sensor_data_->observation)[t]);
+            }
+            catch (const std::invalid_argument &e)
+            {
+                std::cerr << "ERROR: " << e.what() << "\nSkip observation."
+                          << std::endl;
+            }
             t++;
-            // FIXME catch "too old index" exception
             // FIXME check buffer_limit_
         }
     }
