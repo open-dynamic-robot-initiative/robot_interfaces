@@ -31,6 +31,7 @@ void create_sensor_bindings(pybind11::module& m)
     typedef SingleProcessSensorData<ObservationType> SingleProcData;
     typedef MultiProcessSensorData<ObservationType> MultiProcData;
     typedef SensorLogger<ObservationType> Logger;
+    typedef SensorLogReader<ObservationType> LogReader;
 
     pybind11::class_<BaseData, std::shared_ptr<BaseData>>(m, "BaseData");
 
@@ -74,7 +75,12 @@ void create_sensor_bindings(pybind11::module& m)
         .def("start", &Logger::start)
         .def("stop", &Logger::stop)
         .def("reset", &Logger::reset)
-        .def("save", &Logger::save);
+        .def("stop_and_save", &Logger::stop_and_save);
+
+    pybind11::class_<LogReader, std::shared_ptr<LogReader>>(m, "LogReader")
+        .def(pybind11::init<std::string>())
+        .def("read_file", &LogReader::read_file)
+        .def_readonly("data", &LogReader::data);
 }
 
 }  // namespace robot_interfaces
