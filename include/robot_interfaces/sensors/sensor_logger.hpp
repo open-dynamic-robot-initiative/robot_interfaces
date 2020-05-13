@@ -34,6 +34,10 @@ public:
     {
     }
 
+    // reinstate the implicit move constructor
+    // See https://stackoverflow.com/a/27474070
+    SensorLogger(SensorLogger &&) = default;
+
     ~SensorLogger()
     {
         stop();
@@ -74,7 +78,7 @@ private:
     std::vector<Observation> buffer_;
     size_t buffer_limit_;
     std::thread buffer_thread_;
-    std::atomic<bool> enabled_;
+    bool enabled_;
 
     void loop()
     {
