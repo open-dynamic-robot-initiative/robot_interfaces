@@ -27,7 +27,7 @@ class SensorLogger
 public:
     typedef std::shared_ptr<SensorData<Observation>> DataPtr;
 
-    SensorLogger(DataPtr sensor_data, size_t buffer_limit = 100000)
+    SensorLogger(DataPtr sensor_data, size_t buffer_limit)
         : sensor_data_(sensor_data),
           buffer_limit_(buffer_limit),
           enabled_(false)
@@ -96,7 +96,15 @@ private:
                           << std::endl;
             }
             t++;
-            // FIXME check buffer_limit_
+
+            // Stop logging if buffer limit is reached
+            if (buffer_.size() >= buffer_limit_)
+            {
+                std::cerr << "WARNING: SensorLogger buffer limit is reached.  "
+                             "Stop logging."
+                          << std::endl;
+                enabled_ = false;
+            }
         }
     }
 };
