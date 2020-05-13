@@ -15,9 +15,10 @@ namespace robot_interfaces
 /**
  * @brief Types for the TriFinger robot (basically three times the Finger).
  */
-struct TriFingerTypes : public SimpleNJointRobotTypes<9>
-{
-};
+// FIXME remove
+//struct TriFingerTypes : public SimpleNJointRobotTypes<9>
+//{
+//};
 
 }  // namespace robot_interfaces
 

@@ -20,7 +20,7 @@
  * \brief Create bindings for TriFinger robot types
  */
 #include <robot_interfaces/pybind_helper.hpp>
-#include <robot_interfaces/trifinger_types.hpp>
+#include <robot_interfaces/finger_types.hpp>
 
 
 using namespace robot_interfaces;

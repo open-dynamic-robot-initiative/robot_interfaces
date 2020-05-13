@@ -19,12 +19,45 @@
  * \file
  * \brief Helper functions for creating Python bindings.
  */
+#include <type_traits>
+
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl_bind.h>
 
 namespace robot_interfaces
 {
+/**
+ * @bind Add Python bindings for Types::Observaton::tip_force if it exists.
+ *
+ * Uses black SFINAE magic to add bindings for "tip_force" if it exists and do
+ * nothing if it does not.
+ *
+ * Usage:
+ *
+ *     BindTipForceIfExists<Types>::bind(pybind_class);
+ *
+ * This is based on https://stackoverflow.com/a/16000226, see there for an
+ * explanation how/why this works.
+ */
+template <typename Types, typename = int>
+struct BindTipForceIfExists
+{
+    static void bind(pybind11::class_<typename Types::Observation> &c)
+    {
+        // tip_force does not exist, so do nothing
+    }
+};
+template <typename Types>
+struct BindTipForceIfExists<Types,
+                            decltype((void)Types::Observation::tip_force, 0)>
+{
+    static void bind(pybind11::class_<typename Types::Observation> &c)
+    {
+        c.def_readwrite("tip_force", &Types::Observation::tip_force);
+    }
+};
+
 /**
  * \brief Create Python bindings for the specified robot Types.
  *
@@ -81,12 +114,12 @@ void create_python_bindings(pybind11::module &m)
              pybind11::arg("position_kp") = Types::Action::None(),
              pybind11::arg("position_kd") = Types::Action::None());
 
-    pybind11::class_<typename Types::Observation>(m, "Observation")
-        .def(pybind11::init<>())
-        .def_readwrite("position", &Types::Observation::position)
-        .def_readwrite("velocity", &Types::Observation::velocity)
-        .def_readwrite("torque", &Types::Observation::torque);
-        //.def_readwrite("tip_force", &Types::Observation::tip_force);
+    auto obs = pybind11::class_<typename Types::Observation>(m, "Observation")
+                   .def(pybind11::init<>())
+                   .def_readwrite("position", &Types::Observation::position)
+                   .def_readwrite("velocity", &Types::Observation::velocity)
+                   .def_readwrite("torque", &Types::Observation::torque);
+    BindTipForceIfExists<Types>::bind(obs);
 
     // Release the GIL when calling any of the front-end functions, so in case
     // there are subthreads running Python, they have a chance to acquire the

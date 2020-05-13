@@ -26,6 +26,6 @@ using namespace robot_interfaces;
 
 PYBIND11_MODULE(py_finger_types, m)
 {
-    create_python_bindings<FingerTypes>(m);
+    create_python_bindings<MonoFingerTypes>(m);
 
 }
