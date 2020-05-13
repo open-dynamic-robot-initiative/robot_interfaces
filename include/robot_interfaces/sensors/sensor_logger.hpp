@@ -97,24 +97,4 @@ private:
     }
 };
 
-template <typename Observation>
-class SensorLogReader
-{
-public:
-    std::vector<Observation> data;
-
-    SensorLogReader(const std::string &filename)
-    {
-        read_file(filename);
-    }
-
-    void read_file(const std::string &filename)
-    {
-        std::ifstream infile(filename, std::ios::binary);
-        cereal::BinaryInputArchive archive(infile);
-
-        archive(data);
-    }
-};
-
 }  // namespace robot_interfaces

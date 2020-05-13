@@ -15,6 +15,7 @@
 #include <robot_interfaces/sensors/sensor_driver.hpp>
 #include <robot_interfaces/sensors/sensor_frontend.hpp>
 #include <robot_interfaces/sensors/sensor_logger.hpp>
+#include <robot_interfaces/sensors/sensor_log_reader.hpp>
 
 namespace robot_interfaces
 {
