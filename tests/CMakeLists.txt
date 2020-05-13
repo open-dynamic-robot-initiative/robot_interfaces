@@ -19,5 +19,4 @@ endif()
 
 endmacro(create_unittest test_name)
 
-create_unittest(test_process_action)
 create_unittest(test_robot_backend)
