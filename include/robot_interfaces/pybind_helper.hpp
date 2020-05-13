@@ -43,7 +43,7 @@ namespace robot_interfaces
 template <typename Types, typename = int>
 struct BindTipForceIfExists
 {
-    static void bind(pybind11::class_<typename Types::Observation> &c)
+    static void bind(pybind11::class_<typename Types::Observation> &)
     {
         // tip_force does not exist, so do nothing
     }

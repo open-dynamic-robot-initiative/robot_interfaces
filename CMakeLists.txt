@@ -11,6 +11,9 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 endif()
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
 
+# stop build on first error
+string(APPEND CMAKE_CXX_FLAGS " -Wfatal-errors")
+
 # ensuring path to libraries are set during install
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)

@@ -10,8 +10,10 @@
  * Taken from https://stackoverflow.com/a/51944389/2095383 with minor
  * modifications.
  */
+#pragma once
+
+#include <cereal/cereal.hpp>
 #include <Eigen/Eigen>
-#include <type_traits>
 
 namespace cereal
 {
