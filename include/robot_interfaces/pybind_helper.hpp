@@ -85,8 +85,8 @@ void create_python_bindings(pybind11::module &m)
         .def(pybind11::init<>())
         .def_readwrite("position", &Types::Observation::position)
         .def_readwrite("velocity", &Types::Observation::velocity)
-        .def_readwrite("torque", &Types::Observation::torque)
-        .def_readwrite("tip_force", &Types::Observation::tip_force);
+        .def_readwrite("torque", &Types::Observation::torque);
+        //.def_readwrite("tip_force", &Types::Observation::tip_force);
 
     // Release the GIL when calling any of the front-end functions, so in case
     // there are subthreads running Python, they have a chance to acquire the

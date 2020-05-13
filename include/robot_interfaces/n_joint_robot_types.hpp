@@ -27,7 +27,7 @@
 namespace robot_interfaces
 {
 template <size_t N>
-struct Action : public Loggable
+struct NJointAction : public Loggable
 {
     static constexpr size_t num_joints = N;
 
@@ -108,10 +108,10 @@ struct Action : public Loggable
      * @param position_kd  D-gains for the position controller.  Set to NaN
      *     to use default values.
      */
-    Action(Vector torque = Vector::Zero(),
-           Vector position = None(),
-           Vector position_kp = None(),
-           Vector position_kd = None())
+    NJointAction(Vector torque = Vector::Zero(),
+                 Vector position = None(),
+                 Vector position_kp = None(),
+                 Vector position_kd = None())
         : torque(torque),
           position(position),
           position_kp(position_kp),
@@ -126,9 +126,9 @@ struct Action : public Loggable
      *
      * @return Pure "torque action".
      */
-    static Action Torque(Vector torque)
+    static NJointAction Torque(Vector torque)
     {
-        return Action(torque);
+        return NJointAction(torque);
     }
 
     /**
@@ -144,11 +144,11 @@ struct Action : public Loggable
      *
      * @return Pure "position action".
      */
-    static Action Position(Vector position,
-                           Vector kp = None(),
-                           Vector kd = None())
+    static NJointAction Position(Vector position,
+                                 Vector kp = None(),
+                                 Vector kd = None())
     {
-        return Action(Vector::Zero(), position, kp, kd);
+        return NJointAction(Vector::Zero(), position, kp, kd);
     }
 
     /**
@@ -166,12 +166,12 @@ struct Action : public Loggable
      *
      * @return Action with both torque and position commands.
      */
-    static Action TorqueAndPosition(Vector torque,
-                                    Vector position,
-                                    Vector position_kp = None(),
-                                    Vector position_kd = None())
+    static NJointAction TorqueAndPosition(Vector torque,
+                                          Vector position,
+                                          Vector position_kp = None(),
+                                          Vector position_kd = None())
     {
-        return Action(torque, position, position_kp, position_kd);
+        return NJointAction(torque, position, position_kp, position_kd);
     }
 
     /**
@@ -179,9 +179,9 @@ struct Action : public Loggable
      *
      * @return Zero-torque action with position control disabled.
      */
-    static Action Zero()
+    static NJointAction Zero()
     {
-        return Action();
+        return NJointAction();
     }
 
     /**
@@ -196,18 +196,56 @@ struct Action : public Loggable
     }
 };
 
-template <size_t N_JOINTS, size_t N_FORCE_SENSORS>
-struct Observation : public Loggable
+template <size_t N>
+struct NJointObservation : public Loggable
 {
-    static constexpr size_t num_joints = N_JOINTS;
+    static constexpr size_t num_joints = N;
 
-    typedef Eigen::Matrix<double, N_JOINTS, 1> JointVector;
-    typedef Eigen::Matrix<double, N_JOINTS, 1> ForceVector;
+    typedef Eigen::Matrix<double, N, 1> Vector;
+
+    Vector position = Vector::Zero();
+    Vector velocity = Vector::Zero();
+    Vector torque = Vector::Zero();
+
+    template <class Archive>
+    void serialize(Archive& archive)
+    {
+        archive(position, velocity, torque);
+    }
+
+    std::vector<std::string> get_name() override
+    {
+        return {"position", "velocity", "torque"};
+    }
+
+    std::vector<std::vector<double>> get_data() override
+    {
+        typedef std::vector<double> vecd;
+
+        std::vector<vecd> result = {
+            vecd(position.size()), vecd(velocity.size()), vecd(torque.size())};
+
+        Vector::Map(&result[0][0], position.size()) = position;
+        Vector::Map(&result[1][0], velocity.size()) = velocity;
+        Vector::Map(&result[2][0], torque.size()) = torque;
+
+        return result;
+    }
+};
+
+template <size_t N_FINGERS>
+struct FingerObservation : public Loggable
+{
+    static constexpr size_t num_fingers = N_FINGERS;
+    static constexpr size_t num_joints = N_FINGERS * 3;
+
+    typedef Eigen::Matrix<double, num_joints, 1> JointVector;
+    typedef Eigen::Matrix<double, num_fingers, 1> FingerVector;
 
     JointVector position = JointVector::Zero();
     JointVector velocity = JointVector::Zero();
     JointVector torque = JointVector::Zero();
-    ForceVector tip_force = ForceVector::Zero();
+    FingerVector tip_force = FingerVector::Zero();
 
     template <class Archive>
     void serialize(Archive& archive)
@@ -232,43 +270,11 @@ struct Observation : public Loggable
         JointVector::Map(&result[0][0], position.size()) = position;
         JointVector::Map(&result[1][0], velocity.size()) = velocity;
         JointVector::Map(&result[2][0], torque.size()) = torque;
-        ForceVector::Map(&result[0][0], tip_force.size()) = tip_force;
+        FingerVector::Map(&result[0][0], tip_force.size()) = tip_force;
 
         return result;
     }
 };
-
-/**
- * @brief Collection of types for a generic N-joint BLMC robot.
- *
- * Defines all the types needed to set up an interface to a generic N-joint BLMC
- * robot that expects as Action a simple vector of N torque commands and
- * provides N observations containing measured joint angle, velocity and torque.
- *
- * @tparam N Number of joints
- */
-template <typename Action_t, typename Observation_t>
-struct NJointRobotTypes
-{
-    typedef Action_t Action;
-    typedef Observation_t Observation;
-
-    typedef RobotBackend<Action, Observation> Backend;
-    typedef std::shared_ptr<Backend> BackendPtr;
-
-    typedef RobotData<Action, Observation> BaseData;
-    typedef std::shared_ptr<BaseData> BaseDataPtr;
-    typedef SingleProcessRobotData<Action, Observation> SingleProcessData;
-    typedef std::shared_ptr<SingleProcessData> SingleProcessDataPtr;
-    typedef MultiProcessRobotData<Action, Observation> MultiProcessData;
-    typedef std::shared_ptr<MultiProcessData> MultiProcessDataPtr;
-
-    typedef RobotFrontend<Action, Observation> Frontend;
-    typedef std::shared_ptr<Frontend> FrontendPtr;
-
-    typedef RobotLogger<Action, Observation> Logger;
-};
-
 
 template <typename Action_t, typename Observation_t>
 struct RobotInterfaceTypes
@@ -292,6 +298,19 @@ struct RobotInterfaceTypes
     typedef RobotLogger<Action, Observation> Logger;
 };
 
-
+/**
+ * @brief Collection of types for a generic N-joint BLMC robot.
+ *
+ * Defines all the types needed to set up an interface to a generic N-joint BLMC
+ * robot that expects as Action a simple vector of N torque commands and
+ * provides N observations containing measured joint angle, velocity and torque.
+ *
+ * @tparam N Number of joints
+ */
+template <size_t N>
+struct SimpleNJointRobotTypes
+    : public RobotInterfaceTypes<NJointAction<N>, NJointObservation<N>>
+{
+};
 
 }  // namespace robot_interfaces

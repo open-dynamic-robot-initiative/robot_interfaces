@@ -15,7 +15,7 @@ namespace robot_interfaces
 /**
  * @brief Types for the Finger robot (basic 3-joint robot).
  */
-struct FingerTypes : public NJointRobotTypes<3>
+struct FingerTypes : public SimpleNJointRobotTypes<3>
 {
 };
 

@@ -15,7 +15,7 @@ namespace robot_interfaces
 /**
  * @brief Types for the TriFinger robot (basically three times the Finger).
  */
-struct TriFingerTypes : public NJointRobotTypes<9>
+struct TriFingerTypes : public SimpleNJointRobotTypes<9>
 {
 };
 

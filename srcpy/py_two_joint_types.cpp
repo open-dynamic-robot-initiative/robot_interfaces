@@ -27,5 +27,5 @@ using namespace robot_interfaces;
 
 PYBIND11_MODULE(py_two_joint_types, m)
 {
-    create_python_bindings<NJointRobotTypes<2>>(m);
+    create_python_bindings<SimpleNJointRobotTypes<2>>(m);
 }
