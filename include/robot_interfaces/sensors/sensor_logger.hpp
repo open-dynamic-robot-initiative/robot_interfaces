@@ -45,8 +45,11 @@ public:
 
     void start()
     {
-        enabled_ = true;
-        buffer_thread_ = std::thread(&SensorLogger<Observation>::loop, this);
+        if (!enabled_)
+        {
+            enabled_ = true;
+            buffer_thread_ = std::thread(&SensorLogger<Observation>::loop, this);
+        }
     }
 
     void stop()
