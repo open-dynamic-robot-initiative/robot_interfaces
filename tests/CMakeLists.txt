@@ -21,3 +21,5 @@ endmacro(create_unittest test_name)
 
 create_unittest(test_process_action)
 create_unittest(test_robot_backend)
+create_unittest(test_sensor_interface)
+create_unittest(test_sensor_logger)

@@ -44,11 +44,16 @@ public:
         thread_ = std::thread(&SensorBackend<ObservationType>::loop, this);
     }
 
+    // reinstate the implicit move constructor
+    // See https://stackoverflow.com/a/27474070
+    SensorBackend(SensorBackend &&) = default;
+
     virtual ~SensorBackend()
     {
         destructor_was_called_ = true;
         thread_.join();
     }
+
 
 private:
     std::shared_ptr<SensorDriver<ObservationType>> sensor_driver_;
