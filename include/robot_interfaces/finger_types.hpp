@@ -21,7 +21,7 @@ constexpr size_t BOARDS_PER_FINGER = 2;
 template <size_t N_FINGERS>
 struct FingerTypes
     : public RobotInterfaceTypes<NJointAction<N_FINGERS * JOINTS_PER_FINGER>,
-                                 FingerObservation<N_FINGERS>>
+                                 NFingerObservation<N_FINGERS>>
 {
 };
 

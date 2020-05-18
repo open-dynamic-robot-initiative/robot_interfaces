@@ -6,7 +6,7 @@
  */
 #pragma once
 
-#include "finger_observation.hpp"
+#include "n_finger_observation.hpp"
 #include "n_joint_action.hpp"
 #include "n_joint_observation.hpp"
 #include "types.hpp"

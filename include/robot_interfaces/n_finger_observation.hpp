@@ -22,7 +22,7 @@ namespace robot_interfaces
  * @tparam N_FINGERS  Number of fingers.
  */
 template <size_t N_FINGERS>
-struct FingerObservation : public Loggable
+struct NFingerObservation : public Loggable
 {
     static constexpr size_t num_fingers = N_FINGERS;
     static constexpr size_t num_joints = N_FINGERS * 3;
