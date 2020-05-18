@@ -25,7 +25,6 @@ struct FingerTypes
 {
 };
 
-
 // typedefs for common number of fingers
 typedef FingerTypes<1> MonoFingerTypes;
 typedef FingerTypes<3> TriFingerTypes;

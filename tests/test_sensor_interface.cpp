@@ -28,4 +28,3 @@ TEST(TestSensorInterface, basic_pipeline)
         ASSERT_EQ(obs, t);
     }
 }
-

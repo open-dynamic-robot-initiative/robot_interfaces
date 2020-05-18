@@ -197,4 +197,3 @@ struct NJointAction : public Loggable
 };
 
 }  // namespace robot_interfaces
-

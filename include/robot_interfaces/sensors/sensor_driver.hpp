@@ -15,14 +15,13 @@ namespace robot_interfaces
 /**
  * @brief Base driver class from which all specific sensor
  * drivers should derive.
- * 
+ *
  * @tparam ObservationType
  */
 template <typename ObservationType>
 class SensorDriver
 {
 public:
-
     /**
      * @brief return the observation
      * @return depends on the observation structure

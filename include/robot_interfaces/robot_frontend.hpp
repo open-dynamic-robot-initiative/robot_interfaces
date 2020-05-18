@@ -40,8 +40,7 @@ class RobotFrontend
 public:
     typedef time_series::Timestamp TimeStamp;
 
-    RobotFrontend(
-        std::shared_ptr<RobotData<Action, Observation>> robot_data)
+    RobotFrontend(std::shared_ptr<RobotData<Action, Observation>> robot_data)
         : robot_data_(robot_data)
     {
     }

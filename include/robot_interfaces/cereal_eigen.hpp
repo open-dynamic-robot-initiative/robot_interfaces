@@ -12,8 +12,8 @@
  */
 #pragma once
 
-#include <cereal/cereal.hpp>
 #include <Eigen/Eigen>
+#include <cereal/cereal.hpp>
 
 namespace cereal
 {

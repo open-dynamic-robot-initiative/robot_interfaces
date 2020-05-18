@@ -54,7 +54,6 @@ public:
         thread_.join();
     }
 
-
 private:
     std::shared_ptr<SensorDriver<ObservationType>> sensor_driver_;
     std::shared_ptr<SensorData<ObservationType>> sensor_data_;

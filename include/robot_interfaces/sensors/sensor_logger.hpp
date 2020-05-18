@@ -21,7 +21,6 @@
 
 namespace robot_interfaces
 {
-
 /**
  * @brief Record sensor observations and store them to a file.
  *
@@ -82,7 +81,8 @@ public:
         if (!enabled_)
         {
             enabled_ = true;
-            buffer_thread_ = std::thread(&SensorLogger<Observation>::loop, this);
+            buffer_thread_ =
+                std::thread(&SensorLogger<Observation>::loop, this);
         }
     }
 
