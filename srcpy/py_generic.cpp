@@ -37,4 +37,3 @@ PYBIND11_MODULE(py_generic, m)
         .value("DRIVER_ERROR", Status::ErrorStatus::DRIVER_ERROR)
         .value("BACKEND_ERROR", Status::ErrorStatus::BACKEND_ERROR);
 }
-

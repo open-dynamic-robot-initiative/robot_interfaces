@@ -14,8 +14,8 @@
 #include <robot_interfaces/sensors/sensor_data.hpp>
 #include <robot_interfaces/sensors/sensor_driver.hpp>
 #include <robot_interfaces/sensors/sensor_frontend.hpp>
-#include <robot_interfaces/sensors/sensor_logger.hpp>
 #include <robot_interfaces/sensors/sensor_log_reader.hpp>
+#include <robot_interfaces/sensors/sensor_logger.hpp>
 
 namespace robot_interfaces
 {
@@ -36,14 +36,12 @@ void create_sensor_bindings(pybind11::module& m)
 
     pybind11::class_<BaseData, std::shared_ptr<BaseData>>(m, "BaseData");
 
-    pybind11::class_<SingleProcData,
-                     std::shared_ptr<SingleProcData>,
-                     BaseData>(m, "SingleProcessData")
+    pybind11::class_<SingleProcData, std::shared_ptr<SingleProcData>, BaseData>(
+        m, "SingleProcessData")
         .def(pybind11::init<size_t>(), pybind11::arg("history_size") = 1000);
 
-    pybind11::class_<MultiProcData,
-                     std::shared_ptr<MultiProcData>,
-                     BaseData>(m, "MultiProcessData")
+    pybind11::class_<MultiProcData, std::shared_ptr<MultiProcData>, BaseData>(
+        m, "MultiProcessData")
         .def(pybind11::init<std::string, bool, size_t>(),
              pybind11::arg("shared_memory_id_prefix"),
              pybind11::arg("is_master"),
@@ -59,8 +57,7 @@ void create_sensor_bindings(pybind11::module& m)
              typename std::shared_ptr<BaseData>>());
 
     pybind11::class_<SensorFrontend<ObservationType>>(m, "Frontend")
-        .def(pybind11::init<
-             typename std::shared_ptr<BaseData>>())
+        .def(pybind11::init<typename std::shared_ptr<BaseData>>())
         .def("get_latest_observation",
              &SensorFrontend<ObservationType>::get_latest_observation)
         .def("get_observation",
@@ -71,8 +68,7 @@ void create_sensor_bindings(pybind11::module& m)
              &SensorFrontend<ObservationType>::get_current_timeindex);
 
     pybind11::class_<Logger, std::shared_ptr<Logger>>(m, "Logger")
-        .def(pybind11::init<
-             typename std::shared_ptr<BaseData>, size_t>())
+        .def(pybind11::init<typename std::shared_ptr<BaseData>, size_t>())
         .def("start", &Logger::start)
         .def("stop", &Logger::stop)
         .def("reset", &Logger::reset)

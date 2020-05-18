@@ -19,9 +19,8 @@
  * \file
  * \brief Create bindings for Two-Joint robot types
  */
-#include <robot_interfaces/pybind_helper.hpp>
 #include <robot_interfaces/n_joint_robot_types.hpp>
-
+#include <robot_interfaces/pybind_helper.hpp>
 
 using namespace robot_interfaces;
 

@@ -44,8 +44,7 @@ public:
         : RobotFrontend<Action, Observation>(std::make_shared<Data>()),
           driver_ptr_(std::make_shared<Driver>(args...)),
           backend_(
-              std::make_shared<
-                  robot_interfaces::MonitoredRobotDriver<Driver>>(
+              std::make_shared<robot_interfaces::MonitoredRobotDriver<Driver>>(
                   driver_ptr_,
                   max_action_duration_s,
                   max_inter_action_duration_s),

@@ -7,13 +7,13 @@
  * @brief Minimal demo of robot driver, backend and frontend
  */
 
+#include "robot_interfaces/example.hpp"
 #include "robot_interfaces/monitored_robot_driver.hpp"
 #include "robot_interfaces/robot.hpp"
 #include "robot_interfaces/robot_backend.hpp"
 #include "robot_interfaces/robot_driver.hpp"
 #include "robot_interfaces/robot_frontend.hpp"
 #include "robot_interfaces/status.hpp"
-#include "robot_interfaces/example.hpp"
 
 #include <memory>
 
@@ -25,7 +25,6 @@
  */
 
 using namespace robot_interfaces::example;
-
 
 int main()
 {
@@ -49,9 +48,9 @@ int main()
         // be shut down.
         // If no time monitoring is needed in your application, you can simply
         // use the `driver_ptr` directly, without the wrapper.
-        auto monitored_driver_ptr = std::make_shared<
-            robot_interfaces::MonitoredRobotDriver<Driver>>(
-            driver_ptr, max_action_duration_s, max_inter_action_duration_s);
+        auto monitored_driver_ptr =
+            std::make_shared<robot_interfaces::MonitoredRobotDriver<Driver>>(
+                driver_ptr, max_action_duration_s, max_inter_action_duration_s);
 
         std::shared_ptr<Data> data_ptr = std::make_shared<Data>();
 

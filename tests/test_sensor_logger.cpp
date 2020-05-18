@@ -73,7 +73,6 @@ TEST_F(TestSensorLogger, write_and_read_log)
     }
 }
 
-
 TEST_F(TestSensorLogger, buffer_limit)
 {
     constexpr int NUM_OBSERVATIONS = 20;
