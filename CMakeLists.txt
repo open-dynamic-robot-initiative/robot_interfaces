@@ -52,26 +52,22 @@ include_directories(
 catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS ${CATKIN_PKGS}
-  LIBRARIES global_signal_handler
 )
 
-
-add_library(global_signal_handler src/global_signal_handler.cpp)
-target_link_libraries(global_signal_handler ${catkin_LIBRARIES})
 
 ####################
 # manage the demos #
 ####################
 add_executable(demo demos/demo.cpp)
-target_link_libraries(demo ${catkin_LIBRARIES} global_signal_handler)
+target_link_libraries(demo ${catkin_LIBRARIES})
 
 add_executable(demo_multiprocess_backend demos/demo_multiprocess_backend.cpp)
 target_link_libraries(demo_multiprocess_backend ${catkin_LIBRARIES}
-    global_signal_handler rt pthread)
+    rt pthread)
 
 add_executable(demo_multiprocess_frontend demos/demo_multiprocess_frontend.cpp)
 target_link_libraries(demo_multiprocess_frontend ${catkin_LIBRARIES}
-    global_signal_handler rt pthread)
+    rt pthread)
 
 #########################
 # manage the unit tests #
@@ -83,10 +79,10 @@ add_subdirectory(tests)
 ###################
 
 catkin_add_pybind11_module(py_generic)
-catkin_add_pybind11_module(py_finger_types global_signal_handler)
-catkin_add_pybind11_module(py_trifinger_types global_signal_handler)
-catkin_add_pybind11_module(py_one_joint_types global_signal_handler)
-catkin_add_pybind11_module(py_two_joint_types global_signal_handler)
+catkin_add_pybind11_module(py_finger_types)
+catkin_add_pybind11_module(py_trifinger_types)
+catkin_add_pybind11_module(py_one_joint_types)
+catkin_add_pybind11_module(py_two_joint_types)
 
 
 ##########################
