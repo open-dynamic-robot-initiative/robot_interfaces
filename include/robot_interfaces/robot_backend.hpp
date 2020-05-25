@@ -19,7 +19,8 @@
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
 
-#include <robot_interfaces/global_signal_handler.hpp>
+#include <signal_handler/signal_handler.hpp>
+
 #include <robot_interfaces/loggable.hpp>
 #include <robot_interfaces/robot_data.hpp>
 #include <robot_interfaces/robot_driver.hpp>
@@ -66,7 +67,7 @@ public:
           is_shutdown_requested_(false),
           max_action_repetitions_(0)
     {
-        GlobalSignalHandler::initialize();
+        signal_handler::SignalHandler::initialize();
 
         loop_is_running_ = true;
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
@@ -210,7 +211,7 @@ private:
     bool has_shutdown_request() const
     {
         return is_shutdown_requested_ ||
-               GlobalSignalHandler::has_received_sigint();
+               signal_handler::SignalHandler::has_received_sigint();
     }
 
     // control loop

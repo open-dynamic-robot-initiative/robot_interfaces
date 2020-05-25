@@ -13,7 +13,6 @@ if(TARGET ${test_name})
     # link the dependencies to it
     target_link_libraries(${test_name}
         ${catkin_LIBRARIES}
-        global_signal_handler
     )
 endif()
 
