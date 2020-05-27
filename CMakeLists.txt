@@ -29,6 +29,7 @@ set(CATKIN_PKGS ${CATKIN_PKGS}
   mpi_cpp_tools
   pybind11_catkin
   time_series
+  signal_handler
 )
 find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
 
