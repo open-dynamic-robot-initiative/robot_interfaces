@@ -11,7 +11,7 @@
 #include <vector>
 
 #include <Eigen/Eigen>
-#include <robot_interfaces/cereal_eigen.hpp>
+#include <serialization_utils/cereal_eigen.hpp>
 
 #include <robot_interfaces/loggable.hpp>
 
