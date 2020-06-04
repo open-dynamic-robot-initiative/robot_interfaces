@@ -30,6 +30,7 @@ set(CATKIN_PKGS ${CATKIN_PKGS}
   pybind11_catkin
   time_series
   signal_handler
+  serialization_utils
 )
 find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
 

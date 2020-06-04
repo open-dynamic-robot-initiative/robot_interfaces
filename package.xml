@@ -16,5 +16,6 @@
   <depend>pybind11_catkin</depend>
   <depend>time_series</depend>
   <depend>signal_handler</depend>
+  <depend>serialization_utils</depend>
 
 </package>
