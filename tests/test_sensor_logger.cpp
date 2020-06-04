@@ -111,7 +111,7 @@ TEST_F(TestSensorLogger, buffer_limit)
 
         // also verify that the messages are the expected ones (i.e. the ones
         // from the start, before the limit is reached).
-        for (int t = 0; t < log.data.size(); t++)
+        for (std::size_t t = 0; t < log.data.size(); t++)
         {
             ASSERT_EQ(log.data[t], t);
         }
