@@ -34,8 +34,7 @@ public:
     /**
      * @param max_action_duration_s See MonitoredRobotDriver.
      * @param max_inter_action_duration_s See MonitoredRobotDriver.
-     * @param args Arguments required to instantiate the driver
-     * by this constructor if not provided.
+     * @param args Arguments for instantiating Driver
      */
     template <typename... Args>
     Robot(double max_action_duration_s,
@@ -48,7 +47,10 @@ public:
                   driver_ptr_,
                   max_action_duration_s,
                   max_inter_action_duration_s),
-              this->robot_data_)
+              this->robot_data_,
+	      true, // real time mode
+	      std::numeric_limits<double>::infinity(), // first_action_timeout
+	      0) // max_number_of_actions
     {
         // compile time checking template Driver inherate from RobotDriver
         static_assert(
@@ -57,6 +59,34 @@ public:
             "robot_interfaces::RobotDriver");
     }
 
+
+    /**  Robot which instantiates a non real time mode backend
+     * @param max_action_duration_s See MonitoredRobotDriver.
+     * @param max_inter_action_duration_s See MonitoredRobotDriver.
+     * @param args Arguments for instantiating Driver
+     */
+    template <typename... Args>
+    Robot(Args... args)
+        : RobotFrontend<Action, Observation>(std::make_shared<Data>()),
+          driver_ptr_(std::make_shared<Driver>(args...)),
+          backend_(
+              std::make_shared<robot_interfaces::MonitoredRobotDriver<Driver>>(
+                  driver_ptr_,
+                  std::numeric_limits<double>::infinity(), //max_action_duration_s,
+                  std::numeric_limits<double>::infinity() ), //max_inter_action_duration_s)
+              this->robot_data_,
+	      false, // real time mode
+	      std::numeric_limits<double>::infinity(), // first_action_timeout
+	      std::numeric_limits<int>::infinity()) // max_number_of_actions
+    {
+        // compile time checking template Driver inherate from RobotDriver
+        static_assert(
+            std::is_base_of<RobotDriver<Action, Observation>, Driver>::value,
+            "template Driver must be a subclass of "
+            "robot_interfaces::RobotDriver");
+    }
+
+  
     /**
      * initialize the backend
      */
