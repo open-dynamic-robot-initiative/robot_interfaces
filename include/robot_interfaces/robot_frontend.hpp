@@ -45,28 +45,28 @@ public:
     {
     }
 
-    Observation get_observation(const TimeIndex &t)
+    Observation get_observation(const TimeIndex &t) const
     {
         return (*robot_data_->observation)[t];
     }
-    Action get_desired_action(const TimeIndex &t)
+    Action get_desired_action(const TimeIndex &t) const
     {
         return (*robot_data_->desired_action)[t];
     }
-    Action get_applied_action(const TimeIndex &t)
+    Action get_applied_action(const TimeIndex &t) const
     {
         return (*robot_data_->applied_action)[t];
     }
-    Status get_status(const TimeIndex &t)
+    Status get_status(const TimeIndex &t) const
     {
         return (*robot_data_->status)[t];
     }
 
-    TimeStamp get_time_stamp_ms(const TimeIndex &t)
+    TimeStamp get_time_stamp_ms(const TimeIndex &t) const
     {
         return robot_data_->observation->timestamp_ms(t);
     }
-    TimeIndex get_current_timeindex()
+    TimeIndex get_current_timeindex() const
     {
         return robot_data_->observation->newest_timeindex();
     }
@@ -114,7 +114,7 @@ public:
         return robot_data_->desired_action->newest_timeindex();
     }
 
-    void wait_until_timeindex(const TimeIndex &t)
+    void wait_until_timeindex(const TimeIndex &t) const
     {
         robot_data_->observation->timestamp_ms(t);
     }
