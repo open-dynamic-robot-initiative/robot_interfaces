@@ -25,6 +25,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl_bind.h>
 
+#include <robot_interfaces/robot_frontend.hpp>
+
 namespace robot_interfaces
 {
 /**
@@ -139,8 +141,19 @@ void create_python_bindings(pybind11::module &m)
         .def("get_status",
              &Types::Frontend::get_status,
              pybind11::call_guard<pybind11::gil_scoped_release>())
-        .def("get_time_stamp_ms",
-             &Types::Frontend::get_time_stamp_ms,
+        // TODO get_time_stamp_ms is deprecated, remove it some time in the near
+        // future.
+        .def(
+            "get_time_stamp_ms",
+            [](pybind11::object &self, const TimeIndex &t) {
+                auto warnings = pybind11::module::import("warnings");
+                warnings.attr("warn")(
+                    "get_time_stamp_ms() is deprecated, use get_timestamp_ms() "
+                    "instead.");
+                return self.attr("get_timestamp_ms")(t);
+            })
+        .def("get_timestamp_ms",
+             &Types::Frontend::get_timestamp_ms,
              pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("append_desired_action",
              &Types::Frontend::append_desired_action,
