@@ -40,21 +40,21 @@ public:
     {
     }
 
-    ObservationType get_observation(const TimeIndex &t)
+    ObservationType get_observation(const TimeIndex t) const
     {
         return (*sensor_data_->observation)[t];
     }
 
-    ObservationType get_latest_observation()
+    ObservationType get_latest_observation() const
     {
         return sensor_data_->observation->newest_element();
     }
 
-    TimeStamp get_timestamp_ms(const TimeIndex &t)
+    TimeStamp get_timestamp_ms(const TimeIndex t) const
     {
         return sensor_data_->observation->timestamp_ms(t);
     }
-    TimeIndex get_current_timeindex()
+    TimeIndex get_current_timeindex() const
     {
         return sensor_data_->observation->newest_timeindex();
     }
