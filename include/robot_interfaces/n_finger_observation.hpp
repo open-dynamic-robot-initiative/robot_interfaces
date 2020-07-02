@@ -58,7 +58,7 @@ struct NFingerObservation : public Loggable
         JointVector::Map(&result[0][0], position.size()) = position;
         JointVector::Map(&result[1][0], velocity.size()) = velocity;
         JointVector::Map(&result[2][0], torque.size()) = torque;
-        FingerVector::Map(&result[0][0], tip_force.size()) = tip_force;
+        FingerVector::Map(&result[3][0], tip_force.size()) = tip_force;
 
         return result;
     }
