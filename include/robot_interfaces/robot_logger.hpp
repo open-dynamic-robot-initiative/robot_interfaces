@@ -148,7 +148,7 @@ public:
         {
             if (field_data[i].size() == 1)
             {
-                std::string temp = field_name[i];
+                std::string temp = identifier + "_" + field_name[i];
                 header.push_back(temp);
             }
             else
