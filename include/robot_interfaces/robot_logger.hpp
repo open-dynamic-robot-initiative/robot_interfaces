@@ -10,7 +10,7 @@
 
 #include <fstream>
 #include <iostream>
-
+#include <thread>
 #include <chrono>
 
 #include <Eigen/Eigen>
@@ -78,7 +78,6 @@ public:
           block_size_(block_size),
           stop_was_called_(false)
     {
-        thread_ = std::make_shared<real_time_tools::RealTimeThread>();
     }
 
     virtual ~RobotLogger()
@@ -250,12 +249,6 @@ public:
         }
     }
 
-    static void *write(void *instance_pointer)
-    {
-        ((RobotLogger *)(instance_pointer))->write();
-        return nullptr;
-    }
-
     /**
      * @brief Writes everything to the log file.
      *
@@ -326,7 +319,7 @@ public:
     void start(std::string filename)
     {
         output_file_name_ = filename;
-        thread_->create_realtime_thread(&RobotLogger::write, this);
+        thread_ = std::thread(&RobotLogger<Action, Observation>::write, this);
     }
 
     /**
@@ -335,12 +328,14 @@ public:
     void stop()
     {
         stop_was_called_ = true;
-        thread_->join();
+        if (thread_.joinable()) {
+            thread_.join();
+        }
         append_robot_data_to_file();
     }
 
 private:
-    std::shared_ptr<real_time_tools::RealTimeThread> thread_;
+    std::thread thread_;
 };
 
 }  // namespace robot_interfaces
