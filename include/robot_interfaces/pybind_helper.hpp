@@ -158,10 +158,28 @@ void create_python_bindings(pybind11::module &m)
         .def("append_desired_action",
              &Types::Frontend::append_desired_action,
              pybind11::call_guard<pybind11::gil_scoped_release>())
+        // TODO: deprecated, remove in near future
         .def("wait_until_time_index",
+             [](pybind11::object &self, const TimeIndex &t) {
+                 auto warnings = pybind11::module::import("warnings");
+                 warnings.attr("warn")(
+                     "wait_until_time_index() is deprecated, use "
+                     "wait_until_timeindex() instead.");
+                 return self.attr("wait_until_timeindex")(t);
+             })
+        .def("wait_until_timeindex",
              &Types::Frontend::wait_until_timeindex,
              pybind11::call_guard<pybind11::gil_scoped_release>())
+        // TODO: deprecated, remove in near future
         .def("get_current_time_index",
+             [](pybind11::object &self) {
+                 auto warnings = pybind11::module::import("warnings");
+                 warnings.attr("warn")(
+                     "get_current_time_index() is deprecated, use "
+                     "get_current_timeindex() instead.");
+                 return self.attr("get_current_timeindex")();
+             })
+        .def("get_current_timeindex",
              &Types::Frontend::get_current_timeindex,
              pybind11::call_guard<pybind11::gil_scoped_release>());
 
