@@ -184,7 +184,9 @@ void create_python_bindings(pybind11::module &m)
              pybind11::call_guard<pybind11::gil_scoped_release>());
 
     pybind11::class_<typename Types::Logger>(m, "Logger")
-        .def(pybind11::init<typename Types::BaseDataPtr, int>())
+        .def(pybind11::init<typename Types::BaseDataPtr, int>(),
+             pybind11::arg("robot_data"),
+             pybind11::arg("block_size") = 100)
         .def("start", &Types::Logger::start)
         .def("stop", &Types::Logger::stop);
 }
