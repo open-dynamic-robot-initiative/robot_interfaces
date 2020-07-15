@@ -19,10 +19,6 @@
 #include <mpi_cpp_tools/dynamical_systems.hpp>
 #include <mpi_cpp_tools/math.hpp>
 
-#include <real_time_tools/process_manager.hpp>
-#include <real_time_tools/thread.hpp>
-#include <real_time_tools/timer.hpp>
-
 #include <robot_interfaces/loggable.hpp>
 #include <robot_interfaces/status.hpp>
 
@@ -262,7 +258,7 @@ public:
         while (!stop_was_called_ &&
                !(logger_data_->desired_action->length() > 0))
         {
-            real_time_tools::Timer::sleep_until_sec(0.1);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
         index_ = logger_data_->observation->newest_timeindex();
