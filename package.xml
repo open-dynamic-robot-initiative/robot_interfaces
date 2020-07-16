@@ -12,7 +12,6 @@
 
   <depend>mpi_cmake_modules</depend>
   <depend>real_time_tools</depend>
-  <depend>mpi_cpp_tools</depend>
   <depend>pybind11_catkin</depend>
   <depend>time_series</depend>
   <depend>signal_handler</depend>

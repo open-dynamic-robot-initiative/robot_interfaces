@@ -15,12 +15,7 @@
 #include <limits>
 #include <thread>
 
-#include <Eigen/Eigen>
-
-#include <mpi_cpp_tools/basic_tools.hpp>
-#include <mpi_cpp_tools/dynamical_systems.hpp>
-#include <mpi_cpp_tools/math.hpp>
-
+#include <robot_interfaces/robot_data.hpp>
 #include <robot_interfaces/loggable.hpp>
 #include <robot_interfaces/status.hpp>
 

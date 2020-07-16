@@ -26,7 +26,6 @@ set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
 set(CATKIN_PKGS ${CATKIN_PKGS}
   mpi_cmake_modules
   real_time_tools
-  mpi_cpp_tools
   pybind11_catkin
   time_series
   signal_handler
