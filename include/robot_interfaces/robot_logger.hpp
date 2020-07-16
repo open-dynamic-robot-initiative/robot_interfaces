@@ -77,6 +77,7 @@ public:
      */
     void start(const std::string &filename)
     {
+        stop_was_called_ = false;
         output_file_name_ = filename;
         thread_ = std::thread(&RobotLogger<Action, Observation>::loop, this);
     }
