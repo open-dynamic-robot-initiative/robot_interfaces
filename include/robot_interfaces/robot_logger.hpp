@@ -15,22 +15,42 @@
 #include <limits>
 #include <thread>
 
-#include <robot_interfaces/robot_data.hpp>
 #include <robot_interfaces/loggable.hpp>
+#include <robot_interfaces/robot_data.hpp>
 #include <robot_interfaces/status.hpp>
 
 namespace robot_interfaces
 {
 /**
- * @brief To log data from *any* robot (real, simulated, fake).
+ * @brief Log robot data (observations, actions, status) to file.
  *
- * The RobotLogger logs the timestamp, the time index, and the values of every
- * Observation, Action, and Status variable. Observation, Action, and Status
- * *must* derive from Loggable. Any further data structure can be logged
- * similarly, which derives from Loggable.
+ * Logs for each time step the time index, timestamp, and the values
+ * Observation, Action, and Status.  The data is written to a text file, one
+ * line per time step with values separated by spaces.  This format can easily
+ * be read e.g. with NumPy or Pandas.
  *
- * @tparam Action
- * @tparam Observation
+ * There are two different ways of using the logger:
+ *
+ *  1. Write all the data from the time series to the file in one function call.
+ *     Use this if the time series buffer is big enough to cover the whole time
+ *     span that you want to log.  This way all the data is written to the file
+ *     in the end, when the robot is not moving anymore.  This way it will not
+ *     interfere with the running robot but there is the risk of losing all data
+ *     in case the software crashes before writing the log.
+ *     Use the method `write_current_buffer()` for this.
+ *  2. Run the logger in the background and write blocks of data to the log file
+ *     while the robot is running.  This has the advantage that arbitrary time
+ *     spans can be logged independent of the buffer size of the time series.
+ *     Further in case of a software crash not all data will be lost but only
+ *     the data since the last block was written.  However, it has the huge
+ *     disadvantage that writing to the file may cause delays in the real-time
+ *     critical robot code, thus causing the robot to shut down if timing
+ *     constraints are violated.
+ *     Use the `start()` and `stop()` methods for this.
+ *
+ * @tparam Action  Type of the robot action.  Must derive from Loggable.
+ * @tparam Observation  Type of the robot observation.  Must derive from
+ *                      Loggable.
  */
 template <typename Action, typename Observation>
 class RobotLogger
@@ -44,6 +64,13 @@ public:
     static_assert(std::is_base_of<Loggable, Status>::value,
                   "Status must derive from Loggable");
 
+    /**
+     * @brief Initialize logger.
+     *
+     * @param robot_data  Pointer to the robot data instance.
+     * @param block_size  Block size for writing data to the file when running
+     *     the logger in the background.
+     */
     RobotLogger(
         std::shared_ptr<robot_interfaces::RobotData<Action, Observation>>
             robot_data,
@@ -61,15 +88,11 @@ public:
     }
 
     /**
-     * @brief Create the thread for the RobotLogger and start logging.
+     * @brief Start a thread to continuously log to file in the background.
      *
-     * \note
-     * Every time you start the logger with the same file name, it will
-     * obviously append newer data to the same file. This shouldn't be a
-     * problem. But for different log files, specify different file names while
-     * starting the logger.
-     *
-     * @param filename The name of the log file.
+     * @see stop()
+     * @param filename The name of the log file.  Existing files will be
+     *     overwritten!
      */
     void start(const std::string &filename)
     {
@@ -79,7 +102,9 @@ public:
     }
 
     /**
-     * @brief Stop logging.
+     * @brief Stop logging that was started with `start()` previously.
+     *
+     * Does nothing if logger is not currently running.
      */
     void stop()
     {
@@ -100,7 +125,23 @@ public:
         }
     }
 
-    // FIXME better name
+    /**
+     * @brief Write current content of robot data to log file.
+     *
+     * Logs the whole content of the robot data starting from the time index
+     * specified by `start_index` until the current time index.  If
+     * `start_index` is too old (i.e. not inside the robot data buffer anymore),
+     * logging will start at the oldest available time index instead.
+     *
+     * @param filename  Path to the log file.  Existing files will be
+     *     overwritten!
+     * @param start_index  Time index at which to start logging.  If not
+     *     specified, the whole buffer is logged.
+     * @throw std::runtime_error If called while the logger thread is running.
+     *     In case the logger thread was started via `start()`, it needs to be
+     *     stopped by calling `stop()` before `write_current_buffer()` can be
+     *     used.
+     */
     void write_current_buffer(const std::string filename,
                               long int start_index = 0)
     {
@@ -115,8 +156,7 @@ public:
         // log whole time series buffer from given start index to the current
         // time step
         long int t = logger_data_->observation->newest_timeindex();
-        append_robot_data_to_file(start_index,
-                                  t - start_index);
+        append_robot_data_to_file(start_index, t - start_index);
     }
 
 private:
@@ -260,8 +300,8 @@ private:
 
                 std::cout << "Warning: Trying to log time step " << t
                           << " which is not in the buffer anymore.  Skip "
-                          << diff << " steps to time step "
-                          << (t_oldest + 1) << std::endl;
+                          << diff << " steps to time step " << (t_oldest + 1)
+                          << std::endl;
 
                 // Note that t is incremented in the next iteration, so logging
                 // continues from t_oldest + 1.  This means that one potentially
