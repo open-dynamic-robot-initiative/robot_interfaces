@@ -55,7 +55,8 @@ public:
         int block_size = 100)
         : logger_data_(robot_data),
           block_size_(block_size),
-          stop_was_called_(false)
+          stop_was_called_(false),
+          is_running_(false)
     {
     }
 
@@ -87,21 +88,40 @@ public:
      */
     void stop()
     {
-        // FIXME: just calling `stop()` without `start()` first will be bad?!
+        // This is a bit complicated:  In any case, join the thread if it is
+        // joinable.  However, only write the remaining data to file if the
+        // logging thread is actually running at the moment stop() is called.
+        bool still_running = is_running_;
+
         stop_was_called_ = true;
         if (thread_.joinable())
         {
             thread_.join();
         }
-        append_robot_data_to_file(index_, block_size_);
+
+        if (still_running)
+        {
+            append_robot_data_to_file(index_, block_size_);
+        }
     }
 
-    void write_current_buffer(const std::string filename, long int start_index)
+    // FIXME better name
+    void write_current_buffer(const std::string filename,
+                              long int start_index = 0)
     {
+        if (is_running_)
+        {
+            throw std::runtime_error(
+                "RobotLogger is currently running.  Call stop() first.");
+        }
+
+        output_file_name_ = filename;
         write_header_to_file();
-        // log from current
+        // log whole time series buffer from given start index to the current
+        // time step
+        long int t = logger_data_->observation->newest_timeindex();
         append_robot_data_to_file(start_index,
-                                  std::numeric_limits<long int>::max());
+                                  t - start_index);
     }
 
 private:
@@ -114,6 +134,7 @@ private:
     long int index_;
 
     std::atomic<bool> stop_was_called_;
+    std::atomic<bool> is_running_;
 
     std::ofstream output_file_;
     std::string output_file_name_;
@@ -227,35 +248,32 @@ private:
                 Action desired_action = (*logger_data_->desired_action)[t];
                 Observation observation = (*logger_data_->observation)[t];
                 Status status = (*logger_data_->status)[t];
+                auto timestamp = logger_data_->observation->timestamp_s(t);
 
-                std::vector<std::vector<double>> status_data =
-                    status.get_data();
-                std::vector<std::vector<double>> observation_data =
-                    observation.get_data();
-
-                std::vector<std::vector<double>> applied_action_data =
-                    applied_action.get_data();
-
-                std::vector<std::vector<double>> desired_action_data =
-                    desired_action.get_data();
-
-                output_file_ << t << " "
-                             << logger_data_->observation->timestamp_s(t)
-                             << " ";
-
-                append_field_data_to_file(status_data);
-                append_field_data_to_file(observation_data);
-                append_field_data_to_file(applied_action_data);
-                append_field_data_to_file(desired_action_data);
-
+                output_file_ << t << " " << timestamp << " ";
+                append_field_data_to_file(status.get_data());
+                append_field_data_to_file(observation.get_data());
+                append_field_data_to_file(applied_action.get_data());
+                append_field_data_to_file(desired_action.get_data());
                 output_file_ << std::endl;
             }
 
-            catch (const std::exception &e)
+            catch (const std::invalid_argument &e)
             {
-                std::cout << "Trying to access index older than the "
-                             "oldest! Skipping ahead."
-                          << std::endl;
+                auto t_oldest = logger_data_->observation->oldest_timeindex();
+                auto diff = t_oldest - t;
+
+                std::cout << "Warning: Trying to log time step " << t
+                          << " which is not in the buffer anymore.  Skip "
+                          << diff << " steps to time step "
+                          << (t_oldest + 1) << std::endl;
+
+                // Note that t is incremented in the next iteration, so logging
+                // continues from t_oldest + 1.  This means that one potentially
+                // available step is dropped but it lowers the risk that the
+                // same issue happens immediately again as t_oldest may drop out
+                // of the buffer until it is processed in the next iteration.
+                t = t_oldest;
             }
         }
 
@@ -287,6 +305,8 @@ private:
      */
     void loop()
     {
+        is_running_ = true;
+
         write_header_to_file();
 
         while (!stop_was_called_ &&
@@ -323,6 +343,8 @@ private:
 #endif
             }
         }
+
+        is_running_ = false;
     }
 };
 

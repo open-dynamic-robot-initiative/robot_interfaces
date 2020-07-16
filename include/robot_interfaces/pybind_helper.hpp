@@ -188,7 +188,11 @@ void create_python_bindings(pybind11::module &m)
              pybind11::arg("robot_data"),
              pybind11::arg("block_size") = 100)
         .def("start", &Types::Logger::start)
-        .def("stop", &Types::Logger::stop);
+        .def("stop", &Types::Logger::stop)
+        .def("write_current_buffer",
+             &Types::Logger::write_current_buffer,
+             pybind11::arg("filename"),
+             pybind11::arg("start_index") = 0);
 }
 
 }  // namespace robot_interfaces
