@@ -10,7 +10,7 @@
 
 #include <fstream>
 #include <iostream>
-
+#include <thread>
 #include <chrono>
 
 #include <Eigen/Eigen>
@@ -18,10 +18,6 @@
 #include <mpi_cpp_tools/basic_tools.hpp>
 #include <mpi_cpp_tools/dynamical_systems.hpp>
 #include <mpi_cpp_tools/math.hpp>
-
-#include <real_time_tools/process_manager.hpp>
-#include <real_time_tools/thread.hpp>
-#include <real_time_tools/timer.hpp>
 
 #include <robot_interfaces/loggable.hpp>
 #include <robot_interfaces/status.hpp>
@@ -78,7 +74,6 @@ public:
           block_size_(block_size),
           stop_was_called_(false)
     {
-        thread_ = std::make_shared<real_time_tools::RealTimeThread>();
     }
 
     virtual ~RobotLogger()
@@ -250,12 +245,6 @@ public:
         }
     }
 
-    static void *write(void *instance_pointer)
-    {
-        ((RobotLogger *)(instance_pointer))->write();
-        return nullptr;
-    }
-
     /**
      * @brief Writes everything to the log file.
      *
@@ -269,7 +258,7 @@ public:
         while (!stop_was_called_ &&
                !(logger_data_->desired_action->length() > 0))
         {
-            real_time_tools::Timer::sleep_until_sec(0.1);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
         index_ = logger_data_->observation->newest_timeindex();
@@ -326,7 +315,7 @@ public:
     void start(std::string filename)
     {
         output_file_name_ = filename;
-        thread_->create_realtime_thread(&RobotLogger::write, this);
+        thread_ = std::thread(&RobotLogger<Action, Observation>::write, this);
     }
 
     /**
@@ -335,12 +324,14 @@ public:
     void stop()
     {
         stop_was_called_ = true;
-        thread_->join();
+        if (thread_.joinable()) {
+            thread_.join();
+        }
         append_robot_data_to_file();
     }
 
 private:
-    std::shared_ptr<real_time_tools::RealTimeThread> thread_;
+    std::thread thread_;
 };
 
 }  // namespace robot_interfaces
