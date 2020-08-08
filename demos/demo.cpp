@@ -35,7 +35,7 @@ int main()
     // max time allowed for the robot to apply an action.
     double max_action_duration_s = 0.02;
 
-    // max time allowed for 2 successive actions
+    // max time between for 2 successive actions
     double max_inter_action_duration_s = 0.05;
 
     // demo showing the separated usage of backend and frontend
