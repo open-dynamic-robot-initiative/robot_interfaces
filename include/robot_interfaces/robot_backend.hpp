@@ -79,9 +79,9 @@ public:
         // pybind11::gil_scoped_release causes a segfault when the class is used
         // directly from C++ (i.e. no Python interpreter running).
         // Best workaround found so far is to explicitly check if Python is
-        // initialized or not and if the GIL is currently held...
+        // initialized or not...
         // See https://github.com/pybind/pybind11/issues/2177
-        if (Py_IsInitialized() && PyGILState_Check())
+        if (Py_IsInitialized())
         {
             // Release the GIL when destructing the backend, as otherwise the
             // program will get stuck in a dead lock in case the driver needs to
