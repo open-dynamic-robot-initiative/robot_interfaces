@@ -89,4 +89,4 @@ catkin_add_pybind11_module(py_two_joint_types)
 ##########################
 # building documentation #
 ##########################
-build_doxygen_documentation()
+add_doxygen_documentation()
