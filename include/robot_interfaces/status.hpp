@@ -24,29 +24,63 @@ namespace robot_interfaces
 /**
  * @brief Status information from the backend.
  *
- * This struct is used to report status information that is not directly
- * robot-related from the backend to the frontend.
+ * Used to report status information that is not directly robot-related from the
+ * backend to the frontend.
  */
 struct Status : public Loggable
 {
+    //! @brief Different types of errors that can occur in the backend.
     enum class ErrorStatus
     {
+        //! @brief Indicates that there is no error.
         NO_ERROR = 0,
+
+        /**
+         * @brief Error reported from the @ref RobotDriver.
+         *
+         * An error reported by the low level robot driver (see @ref
+         * RobotDriver).  This is depending on the driver implementation.  It
+         * can, for example, be used to report some hardware failure).
+         */
         DRIVER_ERROR,
+
+        /**
+         * @brief Error from the @ref RobotBackend.
+         *
+         * An error which is issued by the back end itself, for example if no
+         * new action is provided and the allowed number of repetitions is
+         * exceeded.
+         */
         BACKEND_ERROR
     };
 
     /**
-     * @brief Number of times the current action has been repeated because no
-     * new action has been provided.
+     * @brief Number of times the current action has been repeated.
+     *
+     * If the back end wants to apply the next action but no new action was
+     * provided by the user in time, it may (depending on configuration) repeat
+     * the previous action.  Each time this happens, `action_repetitions` is
+     * increased by one.  Once a new action is provided, it will be reset to
+     * zero.
+     *
+     * See also @ref next-action-not-in-time.
      */
     uint32_t action_repetitions = 0;
 
-    //! @brief Indicates if there is an error and, if yes, in which component.
+    /**
+     * @brief Indicates if there is an error and, if yes, in which component.
+     *
+     * @note If there is an error reported in the status, the robot is not in an
+     *       operational state anymore.  Trying to append another action in the
+     *       @ref RobotFrontend will result in an exception in this case.
+     *
+     * @see error_message for more information on the error.
+     * @see has_error()
+     */
     ErrorStatus error_status = ErrorStatus::NO_ERROR;
 
     /**
-     * @brief Message describing the error.
+     * @brief Human-readable message describing the error.
      *
      * Value is undefined if `error_status == NO_ERROR`.
      */
@@ -74,7 +108,12 @@ struct Status : public Loggable
     /**
      * @brief Check if an error is set.
      *
-     * See error_status and error_message for more details on the error.
+     * @note If there is an error reported in the status, the robot is not in an
+     *       operational state anymore.  Trying to append another action in the
+     *       @ref RobotFrontend will result in an exception in this case.
+     *
+     * See @ref error_status and @ref error_message for more details on the
+     * error.
      */
     bool has_error() const
     {
