@@ -35,4 +35,3 @@ TODO
 ----
 
 - How to implement own driver
-- Singularity
