@@ -3,9 +3,9 @@ About Time Series
 
 In this section the logic of the _time series_ used for communication between
 front and back end and for synchronization between actions and observations is
-explained.  For more details, please check the
+explained.  For more details, please see our
 [paper](https://arxiv.org/abs/2008.03596) on the open-source version of the
-challenge robot (both have identical software).
+TriFinger robot.
 
 
 On Time Series and Time Relation of Actions and Observations
