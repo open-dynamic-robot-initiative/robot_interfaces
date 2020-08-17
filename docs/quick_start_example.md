@@ -3,7 +3,10 @@ Quick Start Example
 
 Sending actions to and getting observations from the robot is very easy.  See
 the following example, using the TriFinger robot, that simply sends a constant
-position command:
+position command.
+
+@note This example shows only the frontend part of a multi-process setup.  The
+backend for the actual robot needs to be run in a separate process.
 
 
 ## Python

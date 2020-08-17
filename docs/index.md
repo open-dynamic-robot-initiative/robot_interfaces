@@ -18,8 +18,8 @@ Content
 -------
 
 - @ref md_docs_installation
-- @ref md_docs_quick_start_example
 - @ref md_docs_timeseries
+- @ref md_docs_quick_start_example
 - @ref md_docs_robot_data
 - @ref md_docs_custom_driver
 

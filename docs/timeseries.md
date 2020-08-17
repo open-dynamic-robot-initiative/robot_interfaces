@@ -1,5 +1,5 @@
-About Time Series
-=================
+Logic of Actions and Observations
+=================================
 
 In this section the logic of the _time series_ used for communication between
 front and back end and for synchronization between actions and observations is
@@ -22,7 +22,8 @@ at position _t_ from the "desired actions" time series and sends it to the robot
 driver.  At the same time an observation is acquired from the robot and added to
 the "observation" time series. This means that the effect of the desired action
 `a_t` is not yet visible in the observation `y_t` as is illustrated below.
-(`a'_t` corresponds to the *applied action*, see [Desired vs Applied Action]())
+(`a'_t` corresponds to the *applied action*, see @ref
+md_docs_desired_vs_applied_action)
 
 ![Time relation of actions and observations](images/action_observation_timing.png)
 
@@ -97,7 +98,7 @@ auto first_observation = frontend.get_observation(t);
 
 Note that the creation of the zero torque action in the above example is
 specific to the _TriFinger_ robot.  For other robots, the creation of the action
-would need to be adjusted to the action type of that specific robot.  Also, it m
+would need to be adjusted to the action type of that specific robot.
 
 
 ### When Next Action Is Not Provided In Time {#next-action-not-in-time}

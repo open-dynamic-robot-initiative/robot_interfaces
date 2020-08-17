@@ -3,8 +3,9 @@ Build Instructions
 
 
 @note If you intend to use this interface to control your own robot, this
-package is enough.  If you are looking for the interface of the TriFinger robot
-interface, see the installation instructions of the [`robot_fingers`
+package (and its dependencies) is enough, and you can follow the instructions
+below.  If you are looking for the interface of the TriFinger robot interface,
+see the installation instructions of the [`robot_fingers`
 package](https://open-dynamic-robot-initiative.github.io/code_documentation/robot_fingers/docs/doxygen/html/index.html)
 instead (this also includes `robot_interfaces`).
 
@@ -21,6 +22,8 @@ separately:
 
     pip install catkin_tools
 
+We are testing on Ubuntu 18.04 with ROS Melodic.  Other versions may work as
+well but are not officially supported.
 
 @note We provide a Singularity image with all dependencies for the TriFinger
 robot which also covers everything needed for `robot_interfaces`.  See the
