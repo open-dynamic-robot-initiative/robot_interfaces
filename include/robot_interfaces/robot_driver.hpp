@@ -72,6 +72,9 @@ public:
 
     /**
      * @brief Shut down the robot safely.
+     *
+     * Use this method if your robot needs to perform some action when shutting
+     * down, e.g. to move it to a defined rest position.
      */
     virtual void shutdown() = 0;
 };
