@@ -45,14 +45,52 @@ public:
     {
     }
 
+    /**
+     * @brief Get observation of time step t.
+     *
+     * @param t Index of the time step.  If t is in the future, this method will
+     *     block and wait.
+     * @return The observation of time step t.
+     * @throws std::invalid_argument if t is too old and not in the time series
+     *     buffer anymore.
+     */
     Observation get_observation(const TimeIndex &t) const
     {
         return (*robot_data_->observation)[t];
     }
+
+    /**
+     * @brief Get the desired action of time step t.
+     *
+     * The desired action is the action as it is passed by the user in @ref
+     * append_desired_action.
+     *
+     * @param t Index of the time step.  If t is in the future, this method will
+     *     block and wait.
+     * @return The desired action of time step t.
+     * @throws std::invalid_argument if t is too old and not in the time series
+     *     buffer anymore.
+     */
     Action get_desired_action(const TimeIndex &t) const
     {
         return (*robot_data_->desired_action)[t];
     }
+
+    /**
+     * @brief Get the applied action of time step t.
+     *
+     * The applied action is the one that was actually applied to the robot
+     * based on the desired action of that time step.  It may differ from the
+     * desired one e.g. due to some safety checks which limit the maximum
+     * torque.  If and how the action is modified depends on the implementation
+     * of the @ref RobotDriver.
+     *
+     * @param t Index of the time step.  If t is in the future, this method will
+     *     block and wait.
+     * @return The applied action of time step t.
+     * @throws std::invalid_argument if t is too old and not in the time series
+     *     buffer anymore.
+     */
     Action get_applied_action(const TimeIndex &t) const
     {
         return (*robot_data_->applied_action)[t];
@@ -67,15 +105,50 @@ public:
     {
         return get_timestamp_ms(t);
     }
+
+    /**
+     * @brief Get the timestamp of time step t.
+     *
+     * @param t Index of the time step.  If t is in the future, this method will
+     *     block and wait.
+     * @return Timestamp of time step t.
+     * @throws std::invalid_argument if t is too old and not in the time series
+     *     buffer anymore.
+     */
     TimeStamp get_timestamp_ms(const TimeIndex &t) const
     {
         return robot_data_->observation->timestamp_ms(t);
     }
+
+    /**
+     * @brief Get the current time index.
+     *
+     * @return The latest time index for which observations are available.
+     */
     TimeIndex get_current_timeindex() const
     {
         return robot_data_->observation->newest_timeindex();
     }
 
+    /**
+     * @brief Append a desired action to the action time series.
+     *
+     * This will append an action to the "desired actions" time series.  Note
+     * that this does not block until the action is actually executed. The time
+     * series acts like a queue from which the @ref RobotBackend takes the
+     * actions one by one to send them to the actual robot.  It is possible to
+     * call this method multiple times in a row to already provide actions for
+     * the next time steps.
+     *
+     * The time step at which the given action will be applied is returned by
+     * this method.
+     *
+     * @param desired_action  The action that shall be applied on the robot.
+     *     Note that the actually applied action might be different depending on
+     *     the implementation of the @ref RobotDriver (see @ref
+     *     get_applied_action).
+     * @return Time step at which the action will be applied.
+     */
     TimeIndex append_desired_action(const Action &desired_action)
     {
         // check error state. do not allow appending actions if there is an
@@ -119,6 +192,13 @@ public:
         return robot_data_->desired_action->newest_timeindex();
     }
 
+    /**
+     * @brief Wait until the specified time step is reached.
+     *
+     * @param t Time step until which is waited.
+     * @throws std::invalid_argument if t is too old and not in the time series
+     *     buffer anymore.
+     */
     void wait_until_timeindex(const TimeIndex &t) const
     {
         robot_data_->observation->timestamp_ms(t);
