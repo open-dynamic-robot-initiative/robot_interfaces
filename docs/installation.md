@@ -1,6 +1,14 @@
 Build Instructions
 ==================
 
+
+@note If you intend to use this interface to control your own robot, this
+package (and its dependencies) is enough, and you can follow the instructions
+below.  If you are looking for the interface of the TriFinger robot interface,
+see the installation instructions of the [`robot_fingers`
+package](https://open-dynamic-robot-initiative.github.io/code_documentation/robot_fingers/docs/doxygen/html/index.html)
+instead (this also includes `robot_interfaces`).
+
 Dependencies
 ------------
 
@@ -14,12 +22,14 @@ separately:
 
     pip install catkin_tools
 
-**Note**: We are also working on providing a [Singularity](https://sylabs.io/)
-image with all required dependencies, so you don't need to install anything
-(except Singularity) to build.  This will be provided soon.
+We are testing on Ubuntu 18.04 with ROS Melodic.  Other versions may work as
+well but are not officially supported.
 
-
-TODO: This does not actually list dependencies right now.
+@note We provide a Singularity image with all dependencies for the TriFinger
+robot which also covers everything needed for `robot_interfaces`.  See the
+documentation of the [`robot_fingers`
+package](https://open-dynamic-robot-initiative.github.io/code_documentation/robot_fingers/docs/doxygen/html/index.html)
+for more information.
 
 
 Get the Source
@@ -38,7 +48,7 @@ Clone the treep configuration containing the "ROBOT_INTERFACES" project:
 
     git clone git@github.com:machines-in-motion/treep_machines_in_motion.git
 
-**Note:**  treep searches for a configuration directory from the current working
+@note  treep searches for a configuration directory from the current working
 directory upwards.  So you can use treep in the directory in which you invoked
 the `git clone` command above or any subdirectory.
 
@@ -46,7 +56,7 @@ Now clone the project:
 
     treep --clone ROBOT_INTERFACES
 
-**Important:** treep uses SSH to clone from github.  So for the above command to
+@note **Important:** treep uses SSH to clone from github.  So for the above command to
 work, you need a github account with a registered SSH key.  Further this key
 needs to work without asking for a password everytime.  To achieve this, run
 

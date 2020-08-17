@@ -2,7 +2,11 @@ Quick Start Example
 ===================
 
 Sending actions to and getting observations from the robot is very easy.  See
-the following example that simply sends a constant position command:
+the following example, using the TriFinger robot, that simply sends a constant
+position command.
+
+@note This example shows only the frontend part of a multi-process setup.  The
+backend for the actual robot needs to be run in a separate process.
 
 
 ## Python
@@ -10,8 +14,6 @@ the following example that simply sends a constant position command:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.py}
 import robot_interfaces
 
-# Create frontend instance for the TriFinger robot.
-# Do not change the arguments here!
 robot_data = robot_interfaces.trifinger.MultiProcessData(
     "trifinger", False)
 frontend = robot_interfaces.trifinger.Frontend(robot_data)
@@ -54,8 +56,6 @@ typedef robot_interfaces::TriFingerTypes::Action Action;
 
 int main()
 {
-    // Create frontend instance for the TriFinger robot.
-    // Do not change the arguments here!
     auto robot_data = std::make_shared<RobotData>("trifinger", false);
     auto frontend = RobotFrontend(robot_data);
 
@@ -88,7 +88,10 @@ int main()
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When using C++ you need to add the package ``robot_interfaces`` as build
+When using C++ you need to add the package `robot_interfaces` as build
 dependency to your package.
 
 
+## More Examples
+
+For more examples, see the [C++ demos of the `robot_interfaces` package](https://github.com/open-dynamic-robot-initiative/robot_interfaces/tree/master/demos) and the [Python demos in the `robot_fingers` package](https://github.com/open-dynamic-robot-initiative/robot_fingers/tree/master/demos).

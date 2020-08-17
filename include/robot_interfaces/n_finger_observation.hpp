@@ -19,6 +19,22 @@ namespace robot_interfaces
 /**
  * @brief Observation of a Finger robot.
  *
+ *
+ * Values like angular position, velocity or torque of the joints are
+ * represented as a 1-dimensional vector with one element per joint.  The order
+ * of the joints in these vectors is as follows:
+ *
+ *     0. Finger 1, upper joint
+ *     1. Finger 1, middle joint
+ *     2. Finger 1, lower joint
+ *     3. Finger 2, upper joint
+ *     4. Finger 2, middle joint
+ *     5. Finger 2, lower joint
+ *     ...
+ *     #. Finger n, upper joint
+ *     #. Finger n, middle joint
+ *     #. Finger n, lower joint
+ *
  * @tparam N_FINGERS  Number of fingers.
  */
 template <size_t N_FINGERS>
@@ -30,9 +46,22 @@ struct NFingerObservation : public Loggable
     typedef Eigen::Matrix<double, num_joints, 1> JointVector;
     typedef Eigen::Matrix<double, num_fingers, 1> FingerVector;
 
+    //! @brief Measured angular position of all joints in radian.
     JointVector position = JointVector::Zero();
+
+    //! @brief Measured velocity of all joints in radian/second.
     JointVector velocity = JointVector::Zero();
+
+    //! @brief Measured torques of all joints in Nm.
     JointVector torque = JointVector::Zero();
+
+    /**
+     * @brief Measurements of the pressure sensors at the finger tips.
+     *
+     * One per finger.  Ranges between 0 and 1 without specific unit.  Note that
+     * not all fingers are equipped with an actual sensor!  For fingers without
+     * sensor, this value is undefined.
+     */
     FingerVector tip_force = FingerVector::Zero();
 
     template <class Archive>
