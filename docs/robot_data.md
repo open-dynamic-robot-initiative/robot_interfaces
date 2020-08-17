@@ -14,3 +14,8 @@ There are two different implementations of `RobotData`:
 - [MultiProcessRobotData](@ref robot_interfaces::MultiProcessRobotData):  Uses
   shared memory for inter-process communication.  Use this if back end and front
   end are running in separate processes.
+
+
+See the
+[demos](https://github.com/open-dynamic-robot-initiative/robot_interfaces/blob/master/demos)
+for implementations with both the single and the multi process RobotData.

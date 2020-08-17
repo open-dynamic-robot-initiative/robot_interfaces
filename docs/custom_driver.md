@@ -33,4 +33,4 @@ above).
 Example
 -------
 
-See the example implementation of a dummy robot driver in [example.hpp](https://github.com/open-dynamic-robot-initiative/robot_interfaces/blob/master/include/robot_interfaces/example.hpp).  This dummy driver is also used in the [demos](https://github.com/open-dynamic-robot-initiative/robot_interfaces/blob/master/demos)
+See the example implementation of a dummy robot driver in [example.hpp](https://github.com/open-dynamic-robot-initiative/robot_interfaces/blob/master/include/robot_interfaces/example.hpp).  This dummy driver is also used in the [demos](https://github.com/open-dynamic-robot-initiative/robot_interfaces/blob/master/demos).
