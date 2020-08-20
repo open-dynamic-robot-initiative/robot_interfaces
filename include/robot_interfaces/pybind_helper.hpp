@@ -192,7 +192,8 @@ void create_python_bindings(pybind11::module &m)
         .def("write_current_buffer",
              &Types::Logger::write_current_buffer,
              pybind11::arg("filename"),
-             pybind11::arg("start_index") = 0);
+             pybind11::arg("start_index") = 0,
+             pybind11::arg("end_index") = -1);
 }
 
 }  // namespace robot_interfaces

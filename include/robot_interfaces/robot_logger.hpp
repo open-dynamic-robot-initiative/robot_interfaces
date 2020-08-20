@@ -128,22 +128,31 @@ public:
     /**
      * @brief Write current content of robot data to log file.
      *
-     * Logs the whole content of the robot data starting from the time index
-     * specified by `start_index` until the current time index.  If
-     * `start_index` is too old (i.e. not inside the robot data buffer anymore),
-     * logging will start at the oldest available time index instead.
+     * Write data of the time steps `[start_index, end_index)` to a log file.
+     * This assumes that the specified range is completely included in the
+     * active robot data buffer.  If this is not the case, only the time steps
+     * which are still held in the buffer will be logged.
+     *
+     * With the default values for start_index and end_index, the whole content
+     * of the current buffer is logged.
      *
      * @param filename  Path to the log file.  Existing files will be
      *     overwritten!
      * @param start_index  Time index at which to start logging.  If not
      *     specified, the whole buffer is logged.
+     * @param end_index  Time index at which to stop logging.  This is
+     *     exclusive, i.e. the specified time index itself will not be part of
+     *     the log.  If set to a negative value (default) or a value greater
+     *     than the newest time index, the newest time index is used instead
+     *     (see @ref newest_timeindex()).
      * @throw std::runtime_error If called while the logger thread is running.
      *     In case the logger thread was started via `start()`, it needs to be
      *     stopped by calling `stop()` before `write_current_buffer()` can be
      *     used.
      */
     void write_current_buffer(const std::string filename,
-                              long int start_index = 0)
+                              long int start_index = 0,
+                              long int end_index = -1)
     {
         if (is_running_)
         {
@@ -153,10 +162,20 @@ public:
 
         output_file_name_ = filename;
         write_header_to_file();
-        // log whole time series buffer from given start index to the current
-        // time step
+
+        // set end_index to the current time index if not set or if it is in the
+        // future.
         long int t = logger_data_->observation->newest_timeindex();
-        append_robot_data_to_file(start_index, t - start_index);
+        if (end_index < 0)
+        {
+            end_index = t;
+        }
+        else
+        {
+            end_index = std::min(t, end_index);
+        }
+
+        append_robot_data_to_file(start_index, end_index - start_index);
     }
 
 private:
@@ -292,7 +311,6 @@ private:
                 append_field_data_to_file(desired_action.get_data());
                 output_file_ << std::endl;
             }
-
             catch (const std::invalid_argument &e)
             {
                 auto t_oldest = logger_data_->observation->oldest_timeindex();
