@@ -141,6 +141,16 @@ public:
     }
 
     /**
+     * @brief Wait until the first desired action is received.
+     */
+    void wait_until_first_action() const
+    {
+        while (!has_shutdown_request() &&
+               !robot_data_->desired_action->wait_for_timeindex(0, 0.1))
+        {}
+    }
+
+    /**
      * @brief Wait until the backend loop terminates.
      */
     void wait_until_terminated() const
