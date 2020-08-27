@@ -80,13 +80,16 @@ public:
         {
             // the master instance is in charge of cleaning the memory
             time_series::clear_memory(shared_memory_id);
+
+            this->observation = time_series::MultiprocessTimeSeries<
+                Observation>::create_leader_ptr(shared_memory_id,
+                                                history_length);
         }
-
-        const bool clean_on_destruction = is_master;
-
-        this->observation =
-            std::make_shared<time_series::MultiprocessTimeSeries<Observation>>(
-                shared_memory_id, history_length, clean_on_destruction);
+        else
+        {
+            this->observation = time_series::MultiprocessTimeSeries<
+                Observation>::create_follower_ptr(shared_memory_id);
+        }
     }
 };
 

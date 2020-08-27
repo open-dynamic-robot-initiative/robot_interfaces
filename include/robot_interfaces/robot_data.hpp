@@ -122,9 +122,13 @@ public:
      *     prefix and unique suffixes are appended.  Make sure to use a prefix
      *     that cannot lead to name collisions on your system.
      * @param is_master If set to true, this instance will clear the shared
-     *     memory on construction and destruction.  Only once instance should
+     *     memory on construction and destruction.  Only one instance should
      *     act as master in a multi-process setup.
-     * @param history_length History length of the time series.
+     * @param history_length History length of the time series.  Ignored if
+     *     `is_master == false`.
+     *
+     * @todo Make this constructor protected and implement factory methods like
+     *     in MultiprocessTimeSeries..
      */
     MultiProcessRobotData(const std::string &shared_memory_id_prefix,
                           bool is_master,
@@ -142,6 +146,10 @@ public:
             shared_memory_id_prefix + "_observation";
         const std::string id_status = shared_memory_id_prefix + "_status";
 
+        typedef time_series::MultiprocessTimeSeries<Action> TS_Action;
+        typedef time_series::MultiprocessTimeSeries<Observation> TS_Observation;
+        typedef time_series::MultiprocessTimeSeries<Status> TS_Status;
+
         if (is_master)
         {
             // the master instance is in charge of cleaning the memory
@@ -149,22 +157,26 @@ public:
             time_series::clear_memory(id_applied_action);
             time_series::clear_memory(id_observation);
             time_series::clear_memory(id_status);
+
+            this->desired_action =
+                TS_Action::create_leader_ptr(id_desired_action, history_length);
+            this->applied_action =
+                TS_Action::create_leader_ptr(id_applied_action, history_length);
+            this->observation = TS_Observation::create_leader_ptr(
+                id_observation, history_length);
+            this->status =
+                TS_Status::create_leader_ptr(id_status, history_length);
         }
-
-        const bool clean_on_destruction = is_master;
-
-        this->desired_action =
-            std::make_shared<time_series::MultiprocessTimeSeries<Action>>(
-                id_desired_action, history_length, clean_on_destruction);
-        this->applied_action =
-            std::make_shared<time_series::MultiprocessTimeSeries<Action>>(
-                id_applied_action, history_length, clean_on_destruction);
-        this->observation =
-            std::make_shared<time_series::MultiprocessTimeSeries<Observation>>(
-                id_observation, history_length, clean_on_destruction);
-        this->status =
-            std::make_shared<time_series::MultiprocessTimeSeries<Status>>(
-                id_status, history_length, clean_on_destruction);
+        else
+        {
+            this->desired_action =
+                TS_Action::create_follower_ptr(id_desired_action);
+            this->applied_action =
+                TS_Action::create_follower_ptr(id_applied_action);
+            this->observation =
+                TS_Observation::create_follower_ptr(id_observation);
+            this->status = TS_Status::create_follower_ptr(id_status);
+        }
     }
 };
 
