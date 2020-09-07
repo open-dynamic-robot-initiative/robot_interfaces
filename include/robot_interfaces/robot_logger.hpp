@@ -15,6 +15,10 @@
 #include <limits>
 #include <thread>
 
+#include <cereal/archives/binary.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/tuple.hpp>
+
 #include <robot_interfaces/loggable.hpp>
 #include <robot_interfaces/robot_data.hpp>
 #include <robot_interfaces/status.hpp>
@@ -176,6 +180,87 @@ public:
         }
 
         append_robot_data_to_file(start_index, end_index - start_index);
+    }
+
+    void write_current_buffer_binary(const std::string filename,
+                              long int start_index = 0,
+                              long int end_index = -1)
+    {
+        if (is_running_)
+        {
+            throw std::runtime_error(
+                "RobotLogger is currently running.  Call stop() first.");
+        }
+
+        // set end_index to the current time index if not set or if it is in the
+        // future.
+        long int t = logger_data_->observation->newest_timeindex();
+        if (end_index < 0)
+        {
+            end_index = t;
+        }
+        else
+        {
+            end_index = std::min(t, end_index);
+        }
+
+        long int block_size = end_index - start_index;
+
+        // TODO use a struct, so fields have names
+        typedef std::tuple<long int, double, Status, Observation, Action, Action> LogEntry;
+
+        std::vector<LogEntry> log_data;
+        log_data.reserve(block_size);
+
+        for (long int t = start_index;
+             t < std::min(start_index + block_size,
+                          logger_data_->observation->newest_timeindex());
+             t++)
+        {
+            try
+            {
+                Action applied_action = (*logger_data_->applied_action)[t];
+                Action desired_action = (*logger_data_->desired_action)[t];
+                Observation observation = (*logger_data_->observation)[t];
+                Status status = (*logger_data_->status)[t];
+                auto timestamp = logger_data_->observation->timestamp_s(t);
+
+                log_data.push_back(std::make_tuple(
+                            t,
+                            timestamp,
+                            status,
+                            observation,
+                            desired_action,
+                            applied_action));
+            }
+            catch (const std::invalid_argument &e)
+            {
+                auto t_oldest = logger_data_->observation->oldest_timeindex();
+                auto diff = t_oldest - t;
+
+                std::cout << "Warning: Trying to log time step " << t
+                          << " which is not in the buffer anymore.  Skip "
+                          << diff << " steps to time step " << (t_oldest + 1)
+                          << std::endl;
+
+                // Note that t is incremented in the next iteration, so logging
+                // continues from t_oldest + 1.  This means that one potentially
+                // available step is dropped but it lowers the risk that the
+                // same issue happens immediately again as t_oldest may drop out
+                // of the buffer until it is processed in the next iteration.
+                t = t_oldest;
+            }
+        }
+
+
+        std::ofstream outfile(filename, std::ios::binary);
+        cereal::BinaryOutputArchive archive(outfile);
+
+        // add version information to the output file (this can be used while
+        // loading when the data format changes
+        const std::uint32_t format_version = 1;
+
+        archive(format_version, log_data);
     }
 
 private:

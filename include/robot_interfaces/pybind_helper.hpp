@@ -24,6 +24,7 @@
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl_bind.h>
+#include <pybind11/stl.h>
 
 #include <robot_interfaces/robot_frontend.hpp>
 
@@ -196,7 +197,19 @@ void create_python_bindings(pybind11::module &m)
              &Types::Logger::write_current_buffer,
              pybind11::arg("filename"),
              pybind11::arg("start_index") = 0,
+             pybind11::arg("end_index") = -1)
+        .def("write_current_buffer_binary",
+             &Types::Logger::write_current_buffer_binary,
+             pybind11::arg("filename"),
+             pybind11::arg("start_index") = 0,
              pybind11::arg("end_index") = -1);
+
+    pybind11::class_<typename Types::BinaryLogReader,
+                     std::shared_ptr<typename Types::BinaryLogReader>>(
+        m, "BinaryLogReader")
+        .def(pybind11::init<std::string>())
+        .def("read_file", &Types::BinaryLogReader::read_file)
+        .def_readonly("data", &Types::BinaryLogReader::data);
 }
 
 }  // namespace robot_interfaces
