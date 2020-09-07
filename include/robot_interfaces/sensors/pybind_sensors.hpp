@@ -77,7 +77,8 @@ void create_sensor_bindings(pybind11::module& m)
     pybind11::class_<LogReader, std::shared_ptr<LogReader>>(m, "LogReader")
         .def(pybind11::init<std::string>())
         .def("read_file", &LogReader::read_file)
-        .def_readonly("data", &LogReader::data);
+        .def_readonly("data", &LogReader::data)
+        .def_readonly("timestamps", &LogReader::timestamps);
 }
 
 }  // namespace robot_interfaces
