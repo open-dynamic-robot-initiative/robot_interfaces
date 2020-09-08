@@ -21,6 +21,7 @@
 
 #include <robot_interfaces/loggable.hpp>
 #include <robot_interfaces/robot_data.hpp>
+#include <robot_interfaces/robot_log_entry.hpp>
 #include <robot_interfaces/status.hpp>
 
 namespace robot_interfaces
@@ -67,6 +68,9 @@ public:
                   "Observation must derive from Loggable");
     static_assert(std::is_base_of<Loggable, Status>::value,
                   "Status must derive from Loggable");
+
+    typedef RobotLogEntry<Action, Observation> LogEntry;
+
 
     /**
      * @brief Initialize logger.
@@ -206,9 +210,6 @@ public:
 
         long int block_size = end_index - start_index;
 
-        // TODO use a struct, so fields have names
-        typedef std::tuple<long int, double, Status, Observation, Action, Action> LogEntry;
-
         std::vector<LogEntry> log_data;
         log_data.reserve(block_size);
 
@@ -219,19 +220,15 @@ public:
         {
             try
             {
-                Action applied_action = (*logger_data_->applied_action)[t];
-                Action desired_action = (*logger_data_->desired_action)[t];
-                Observation observation = (*logger_data_->observation)[t];
-                Status status = (*logger_data_->status)[t];
-                auto timestamp = logger_data_->observation->timestamp_s(t);
+                LogEntry entry;
+                entry.timeindex = t;
+                entry.applied_action = (*logger_data_->applied_action)[t];
+                entry.desired_action = (*logger_data_->desired_action)[t];
+                entry.observation = (*logger_data_->observation)[t];
+                entry.status = (*logger_data_->status)[t];
+                entry.timestamp = logger_data_->observation->timestamp_s(t);
 
-                log_data.push_back(std::make_tuple(
-                            t,
-                            timestamp,
-                            status,
-                            observation,
-                            desired_action,
-                            applied_action));
+                log_data.push_back(entry);
             }
             catch (const std::invalid_argument &e)
             {
@@ -258,7 +255,7 @@ public:
 
         // add version information to the output file (this can be used while
         // loading when the data format changes
-        const std::uint32_t format_version = 1;
+        const std::uint32_t format_version = 2;
 
         archive(format_version, log_data);
     }

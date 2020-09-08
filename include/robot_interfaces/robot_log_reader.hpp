@@ -13,7 +13,7 @@
 #include <cereal/types/tuple.hpp>
 #include <cereal/types/vector.hpp>
 
-#include <robot_interfaces/status.hpp>
+#include <robot_interfaces/robot_log_entry.hpp>
 
 namespace robot_interfaces
 {
@@ -27,8 +27,7 @@ template <typename Action, typename Observation>
 class RobotBinaryLogReader
 {
 public:
-    typedef std::tuple<long int, double, Status, Observation, Action, Action>
-        LogEntry;
+    typedef RobotLogEntry<Action, Observation> LogEntry;
 
     std::vector<LogEntry> data;
 
@@ -53,7 +52,7 @@ public:
         std::uint32_t format_version;
         archive(format_version);
 
-        if (format_version != 1)
+        if (format_version != 2)
         {
             throw std::runtime_error("Incompatible log file format.");
         }

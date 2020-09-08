@@ -23,8 +23,8 @@
 
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
-#include <pybind11/stl_bind.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
 
 #include <robot_interfaces/robot_frontend.hpp>
 
@@ -186,6 +186,14 @@ void create_python_bindings(pybind11::module &m)
         .def("get_current_timeindex",
              &Types::Frontend::get_current_timeindex,
              pybind11::call_guard<pybind11::gil_scoped_release>());
+
+    pybind11::class_<typename Types::LogEntry>(m, "LogEntry")
+        .def_readwrite("timeindex", &Types::LogEntry::timeindex)
+        .def_readwrite("timestamp", &Types::LogEntry::timestamp)
+        .def_readwrite("status", &Types::LogEntry::status)
+        .def_readwrite("observation", &Types::LogEntry::observation)
+        .def_readwrite("desired_action", &Types::LogEntry::desired_action)
+        .def_readwrite("applied_action", &Types::LogEntry::applied_action);
 
     pybind11::class_<typename Types::Logger>(m, "Logger")
         .def(pybind11::init<typename Types::BaseDataPtr, int>(),
