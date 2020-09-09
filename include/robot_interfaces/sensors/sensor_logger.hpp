@@ -16,6 +16,7 @@
 
 #include <cereal/archives/binary.hpp>
 #include <cereal/types/vector.hpp>
+#include <cereal/types/tuple.hpp>
 
 #include "sensor_data.hpp"
 
@@ -45,6 +46,7 @@ class SensorLogger
 {
 public:
     typedef std::shared_ptr<SensorData<Observation>> DataPtr;
+    typedef typename std::tuple<double, Observation> StampedObservation;
 
     /**
      * @brief Initialize the logger.
@@ -60,6 +62,9 @@ public:
           buffer_limit_(buffer_limit),
           enabled_(false)
     {
+        // directly reserve the memory for the full buffer so it does not need
+        // to move data around during run time
+        buffer_.reserve(buffer_limit);
     }
 
     // reinstate the implicit move constructor
@@ -119,12 +124,16 @@ public:
         std::ofstream outfile(filename, std::ios::binary);
         cereal::BinaryOutputArchive archive(outfile);
 
-        archive(buffer_);
+        // add version information to the output file (this can be used while
+        // loading when the data format changes
+        const std::uint32_t format_version = 1;
+
+        archive(format_version, buffer_);
     }
 
 private:
     DataPtr sensor_data_;
-    std::vector<Observation> buffer_;
+    std::vector<StampedObservation> buffer_;
     size_t buffer_limit_;
     std::thread buffer_thread_;
     bool enabled_;
@@ -138,7 +147,9 @@ private:
         {
             try
             {
-                buffer_.push_back((*sensor_data_->observation)[t]);
+                auto timestamp = sensor_data_->observation->timestamp_ms(t);
+                auto observation = (*sensor_data_->observation)[t];
+                buffer_.push_back(std::make_tuple(timestamp, observation));
             }
             catch (const std::invalid_argument &e)
             {

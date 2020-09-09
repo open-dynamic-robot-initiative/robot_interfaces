@@ -26,8 +26,15 @@ template <typename Observation>
 class SensorLogReader
 {
 public:
-    //! @brief Data from the log file.
+    typedef typename std::tuple<double, Observation> StampedObservation;
+
+    //! @brief Observations from the log file.
+    //! @todo rename to "observations"
     std::vector<Observation> data;
+
+    //! @brief Timestamps of the time series from which the observations were
+    //! logged.
+    std::vector<double> timestamps;
 
     //! @copydoc SensorLogReader::read_file()
     SensorLogReader(const std::string &filename)
@@ -47,7 +54,24 @@ public:
         std::ifstream infile(filename, std::ios::binary);
         cereal::BinaryInputArchive archive(infile);
 
-        archive(data);
+        std::uint32_t format_version;
+        archive(format_version);
+
+        if (format_version != 1)
+        {
+            throw std::runtime_error("Incompatible log file format.");
+        }
+
+        std::vector<StampedObservation> stamped_data;
+        archive(stamped_data);
+
+        data.reserve(stamped_data.size());
+        timestamps.reserve(stamped_data.size());
+        for (auto [timestamp, observation] : stamped_data)
+        {
+            data.push_back(observation);
+            timestamps.push_back(timestamp);
+        }
     }
 };
 
