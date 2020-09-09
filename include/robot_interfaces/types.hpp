@@ -12,6 +12,8 @@
 #include "robot_data.hpp"
 #include "robot_frontend.hpp"
 #include "robot_logger.hpp"
+#include "robot_log_entry.hpp"
+#include "robot_log_reader.hpp"
 
 namespace robot_interfaces
 {
@@ -34,7 +36,9 @@ struct RobotInterfaceTypes
     typedef RobotFrontend<Action, Observation> Frontend;
     typedef std::shared_ptr<Frontend> FrontendPtr;
 
+    typedef RobotLogEntry<Action, Observation> LogEntry;
     typedef RobotLogger<Action, Observation> Logger;
+    typedef RobotBinaryLogReader<Action, Observation> BinaryLogReader;
 };
 
 }  // namespace robot_interfaces
