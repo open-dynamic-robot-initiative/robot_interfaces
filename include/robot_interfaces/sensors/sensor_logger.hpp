@@ -141,7 +141,7 @@ private:
     //! Get observations from sensor_data_ and add them to the buffer.
     void loop()
     {
-        auto t = sensor_data_->observation->newest_timeindex();
+        auto t = sensor_data_->observation->oldest_timeindex();
 
         while (enabled_)
         {
