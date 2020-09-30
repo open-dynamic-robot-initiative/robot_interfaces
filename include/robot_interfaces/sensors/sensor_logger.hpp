@@ -147,6 +147,7 @@ private:
         {
             try
             {
+                // FIXME: this will block if the sensor has stopped
                 auto timestamp = sensor_data_->observation->timestamp_ms(t);
                 auto observation = (*sensor_data_->observation)[t];
                 buffer_.push_back(std::make_tuple(timestamp, observation));

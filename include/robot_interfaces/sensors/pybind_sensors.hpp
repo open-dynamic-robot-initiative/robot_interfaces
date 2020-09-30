@@ -54,7 +54,10 @@ void create_sensor_bindings(pybind11::module& m)
     pybind11::class_<SensorBackend<ObservationType>>(m, "Backend")
         .def(pybind11::init<
              typename std::shared_ptr<SensorDriver<ObservationType>>,
-             typename std::shared_ptr<BaseData>>());
+             typename std::shared_ptr<BaseData>>())
+        .def("shutdown",
+             &SensorBackend<ObservationType>::shutdown,
+             pybind11::call_guard<pybind11::gil_scoped_release>());
 
     pybind11::class_<SensorFrontend<ObservationType>>(m, "Frontend")
         .def(pybind11::init<typename std::shared_ptr<BaseData>>())
