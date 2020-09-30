@@ -39,7 +39,7 @@ public:
                   std::shared_ptr<SensorData<ObservationType>> sensor_data)
         : sensor_driver_(sensor_driver),
           sensor_data_(sensor_data),
-          destructor_was_called_(false)
+          shutdown_requested_(false)
     {
         thread_ = std::thread(&SensorBackend<ObservationType>::loop, this);
     }
@@ -48,17 +48,26 @@ public:
     // See https://stackoverflow.com/a/27474070
     SensorBackend(SensorBackend &&) = default;
 
+    //! @brief Stop the backend thread.
+    void shutdown()
+    {
+        shutdown_requested_ = true;
+        if (thread_.joinable())
+        {
+            thread_.join();
+        }
+    }
+
     virtual ~SensorBackend()
     {
-        destructor_was_called_ = true;
-        thread_.join();
+        shutdown();
     }
 
 private:
     std::shared_ptr<SensorDriver<ObservationType>> sensor_driver_;
     std::shared_ptr<SensorData<ObservationType>> sensor_data_;
 
-    bool destructor_was_called_;
+    bool shutdown_requested_;
 
     std::thread thread_;
 
@@ -67,7 +76,7 @@ private:
      */
     void loop()
     {
-        for (long int t = 0; !destructor_was_called_; t++)
+        for (long int t = 0; !shutdown_requested_; t++)
         {
             ObservationType sensor_observation;
             try

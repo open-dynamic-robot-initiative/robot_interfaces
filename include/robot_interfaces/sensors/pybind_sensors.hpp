@@ -54,31 +54,52 @@ void create_sensor_bindings(pybind11::module& m)
     pybind11::class_<SensorBackend<ObservationType>>(m, "Backend")
         .def(pybind11::init<
              typename std::shared_ptr<SensorDriver<ObservationType>>,
-             typename std::shared_ptr<BaseData>>());
+             typename std::shared_ptr<BaseData>>())
+        .def("shutdown",
+             &SensorBackend<ObservationType>::shutdown,
+             pybind11::call_guard<pybind11::gil_scoped_release>());
 
     pybind11::class_<SensorFrontend<ObservationType>>(m, "Frontend")
         .def(pybind11::init<typename std::shared_ptr<BaseData>>())
         .def("get_latest_observation",
-             &SensorFrontend<ObservationType>::get_latest_observation)
+             &SensorFrontend<ObservationType>::get_latest_observation,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("get_observation",
-             &SensorFrontend<ObservationType>::get_observation)
+             &SensorFrontend<ObservationType>::get_observation,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("get_timestamp_ms",
-             &SensorFrontend<ObservationType>::get_timestamp_ms)
+             &SensorFrontend<ObservationType>::get_timestamp_ms,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("get_current_timeindex",
-             &SensorFrontend<ObservationType>::get_current_timeindex);
+             &SensorFrontend<ObservationType>::get_current_timeindex,
+             pybind11::call_guard<pybind11::gil_scoped_release>());
 
     pybind11::class_<Logger, std::shared_ptr<Logger>>(m, "Logger")
         .def(pybind11::init<typename std::shared_ptr<BaseData>, size_t>())
-        .def("start", &Logger::start)
-        .def("stop", &Logger::stop)
-        .def("reset", &Logger::reset)
-        .def("stop_and_save", &Logger::stop_and_save);
+        .def("start",
+             &Logger::start,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("stop",
+             &Logger::stop,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("reset",
+             &Logger::reset,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("stop_and_save",
+             &Logger::stop_and_save,
+             pybind11::call_guard<pybind11::gil_scoped_release>());
 
     pybind11::class_<LogReader, std::shared_ptr<LogReader>>(m, "LogReader")
         .def(pybind11::init<std::string>())
-        .def("read_file", &LogReader::read_file)
-        .def_readonly("data", &LogReader::data)
-        .def_readonly("timestamps", &LogReader::timestamps);
+        .def("read_file",
+             &LogReader::read_file,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def_readonly("data",
+                      &LogReader::data,
+                      pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def_readonly("timestamps",
+                      &LogReader::timestamps,
+                      pybind11::call_guard<pybind11::gil_scoped_release>());
 }
 
 }  // namespace robot_interfaces
