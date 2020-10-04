@@ -246,7 +246,8 @@ void create_python_bindings(pybind11::module &m)
              &Types::Frontend::get_current_timeindex,
              pybind11::call_guard<pybind11::gil_scoped_release>());
 
-    pybind11::class_<typename Types::LogEntry>(m, "LogEntry")
+    pybind11::class_<typename Types::LogEntry>(
+        m, "LogEntry", "Represents the logged of one time step.")
         .def_readwrite("timeindex", &Types::LogEntry::timeindex)
         .def_readwrite("timestamp", &Types::LogEntry::timestamp)
         .def_readwrite("status", &Types::LogEntry::status)
@@ -273,10 +274,26 @@ void create_python_bindings(pybind11::module &m)
 
     pybind11::class_<typename Types::BinaryLogReader,
                      std::shared_ptr<typename Types::BinaryLogReader>>(
-        m, "BinaryLogReader")
+        m,
+        "BinaryLogReader",
+        "BinaryLogReader(filename: str)\n\nSee :meth:`read_file`.")
         .def(pybind11::init<std::string>())
-        .def("read_file", &Types::BinaryLogReader::read_file)
-        .def_readonly("data", &Types::BinaryLogReader::data);
+        .def("read_file",
+             &Types::BinaryLogReader::read_file,
+             pybind11::arg("filename"),
+             R"XXX(
+                read_file(filename: str)
+
+                Read data from the specified binary robot log file.
+
+                The data is stored to :attr:`data`.
+
+                Args:
+                    filename (str): Path to the robot log file.
+)XXX")
+        .def_readonly("data",
+                      &Types::BinaryLogReader::data,
+                      "List[LogEntry]: Contains the log entries.");
 }
 
 }  // namespace robot_interfaces
