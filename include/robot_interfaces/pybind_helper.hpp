@@ -57,7 +57,10 @@ struct BindTipForceIfExists<Types,
 {
     static void bind(pybind11::class_<typename Types::Observation> &c)
     {
-        c.def_readwrite("tip_force", &Types::Observation::tip_force);
+        c.def_readwrite("tip_force",
+                        &Types::Observation::tip_force,
+                        "Measurements of the push sensors at the finger tips, "
+                        "one per finger. Ranges between 0 and 1.");
     }
 };
 
@@ -78,6 +81,11 @@ struct BindTipForceIfExists<Types,
 template <typename Types>
 void create_python_bindings(pybind11::module &m)
 {
+    pybind11::options options;
+    // disable automatic function signature generation as this does not look too
+    // nice in the Sphinx documentation.
+    options.disable_function_signatures();
+
     pybind11::class_<typename Types::BaseData, typename Types::BaseDataPtr>(
         m, "BaseData");
 
@@ -106,11 +114,53 @@ void create_python_bindings(pybind11::module &m)
              &Types::Backend::wait_until_terminated,
              pybind11::call_guard<pybind11::gil_scoped_release>());
 
-    pybind11::class_<typename Types::Action>(m, "Action")
-        .def_readwrite("torque", &Types::Action::torque)
-        .def_readwrite("position", &Types::Action::position)
-        .def_readwrite("position_kp", &Types::Action::position_kp)
-        .def_readwrite("position_kd", &Types::Action::position_kd)
+    pybind11::class_<typename Types::Action>(m,
+                                             "Action",
+                                             R"XXX(
+                Action(torque=[0] * n_joints, position=[nan] * n_joints, position_kp=[nan] * n_joints, position_kd=[nan] * n_joints)
+
+                Action with desired torque and (optional) position.
+
+                The resulting torque command sent to the robot is::
+
+                    torque_command = torque + PD(position)
+
+                To disable the position controller, set the target position to
+                NaN.  The controller is executed joint-wise, so it is possible
+                to run it only for some joints by setting a target position for
+                these joints and setting the others to NaN.
+
+                The specified torque is always added to the result of the
+                position controller, so if you only want to run the position
+                controller, make sure to set `torque` to zero for all joints.
+
+                Args:
+                    torque:  Desired torque.
+                    position:  Desired position.  Set values to NaN to disable
+                        position controller for the corresponding joints
+                    position_kp:  P-gains for the position controller.  Set to
+                        NaN to use default values.
+                    position_kd:  D-gains for the position controller.  Set to
+                        NaN to use default values.
+)XXX")
+        .def_readwrite("torque",
+                       &Types::Action::torque,
+                       "List of desired torques, one per joint.")
+        .def_readwrite(
+            "position",
+            &Types::Action::position,
+            "List of desired positions, one per joint.  If set, a PD "
+            "position controller is run and the resulting torque is "
+            "added to :attr:`torque`.  Set to NaN to disable "
+            "position controller (default).")
+        .def_readwrite("position_kp",
+                       &Types::Action::position_kp,
+                       "P-gains for position controller, one per joint.  If "
+                       "NaN, default is used.")
+        .def_readwrite("position_kd",
+                       &Types::Action::position_kd,
+                       "D-gains for position controller, one per joint.  If "
+                       "NaN, default is used.")
         .def(pybind11::init<typename Types::Action::Vector,
                             typename Types::Action::Vector,
                             typename Types::Action::Vector,
@@ -120,11 +170,20 @@ void create_python_bindings(pybind11::module &m)
              pybind11::arg("position_kp") = Types::Action::None(),
              pybind11::arg("position_kd") = Types::Action::None());
 
-    auto obs = pybind11::class_<typename Types::Observation>(m, "Observation")
-                   .def(pybind11::init<>())
-                   .def_readwrite("position", &Types::Observation::position)
-                   .def_readwrite("velocity", &Types::Observation::velocity)
-                   .def_readwrite("torque", &Types::Observation::torque);
+    auto obs =
+        pybind11::class_<typename Types::Observation>(m, "Observation")
+            .def(pybind11::init<>())
+            .def_readwrite(
+                "position",
+                &Types::Observation::position,
+                "List of angular joint positions [rad], one per joint.")
+            .def_readwrite(
+                "velocity",
+                &Types::Observation::velocity,
+                "List of angular joint velocities [rad/s], one per joint.")
+            .def_readwrite("torque",
+                           &Types::Observation::torque,
+                           "List of torques [Nm], one per joint.");
     BindTipForceIfExists<Types>::bind(obs);
 
     // Release the GIL when calling any of the front-end functions, so in case
@@ -187,7 +246,8 @@ void create_python_bindings(pybind11::module &m)
              &Types::Frontend::get_current_timeindex,
              pybind11::call_guard<pybind11::gil_scoped_release>());
 
-    pybind11::class_<typename Types::LogEntry>(m, "LogEntry")
+    pybind11::class_<typename Types::LogEntry>(
+        m, "LogEntry", "Represents the logged of one time step.")
         .def_readwrite("timeindex", &Types::LogEntry::timeindex)
         .def_readwrite("timestamp", &Types::LogEntry::timestamp)
         .def_readwrite("status", &Types::LogEntry::status)
@@ -214,10 +274,26 @@ void create_python_bindings(pybind11::module &m)
 
     pybind11::class_<typename Types::BinaryLogReader,
                      std::shared_ptr<typename Types::BinaryLogReader>>(
-        m, "BinaryLogReader")
+        m,
+        "BinaryLogReader",
+        "BinaryLogReader(filename: str)\n\nSee :meth:`read_file`.")
         .def(pybind11::init<std::string>())
-        .def("read_file", &Types::BinaryLogReader::read_file)
-        .def_readonly("data", &Types::BinaryLogReader::data);
+        .def("read_file",
+             &Types::BinaryLogReader::read_file,
+             pybind11::arg("filename"),
+             R"XXX(
+                read_file(filename: str)
+
+                Read data from the specified binary robot log file.
+
+                The data is stored to :attr:`data`.
+
+                Args:
+                    filename (str): Path to the robot log file.
+)XXX")
+        .def_readonly("data",
+                      &Types::BinaryLogReader::data,
+                      "List[LogEntry]: Contains the log entries.");
 }
 
 }  // namespace robot_interfaces

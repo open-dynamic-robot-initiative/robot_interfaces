@@ -27,6 +27,11 @@ namespace robot_interfaces
 template <typename ObservationType>
 void create_sensor_bindings(pybind11::module& m)
 {
+    pybind11::options options;
+    // disable automatic function signature generation as this does not look too
+    // nice in the Sphinx documentation.
+    options.disable_function_signatures();
+
     // some typedefs to keep code below shorter
     typedef SensorData<ObservationType> BaseData;
     typedef SingleProcessSensorData<ObservationType> SingleProcData;
@@ -89,17 +94,36 @@ void create_sensor_bindings(pybind11::module& m)
              &Logger::stop_and_save,
              pybind11::call_guard<pybind11::gil_scoped_release>());
 
-    pybind11::class_<LogReader, std::shared_ptr<LogReader>>(m, "LogReader")
+    pybind11::class_<LogReader, std::shared_ptr<LogReader>>(m,
+                                                            "LogReader",
+                                                            R"XXX(
+            LogReader(filename: str)
+
+            See :meth:`read_file`
+)XXX")
         .def(pybind11::init<std::string>())
         .def("read_file",
              &LogReader::read_file,
-             pybind11::call_guard<pybind11::gil_scoped_release>())
+             pybind11::call_guard<pybind11::gil_scoped_release>(),
+             pybind11::arg("filename"),
+             R"XXX(
+                read_file(filename: str)
+
+                Read data from the specified camera log file.
+
+                The data is stored in :attr:`data` and :attr:`timestamps`.
+
+                Args:
+                    filename (str): Path to the camera log file.
+)XXX")
         .def_readonly("data",
                       &LogReader::data,
-                      pybind11::call_guard<pybind11::gil_scoped_release>())
+                      pybind11::call_guard<pybind11::gil_scoped_release>(),
+                      "List of camera observations from the log file.")
         .def_readonly("timestamps",
                       &LogReader::timestamps,
-                      pybind11::call_guard<pybind11::gil_scoped_release>());
+                      pybind11::call_guard<pybind11::gil_scoped_release>(),
+                      "List of timestamps of the camera observations.");
 }
 
 }  // namespace robot_interfaces

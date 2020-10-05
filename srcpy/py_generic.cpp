@@ -28,12 +28,28 @@ PYBIND11_MODULE(py_generic, m)
 {
     pybind11::class_<Status> pystatus(m, "Status");
     pystatus.def(pybind11::init<>())
-        .def_readwrite("action_repetitions", &Status::action_repetitions)
-        .def_readwrite("error_status", &Status::error_status)
-        .def_readwrite("error_message", &Status::error_message);
+        .def_readwrite(
+            "action_repetitions",
+            &Status::action_repetitions,
+            "int: Number of times the current action has been repeated.")
+        .def_readwrite("error_status",
+                       &Status::error_status,
+                       "ErrorStatus: Current error status.")
+        .def_readwrite("error_message",
+                       &Status::error_message,
+                       "str: Human-readable error message. Only defined if "
+                       "``error_status != NO_ERROR``");
 
     pybind11::enum_<Status::ErrorStatus>(pystatus, "ErrorStatus")
-        .value("NO_ERROR", Status::ErrorStatus::NO_ERROR)
-        .value("DRIVER_ERROR", Status::ErrorStatus::DRIVER_ERROR)
-        .value("BACKEND_ERROR", Status::ErrorStatus::BACKEND_ERROR);
+        .value("NO_ERROR",
+               Status::ErrorStatus::NO_ERROR,
+               "Indicates that there is no error.")
+        .value("DRIVER_ERROR",
+               Status::ErrorStatus::DRIVER_ERROR,
+               "Error from the low level robot driver (e.g. some hardware "
+               "failure).")
+        .value(
+            "BACKEND_ERROR",
+            Status::ErrorStatus::BACKEND_ERROR,
+            "Error from the robot back end (e.g. some communication issue).");
 }

@@ -96,9 +96,9 @@ struct NJointAction : public Loggable
      * controller, so if you only want to run the position controller, make
      * sure to set `torque` to zero for all joints.
      *
-     * For more explicit code, the static factory methods `Troque`,
+     * For more explicit code, the static factory methods `Torque`,
      * `Position`, `TorqueAndPosition` and `Zero` should be used instead
-     * directly creating actions through this constuctor.
+     * directly creating actions through this constructor.
      *
      * @param torque  Desired torque.
      * @param position  Desired position.  Set values to NaN to disable
