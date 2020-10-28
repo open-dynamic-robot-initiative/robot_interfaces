@@ -1,20 +1,17 @@
-###################
-## add unit tests #
-###################
+#
+# Add unit tests.
+#
+
+find_package(ament_cmake_gtest REQUIRED)
+find_package(Boost REQUIRED)
 
 macro(create_unittest test_name)
 
-# create the executable
-catkin_add_gtest(${test_name}
-  main.cpp
-  ${test_name}.cpp
-)
-if(TARGET ${test_name})
-    # link the dependencies to it
-    target_link_libraries(${test_name}
-        ${catkin_LIBRARIES}
-    )
-endif()
+  # create the executable
+  ament_add_gtest(${test_name} main.cpp ${test_name}.cpp)
+  target_include_directories(${test_name} PRIVATE ${BOOST_INCLUDE_DIR})
+  target_link_libraries(${test_name} ${PROJECT_NAME} 
+                        ${BOOST_LIBRARIES})
 
 endmacro(create_unittest test_name)
 
