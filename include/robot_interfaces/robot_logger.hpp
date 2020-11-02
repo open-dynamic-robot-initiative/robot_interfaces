@@ -168,6 +168,14 @@ public:
                 "RobotLogger is currently running.  Call stop() first.");
         }
 
+        if (logger_data_->observation->length() == 0)
+        {
+            std::cout
+                << "Warning: RobotLogger buffer is empty.  Nothing to write."
+                << std::endl;
+            return;
+        }
+
         output_file_name_ = filename;
         write_header_to_file();
 
@@ -194,6 +202,14 @@ public:
         {
             throw std::runtime_error(
                 "RobotLogger is currently running.  Call stop() first.");
+        }
+
+        if (logger_data_->observation->length() == 0)
+        {
+            std::cout
+                << "Warning: RobotLogger buffer is empty.  Nothing to write."
+                << std::endl;
+            return;
         }
 
         // set end_index to the current time index if not set or if it is in the
