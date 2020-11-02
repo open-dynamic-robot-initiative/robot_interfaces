@@ -16,8 +16,8 @@
 #include <thread>
 
 #include <cereal/archives/binary.hpp>
-#include <cereal/types/vector.hpp>
 #include <cereal/types/tuple.hpp>
+#include <cereal/types/vector.hpp>
 
 #include <robot_interfaces/loggable.hpp>
 #include <robot_interfaces/robot_data.hpp>
@@ -70,7 +70,6 @@ public:
                   "Status must derive from Loggable");
 
     typedef RobotLogEntry<Action, Observation> LogEntry;
-
 
     /**
      * @brief Initialize logger.
@@ -195,8 +194,8 @@ public:
     }
 
     void write_current_buffer_binary(const std::string filename,
-                              long int start_index = 0,
-                              long int end_index = -1)
+                                     long int start_index = 0,
+                                     long int end_index = -1)
     {
         if (is_running_)
         {
@@ -264,7 +263,6 @@ public:
                 t = t_oldest;
             }
         }
-
 
         std::ofstream outfile(filename, std::ios::binary);
         cereal::BinaryOutputArchive archive(outfile);
