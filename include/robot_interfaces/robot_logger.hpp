@@ -16,8 +16,8 @@
 #include <thread>
 
 #include <cereal/archives/binary.hpp>
-#include <cereal/types/vector.hpp>
 #include <cereal/types/tuple.hpp>
+#include <cereal/types/vector.hpp>
 
 #include <robot_interfaces/loggable.hpp>
 #include <robot_interfaces/robot_data.hpp>
@@ -70,7 +70,6 @@ public:
                   "Status must derive from Loggable");
 
     typedef RobotLogEntry<Action, Observation> LogEntry;
-
 
     /**
      * @brief Initialize logger.
@@ -168,6 +167,14 @@ public:
                 "RobotLogger is currently running.  Call stop() first.");
         }
 
+        if (logger_data_->observation->length() == 0)
+        {
+            std::cout
+                << "Warning: RobotLogger buffer is empty.  Nothing to write."
+                << std::endl;
+            return;
+        }
+
         output_file_name_ = filename;
         write_header_to_file();
 
@@ -187,13 +194,21 @@ public:
     }
 
     void write_current_buffer_binary(const std::string filename,
-                              long int start_index = 0,
-                              long int end_index = -1)
+                                     long int start_index = 0,
+                                     long int end_index = -1)
     {
         if (is_running_)
         {
             throw std::runtime_error(
                 "RobotLogger is currently running.  Call stop() first.");
+        }
+
+        if (logger_data_->observation->length() == 0)
+        {
+            std::cout
+                << "Warning: RobotLogger buffer is empty.  Nothing to write."
+                << std::endl;
+            return;
         }
 
         // set end_index to the current time index if not set or if it is in the
@@ -248,7 +263,6 @@ public:
                 t = t_oldest;
             }
         }
-
 
         std::ofstream outfile(filename, std::ios::binary);
         cereal::BinaryOutputArchive archive(outfile);
