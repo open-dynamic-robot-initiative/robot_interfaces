@@ -42,6 +42,27 @@ template <typename Action, typename Observation>
 class RobotBackend
 {
 public:
+    enum TerminationReason : int
+    {
+        // ## non-failure cases (use positive numbers here)
+
+        //! Backend is still running.
+        NOT_TERMINATED = 0,
+        //! Shutdown requested for non-failure reason (e.g. by SIGINT).
+        SHUTDOWN_REQUESTED = 1,
+        //! Maximum number of actions was reached.
+        MAXIMUM_NUMBER_OF_ACTIONS_REACHED = 2,
+
+        // ## failure cases (use negative numbers here)
+
+        //! Some error in the driver.
+        DRIVER_ERROR = -1,
+        //! First action timeout was triggered.
+        FIRST_ACTION_TIMEOUT = -2,
+        //! Next action timeout was triggered.
+        NEXT_ACTION_TIMEOUT = -3
+    };
+
     /**
      * @param robot_driver  Driver instance for the actual robot.
      * @param robot_data  Data is send to/retrieved from here.
@@ -65,7 +86,8 @@ public:
           first_action_timeout_(first_action_timeout),
           max_number_of_actions_(max_number_of_actions),
           is_shutdown_requested_(false),
-          max_action_repetitions_(0)
+          max_action_repetitions_(0),
+          termination_reason_(TerminationReason::NOT_TERMINATED)
     {
         signal_handler::SignalHandler::initialize();
 
@@ -147,18 +169,22 @@ public:
     {
         while (!has_shutdown_request() &&
                !robot_data_->desired_action->wait_for_timeindex(0, 0.1))
-        {}
+        {
+        }
     }
 
     /**
      * @brief Wait until the backend loop terminates.
+     * @return Termination code (see @ref TerminationReason).
      */
-    void wait_until_terminated() const
+    int wait_until_terminated() const
     {
         while (loop_is_running_)
         {
             real_time_tools::Timer::sleep_microseconds(100000);
         }
+
+        return termination_reason_;
     }
 
 private:
@@ -218,6 +244,8 @@ private:
 
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 
+    std::atomic<int> termination_reason_;
+
     bool has_shutdown_request() const
     {
         return is_shutdown_requested_ ||
@@ -255,6 +283,7 @@ private:
                 Status status;
                 status.set_error(Status::ErrorStatus::BACKEND_ERROR,
                                  "First action was not provided in time");
+                termination_reason_ = TerminationReason::FIRST_ACTION_TIMEOUT;
 
                 robot_data_->status->append(status);
 
@@ -277,6 +306,8 @@ private:
                 // TODO this is not really an error
                 status.set_error(Status::ErrorStatus::BACKEND_ERROR,
                                  "Maximum number of actions reached.");
+                termination_reason_ =
+                    TerminationReason::MAXIMUM_NUMBER_OF_ACTIONS_REACHED;
             }
 
             timer_.start();
@@ -314,6 +345,8 @@ private:
                     // of the previous action is exceeded --> Error
                     status.set_error(Status::ErrorStatus::BACKEND_ERROR,
                                      "Next action was not provided in time");
+                    termination_reason_ =
+                        TerminationReason::NEXT_ACTION_TIMEOUT;
                 }
             }
 
@@ -322,6 +355,7 @@ private:
             {
                 status.set_error(Status::ErrorStatus::DRIVER_ERROR,
                                  driver_error_msg);
+                termination_reason_ = TerminationReason::DRIVER_ERROR;
             }
 
             robot_data_->status->append(status);
@@ -361,6 +395,14 @@ private:
         }
 
         robot_driver_->shutdown();
+
+        // If no specific termination reason was set, assume that the shutdown
+        // was requested from outside.
+        if (termination_reason_ == TerminationReason::NOT_TERMINATED)
+        {
+            termination_reason_ = TerminationReason::SHUTDOWN_REQUESTED;
+        }
+
         loop_is_running_ = false;
     }
 };
