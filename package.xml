@@ -1,24 +1,48 @@
 <?xml version="1.0"?>
-<package format="2">
-  <name>robot_interfaces</name>
-  <version>1.0.0</version>
-  <description>
-    This package provides C++ interfaces (purely virtual classes) for different
-    robots. The idea is to use this interface both for the real robots as well
-    as the simulators.
-  </description>
-  <author email="manuel.wuthrich@gmail.com">Manuel Wuthrich</author>
-  <maintainer email="manuel.wuthrich@gmail.com">Manuel Wuthrich</maintainer>
-  <maintainer email="felix.widmaier@tue.mpg.de">Felix Widmaier</maintainer>
-  <license>BSD 3-Clause</license>
+<?xml-model
+   href="http://download.ros.org/schema/package_format3.xsd"
+   schematypens="http://www.w3.org/2001/XMLSchema"?>
 
-  <buildtool_depend>catkin</buildtool_depend>
 
-  <depend>mpi_cmake_modules</depend>
-  <depend>real_time_tools</depend>
-  <depend>pybind11_catkin</depend>
-  <depend>time_series</depend>
-  <depend>signal_handler</depend>
-  <depend>serialization_utils</depend>
+<package format="3">
+
+    <name>robot_interfaces</name>
+    <version>1.0.0</version>
+    
+    <description>
+        This package provides C++ interfaces (purely virtual classes) for
+        different robots. The idea is to use this interface both for the real
+        robots as well as the simulators.
+    </description>
+
+    <author email="manuel.wuthrich@gmail.com">Manuel Wuthrich</author>
+    <maintainer email="manuel.wuthrich@gmail.com">Manuel Wuthrich</maintainer>
+    <maintainer email="felix.widmaier@tue.mpg.de">Felix Widmaier</maintainer>
+
+    <license>BSD 3-clause</license>
+
+    <!-- Build Dependencies -->
+    <buildtool_depend>ament_cmake</buildtool_depend>
+    <buildtool_depend>ament_cmake_python</buildtool_depend>
+    <buildtool_depend>pybind11_vendor</buildtool_depend>
+    <buildtool_depend>mpi_cmake_modules</buildtool_depend>
+
+    <!-- Dependencies -->
+    <depend>pybind11</depend>
+    <depend>Eigen3</depend>
+    <depend>real_time_tools</depend>
+    <depend>time_series</depend>
+    <depend>signal_handler</depend>
+    <depend>serialization_utils</depend>
+    <depend>Threads</depend>
+    <depend>rt</depend>
+    
+    <!-- Unit tests -->
+    <test_depend>ament_cmake_gtest</test_depend>
+    <test_depend>Boost</test_depend>
+
+    <export>
+        <build_type>ament_cmake</build_type>
+    </export>
 
 </package>

@@ -4,8 +4,9 @@
  * @copyright Copyright (c) 2019, Max Planck Gesellschaft.
  */
 #include <gtest/gtest.h>
-#include <cstdio>
 
+#include <boost/filesystem.hpp>
+#include <cstdio>
 #include <robot_interfaces/sensors/sensor_backend.hpp>
 #include <robot_interfaces/sensors/sensor_data.hpp>
 #include <robot_interfaces/sensors/sensor_frontend.hpp>
@@ -24,7 +25,10 @@ protected:
 
     void SetUp() override
     {
-        log_file = std::tmpnam(nullptr);
+        boost::filesystem::path temp =
+            boost::filesystem::temp_directory_path() /
+            boost::filesystem::unique_path();
+        log_file = temp.native();
     }
 
     void TearDown() override
@@ -65,7 +69,7 @@ TEST_F(TestSensorLogger, write_and_read_log)
     // read the log
     {
         auto log = SensorLogReader<int>(log_file);
-        ASSERT_GE(log.data.size(), NUM_OBSERVATIONS);
+        ASSERT_GE(log.data.size(), static_cast<std::size_t>(NUM_OBSERVATIONS));
         for (int t = 0; t < NUM_OBSERVATIONS; t++)
         {
             ASSERT_EQ(log.data[t], t);
@@ -107,13 +111,13 @@ TEST_F(TestSensorLogger, buffer_limit)
         auto log = SensorLogReader<int>(log_file);
 
         // make sure the log size equals the buffer limit
-        ASSERT_EQ(log.data.size(), BUFFER_LIMIT);
+        ASSERT_EQ(log.data.size(), static_cast<std::size_t>(BUFFER_LIMIT));
 
         // also verify that the messages are the expected ones (i.e. the ones
         // from the start, before the limit is reached).
         for (std::size_t t = 0; t < log.data.size(); t++)
         {
-            ASSERT_EQ(log.data[t], t);
+            ASSERT_EQ(log.data[t], static_cast<int>(t));
         }
     }
 }
