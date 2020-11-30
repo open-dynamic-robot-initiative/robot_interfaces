@@ -38,6 +38,8 @@ find_package(rt)
 ament_export_dependencies(pybind11 Eigen3 real_time_tools time_series
                           signal_handler serialization_utils)
 
+ament_python_install_package(${PROJECT_NAME} PACKAGE_DIR python/${PROJECT_NAME})
+
 # prepare to export all needed targets
 set(all_targets)
 set(all_target_exports)
