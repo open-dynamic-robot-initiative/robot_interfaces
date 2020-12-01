@@ -92,11 +92,16 @@ endif()
 #
 # python bindings.
 #
-add_pybind11_module(py_generic ${PROJECT_NAME})
-add_pybind11_module(py_finger_types ${PROJECT_NAME})
-add_pybind11_module(py_trifinger_types ${PROJECT_NAME})
-add_pybind11_module(py_one_joint_types ${PROJECT_NAME})
-add_pybind11_module(py_two_joint_types ${PROJECT_NAME})
+add_pybind11_module(py_generic srcpy/py_generic.cpp
+    LINK_LIBRARIES ${PROJECT_NAME})
+add_pybind11_module(py_finger_types srcpy/py_finger_types.cpp
+    LINK_LIBRARIES ${PROJECT_NAME})
+add_pybind11_module(py_trifinger_types srcpy/py_trifinger_types.cpp
+    LINK_LIBRARIES ${PROJECT_NAME})
+add_pybind11_module(py_one_joint_types srcpy/py_one_joint_types.cpp
+    LINK_LIBRARIES ${PROJECT_NAME})
+add_pybind11_module(py_two_joint_types srcpy/py_two_joint_types.cpp
+    LINK_LIBRARIES ${PROJECT_NAME})
 
 #
 # building documentation
