@@ -38,6 +38,8 @@ find_package(rt)
 ament_export_dependencies(pybind11 Eigen3 real_time_tools time_series
                           signal_handler serialization_utils)
 
+ament_python_install_package(${PROJECT_NAME} PACKAGE_DIR python/${PROJECT_NAME})
+
 # prepare to export all needed targets
 set(all_targets)
 set(all_target_exports)
@@ -90,31 +92,16 @@ endif()
 #
 # python bindings.
 #
-
-macro(ADD_PYTHON_BINDINGS module_name)
-  add_library(${module_name}_cpp_bindings MODULE srcpy/${module_name}.cpp)
-  target_link_libraries(${module_name}_cpp_bindings PRIVATE pybind11::module)
-  target_link_libraries(${module_name}_cpp_bindings PRIVATE ${PYTHON_LIBRARIES})
-  target_link_libraries(${module_name}_cpp_bindings PRIVATE ${PROJECT_NAME})
-  set_target_properties(
-    ${module_name}_cpp_bindings
-    PROPERTIES OUTPUT_NAME ${module_name}
-               PREFIX ""
-               SUFFIX "${PYTHON_MODULE_EXTENSION}")
-  target_include_directories(
-    ${module_name}_cpp_bindings
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-           $<INSTALL_INTERFACE:include> SYSTEM
-    PUBLIC ${PYTHON_INCLUDE_DIRS})
-  _ament_cmake_python_get_python_install_dir()
-  install(TARGETS ${module_name}_cpp_bindings DESTINATION ${PYTHON_INSTALL_DIR})
-endmacro(ADD_PYTHON_BINDINGS module_name)
-
-add_python_bindings(py_generic)
-add_python_bindings(py_finger_types)
-add_python_bindings(py_trifinger_types)
-add_python_bindings(py_one_joint_types)
-add_python_bindings(py_two_joint_types)
+add_pybind11_module(py_generic srcpy/py_generic.cpp
+    LINK_LIBRARIES ${PROJECT_NAME})
+add_pybind11_module(py_finger_types srcpy/py_finger_types.cpp
+    LINK_LIBRARIES ${PROJECT_NAME})
+add_pybind11_module(py_trifinger_types srcpy/py_trifinger_types.cpp
+    LINK_LIBRARIES ${PROJECT_NAME})
+add_pybind11_module(py_one_joint_types srcpy/py_one_joint_types.cpp
+    LINK_LIBRARIES ${PROJECT_NAME})
+add_pybind11_module(py_two_joint_types srcpy/py_two_joint_types.cpp
+    LINK_LIBRARIES ${PROJECT_NAME})
 
 #
 # building documentation
@@ -131,7 +118,7 @@ install(
   EXPORT ${all_target_exports}
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
   INCLUDES
   DESTINATION include)
 
