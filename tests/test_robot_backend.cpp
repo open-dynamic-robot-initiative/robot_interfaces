@@ -65,5 +65,5 @@ TEST_F(TestRobotBackend, max_number_of_actions)
     auto status = frontend.get_status(t + 1);
     ASSERT_TRUE(status.has_error());
     ASSERT_EQ(Status::ErrorStatus::BACKEND_ERROR, status.error_status);
-    ASSERT_EQ("Maximum number of actions reached.", status.error_message);
+    ASSERT_EQ("Maximum number of actions reached.", status.get_error_message());
 }

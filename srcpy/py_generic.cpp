@@ -32,13 +32,13 @@ PYBIND11_MODULE(py_generic, m)
             "action_repetitions",
             &Status::action_repetitions,
             "int: Number of times the current action has been repeated.")
-        .def_readwrite("error_status",
-                       &Status::error_status,
-                       "ErrorStatus: Current error status.")
-        .def_readwrite("error_message",
-                       &Status::error_message,
-                       "str: Human-readable error message. Only defined if "
-                       "``error_status != NO_ERROR``");
+        .def_readonly("error_status",
+                      &Status::error_status,
+                      "ErrorStatus: Current error status.")
+        .def("set_error",
+             &Status::set_error)
+        .def("get_error_message",
+             &Status::get_error_message);
 
     pybind11::enum_<Status::ErrorStatus>(pystatus, "ErrorStatus")
         .value("NO_ERROR",

@@ -14,7 +14,6 @@
 #pragma once
 
 #include <cereal/types/string.hpp>
-
 #include <robot_interfaces/loggable.hpp>
 #include <string>
 #include <vector>
@@ -29,6 +28,8 @@ namespace robot_interfaces
  */
 struct Status : public Loggable
 {
+    static constexpr unsigned int ERROR_MESSAGE_LENGTH = 64;
+
     //! @brief Different types of errors that can occur in the backend.
     enum class ErrorStatus
     {
@@ -80,13 +81,6 @@ struct Status : public Loggable
     ErrorStatus error_status = ErrorStatus::NO_ERROR;
 
     /**
-     * @brief Human-readable message describing the error.
-     *
-     * Value is undefined if `error_status == NO_ERROR`.
-     */
-    std::string error_message;
-
-    /**
      * @brief Set error.
      *
      * If another error was set before, the old one is kept and the new one
@@ -101,7 +95,11 @@ struct Status : public Loggable
         if (!has_error())
         {
             this->error_status = error_type;
-            this->error_message = message;
+
+            std::strncpy(
+                this->error_message, message.c_str(), ERROR_MESSAGE_LENGTH - 1);
+            // make sure it is terminated
+            this->error_message[ERROR_MESSAGE_LENGTH - 1] = '\0';
         }
     }
 
@@ -118,6 +116,12 @@ struct Status : public Loggable
     bool has_error() const
     {
         return this->error_status != Status::ErrorStatus::NO_ERROR;
+    }
+
+    //! Get the error message as std::string.
+    std::string get_error_message() const
+    {
+        return std::string(this->error_message);
     }
 
     template <class Archive>
@@ -138,6 +142,14 @@ struct Status : public Loggable
         return {{static_cast<double>(action_repetitions)},
                 {static_cast<double>(error_status)}};
     }
+
+private:
+    /**
+     * @brief Human-readable message describing the error.
+     *
+     * Value is undefined if `error_status == NO_ERROR`.
+     */
+    char error_message[ERROR_MESSAGE_LENGTH] = "";
 };
 
 }  // namespace robot_interfaces
