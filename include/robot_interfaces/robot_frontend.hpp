@@ -10,12 +10,10 @@
 
 #include <algorithm>
 #include <cmath>
-
-#include <time_series/time_series.hpp>
-
 #include <robot_interfaces/robot_backend.hpp>
 #include <robot_interfaces/robot_data.hpp>
 #include <robot_interfaces/status.hpp>
+#include <time_series/time_series.hpp>
 
 namespace robot_interfaces
 {
@@ -162,13 +160,13 @@ public:
                     break;
                 case Status::ErrorStatus::DRIVER_ERROR:
                     throw std::runtime_error("Driver Error: " +
-                                             status.error_message);
+                                             status.get_error_message());
                 case Status::ErrorStatus::BACKEND_ERROR:
                     throw std::runtime_error("Backend Error: " +
-                                             status.error_message);
+                                             status.get_error_message());
                 default:
                     throw std::runtime_error("Unknown Error: " +
-                                             status.error_message);
+                                             status.get_error_message());
             }
         }
 

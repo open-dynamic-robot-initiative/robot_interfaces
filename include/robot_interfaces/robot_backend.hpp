@@ -287,7 +287,7 @@ private:
 
                 robot_data_->status->append(status);
 
-                std::cerr << "Error: " << status.error_message
+                std::cerr << "Error: " << status.get_error_message()
                           << "\nRobot is shut down." << std::endl;
 
                 request_shutdown();
@@ -363,7 +363,7 @@ private:
             // if there is an error, shut robot down and stop loop
             if (status.error_status != Status::ErrorStatus::NO_ERROR)
             {
-                std::cerr << "Error: " << status.error_message
+                std::cerr << "Error: " << status.get_error_message()
                           << "\nRobot is shut down." << std::endl;
                 break;
             }
