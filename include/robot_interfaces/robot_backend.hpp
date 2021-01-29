@@ -187,6 +187,21 @@ public:
         return termination_reason_;
     }
 
+    /**
+     * @brief Check if the backend loop is still running.
+     * @return True if the loop is still running.
+     */
+    bool is_running() const
+    {
+        return loop_is_running_;
+    }
+
+    //! @brief Get the termination reason
+    int get_termination_reason() const
+    {
+        return termination_reason_;
+    }
+
 private:
     std::shared_ptr<RobotDriver<Action, Observation>> robot_driver_;
     std::shared_ptr<RobotData<Action, Observation>> robot_data_;
