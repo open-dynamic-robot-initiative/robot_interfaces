@@ -99,8 +99,7 @@ public:
     }
 
     //! @deprecated Use get_timestamp_ms instead
-    [[deprecated]] TimeStamp get_time_stamp_ms(const TimeIndex &t) const
-    {
+    [[deprecated]] TimeStamp get_time_stamp_ms(const TimeIndex &t) const {
         return get_timestamp_ms(t);
     }
 
