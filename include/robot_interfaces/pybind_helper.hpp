@@ -107,6 +107,9 @@ void create_python_bindings(pybind11::module &m)
         .def("initialize",
              &Types::Backend::initialize,
              pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("request_shutdown",
+             &Types::Backend::request_shutdown,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("wait_until_first_action",
              &Types::Backend::wait_until_first_action,
              pybind11::call_guard<pybind11::gil_scoped_release>())
