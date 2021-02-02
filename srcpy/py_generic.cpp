@@ -35,10 +35,8 @@ PYBIND11_MODULE(py_generic, m)
         .def_readonly("error_status",
                       &Status::error_status,
                       "ErrorStatus: Current error status.")
-        .def("set_error",
-             &Status::set_error)
-        .def("get_error_message",
-             &Status::get_error_message);
+        .def("set_error", &Status::set_error)
+        .def("get_error_message", &Status::get_error_message);
 
     pybind11::enum_<Status::ErrorStatus>(pystatus, "ErrorStatus")
         .value("NO_ERROR",

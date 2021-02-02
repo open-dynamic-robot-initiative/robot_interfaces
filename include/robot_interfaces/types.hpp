@@ -11,9 +11,9 @@
 #include "robot_backend.hpp"
 #include "robot_data.hpp"
 #include "robot_frontend.hpp"
-#include "robot_logger.hpp"
 #include "robot_log_entry.hpp"
 #include "robot_log_reader.hpp"
+#include "robot_logger.hpp"
 
 namespace robot_interfaces
 {

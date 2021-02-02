@@ -48,9 +48,9 @@ public:
                   max_action_duration_s,
                   max_inter_action_duration_s),
               this->robot_data_,
-	      true, // real time mode
-	      std::numeric_limits<double>::infinity(), // first_action_timeout
-	      0) // max_number_of_actions
+              true,                                     // real time mode
+              std::numeric_limits<double>::infinity(),  // first_action_timeout
+              0)                                        // max_number_of_actions
     {
         // compile time checking template Driver inherate from RobotDriver
         static_assert(
@@ -58,7 +58,6 @@ public:
             "template Driver must be a subclass of "
             "robot_interfaces::RobotDriver");
     }
-
 
     /**  Robot which instantiates a non real time mode backend
      * @param max_action_duration_s See MonitoredRobotDriver.
@@ -72,12 +71,14 @@ public:
           backend_(
               std::make_shared<robot_interfaces::MonitoredRobotDriver<Driver>>(
                   driver_ptr_,
-                  std::numeric_limits<double>::infinity(), //max_action_duration_s,
-                  std::numeric_limits<double>::infinity() ), //max_inter_action_duration_s)
+                  std::numeric_limits<
+                      double>::infinity(),  // max_action_duration_s,
+                  std::numeric_limits<
+                      double>::infinity()),  // max_inter_action_duration_s)
               this->robot_data_,
-	      false, // real time mode
-	      std::numeric_limits<double>::infinity(), // first_action_timeout
-	      std::numeric_limits<int>::infinity()) // max_number_of_actions
+              false,                                    // real time mode
+              std::numeric_limits<double>::infinity(),  // first_action_timeout
+              std::numeric_limits<int>::infinity())     // max_number_of_actions
     {
         // compile time checking template Driver inherate from RobotDriver
         static_assert(
@@ -86,7 +87,6 @@ public:
             "robot_interfaces::RobotDriver");
     }
 
-  
     /**
      * initialize the backend
      */
