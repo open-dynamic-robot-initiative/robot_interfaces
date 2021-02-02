@@ -204,44 +204,15 @@ void create_python_bindings(pybind11::module &m)
         .def("get_status",
              &Types::Frontend::get_status,
              pybind11::call_guard<pybind11::gil_scoped_release>())
-        // TODO get_time_stamp_ms is deprecated, remove it some time in the near
-        // future.
-        .def(
-            "get_time_stamp_ms",
-            [](pybind11::object &self, const TimeIndex &t) {
-                auto warnings = pybind11::module::import("warnings");
-                warnings.attr("warn")(
-                    "get_time_stamp_ms() is deprecated, use get_timestamp_ms() "
-                    "instead.");
-                return self.attr("get_timestamp_ms")(t);
-            })
         .def("get_timestamp_ms",
              &Types::Frontend::get_timestamp_ms,
              pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("append_desired_action",
              &Types::Frontend::append_desired_action,
              pybind11::call_guard<pybind11::gil_scoped_release>())
-        // TODO: deprecated, remove in near future
-        .def("wait_until_time_index",
-             [](pybind11::object &self, const TimeIndex &t) {
-                 auto warnings = pybind11::module::import("warnings");
-                 warnings.attr("warn")(
-                     "wait_until_time_index() is deprecated, use "
-                     "wait_until_timeindex() instead.");
-                 return self.attr("wait_until_timeindex")(t);
-             })
         .def("wait_until_timeindex",
              &Types::Frontend::wait_until_timeindex,
              pybind11::call_guard<pybind11::gil_scoped_release>())
-        // TODO: deprecated, remove in near future
-        .def("get_current_time_index",
-             [](pybind11::object &self) {
-                 auto warnings = pybind11::module::import("warnings");
-                 warnings.attr("warn")(
-                     "get_current_time_index() is deprecated, use "
-                     "get_current_timeindex() instead.");
-                 return self.attr("get_current_timeindex")();
-             })
         .def("get_current_timeindex",
              &Types::Frontend::get_current_timeindex,
              pybind11::call_guard<pybind11::gil_scoped_release>());

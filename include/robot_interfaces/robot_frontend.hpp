@@ -98,11 +98,6 @@ public:
         return (*robot_data_->status)[t];
     }
 
-    //! @deprecated Use get_timestamp_ms instead
-    [[deprecated]] TimeStamp get_time_stamp_ms(const TimeIndex &t) const {
-        return get_timestamp_ms(t);
-    }
-
     /**
      * @brief Get the timestamp of time step t.
      *
