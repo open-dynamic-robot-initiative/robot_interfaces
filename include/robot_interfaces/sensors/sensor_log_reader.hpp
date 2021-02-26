@@ -52,6 +52,11 @@ public:
     void read_file(const std::string &filename)
     {
         std::ifstream infile(filename, std::ios::binary);
+        if (!infile)
+        {
+            throw std::runtime_error("Failed to open file " + filename);
+        }
+
         cereal::BinaryInputArchive archive(infile);
 
         std::uint32_t format_version;
