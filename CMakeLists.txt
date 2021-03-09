@@ -102,6 +102,8 @@ add_pybind11_module(py_one_joint_types srcpy/py_one_joint_types.cpp
     LINK_LIBRARIES ${PROJECT_NAME})
 add_pybind11_module(py_two_joint_types srcpy/py_two_joint_types.cpp
     LINK_LIBRARIES ${PROJECT_NAME})
+add_pybind11_module(py_solo_eight_types srcpy/py_solo_eight_types.cpp
+    LINK_LIBRARIES ${PROJECT_NAME})
 
 #
 # building documentation
