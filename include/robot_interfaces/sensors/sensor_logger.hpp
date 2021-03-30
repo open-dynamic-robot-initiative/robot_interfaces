@@ -14,6 +14,9 @@
 #include <thread>
 #include <vector>
 
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+
 #include <cereal/archives/binary.hpp>
 #include <cereal/types/tuple.hpp>
 #include <cereal/types/vector.hpp>
@@ -122,7 +125,13 @@ public:
         stop();
 
         std::ofstream outfile(filename, std::ios::binary);
-        cereal::BinaryOutputArchive archive(outfile);
+
+        // wrap the out stream with a gzip compressor
+        boost::iostreams::filtering_ostream outfile_compressed;
+        outfile_compressed.push(boost::iostreams::gzip_compressor());
+        outfile_compressed.push(outfile);
+
+        cereal::BinaryOutputArchive archive(outfile_compressed);
 
         // add version information to the output file (this can be used while
         // loading when the data format changes
