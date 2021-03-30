@@ -94,15 +94,6 @@ Build
 
 To build, cd into the `workspace` directory and call
 
-    catkin build
+    colcon build
 
 to build the whole workspace.
-
-### Python Bindings
-
-With the above command Python bindings will be build for the default python
-version of your system (see `python --version`).  If you want to use a
-different version (e.g. python3), you can specify as follows:
-
-    catkin build -DPYTHON_EXECUTABLE=/usr/bin/python3
-
