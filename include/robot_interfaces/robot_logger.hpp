@@ -130,7 +130,7 @@ public:
 
         if (still_running)
         {
-            append_robot_data_to_file(index_, block_size_);
+            append_robot_data_to_file(output_file_name_, index_, block_size_);
         }
     }
 
@@ -177,8 +177,7 @@ public:
             return;
         }
 
-        output_file_name_ = filename;
-        write_header_to_file();
+        write_header_to_file(filename);
 
         // set end_index to the current time index if not set or if it is in the
         // future.
@@ -192,7 +191,8 @@ public:
             end_index = std::min(t, end_index);
         }
 
-        append_robot_data_to_file(start_index, end_index - start_index);
+        append_robot_data_to_file(
+            filename, start_index, end_index - start_index);
     }
 
     void write_current_buffer_binary(const std::string filename,
@@ -290,7 +290,6 @@ private:
     std::atomic<bool> stop_was_called_;
     std::atomic<bool> is_running_;
 
-    std::ofstream output_file_;
     std::string output_file_name_;
 
     /**
@@ -367,17 +366,18 @@ private:
     /**
      * @brief Write the header to the log file.  This overwrites existing files!
      */
-    void write_header_to_file()
+    void write_header_to_file(const std::string &filename)
     {
-        output_file_.open(output_file_name_);
-        std::ostream_iterator<std::string> string_iterator(output_file_, " ");
+        std::ofstream output_file;
+        output_file.open(filename);
+        std::ostream_iterator<std::string> string_iterator(output_file, " ");
 
         std::vector<std::string> header = construct_header();
 
         std::copy(header.begin(), header.end(), string_iterator);
-        output_file_ << std::endl;
+        output_file << std::endl;
 
-        output_file_.close();
+        output_file.close();
     }
 
     /**
@@ -386,10 +386,13 @@ private:
      * @param start_index  Time index marking the beginning of the block.
      * @param block_size  Number of time steps that are written to the log file.
      */
-    void append_robot_data_to_file(long int start_index, long int block_size)
+    void append_robot_data_to_file(const std::string &filename,
+                                   long int start_index,
+                                   long int block_size)
     {
-        output_file_.open(output_file_name_, std::ios_base::app);
-        output_file_.precision(27);
+        std::ofstream output_file;
+        output_file.open(filename, std::ios_base::app);
+        output_file.precision(27);
 
         for (long int t = start_index;
              t < std::min(start_index + block_size,
@@ -404,12 +407,14 @@ private:
                 Status status = (*logger_data_->status)[t];
                 auto timestamp = logger_data_->observation->timestamp_s(t);
 
-                output_file_ << t << " " << timestamp << " ";
-                append_field_data_to_file(status.get_data());
-                append_field_data_to_file(observation.get_data());
-                append_field_data_to_file(applied_action.get_data());
-                append_field_data_to_file(desired_action.get_data());
-                output_file_ << std::endl;
+                output_file << t << " " << timestamp << " ";
+                append_field_data_to_file(status.get_data(), output_file);
+                append_field_data_to_file(observation.get_data(), output_file);
+                append_field_data_to_file(applied_action.get_data(),
+                                          output_file);
+                append_field_data_to_file(desired_action.get_data(),
+                                          output_file);
+                output_file << std::endl;
             }
             catch (const std::invalid_argument &e)
             {
@@ -430,7 +435,7 @@ private:
             }
         }
 
-        output_file_.close();
+        output_file.close();
     }
 
     /**
@@ -440,9 +445,10 @@ private:
      * @param field_data The field data
      */
     void append_field_data_to_file(
-        const std::vector<std::vector<double>> &field_data)
+        const std::vector<std::vector<double>> &field_data,
+        std::ostream &output_stream)
     {
-        std::ostream_iterator<double> double_iterator(output_file_, " ");
+        std::ostream_iterator<double> double_iterator(output_stream, " ");
 
         for (auto data : field_data)
         {
@@ -460,7 +466,7 @@ private:
     {
         is_running_ = true;
 
-        write_header_to_file();
+        write_header_to_file(output_file_name_);
 
         while (!stop_was_called_ &&
                !(logger_data_->desired_action->length() > 0))
@@ -479,7 +485,8 @@ private:
                 auto t1 = std::chrono::high_resolution_clock::now();
 #endif
 
-                append_robot_data_to_file(index_, block_size_);
+                append_robot_data_to_file(
+                    output_file_name_, index_, block_size_);
 
                 index_ += block_size_;
 
