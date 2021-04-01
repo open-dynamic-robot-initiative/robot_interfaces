@@ -3,8 +3,15 @@
  * @brief Tests for RobotLogger
  * @copyright Copyright (c) 2019, Max Planck Gesellschaft.
  */
-#include <gtest/gtest.h>
+#include <chrono>
 #include <filesystem>
+#include <fstream>
+#include <string>
+#include <thread>
+
+#include <gtest/gtest.h>
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
 
 #include <robot_interfaces/example.hpp>
 #include <robot_interfaces/robot_backend.hpp>
@@ -39,7 +46,6 @@ protected:
     std::shared_ptr<Data> data;
     std::shared_ptr<Backend> backend;
     std::shared_ptr<Frontend> frontend;
-    std::shared_ptr<Logger> logger;
 
     std::filesystem::path logfile;
 
@@ -54,10 +60,9 @@ protected:
                                             first_action_timeout,
                                             max_number_of_actions);
         frontend = std::make_shared<Frontend>(data);
-        logger = std::make_shared<Logger>(data);
 
         auto tmp_dir = std::filesystem::temp_directory_path();
-        logfile = tmp_dir / "test_robot_logger.dat";
+        logfile = tmp_dir / "test_robot_logger.log";
     }
 
     void TearDown() override
@@ -65,10 +70,74 @@ protected:
         // clean up
         std::filesystem::remove(logfile);
     }
+
+    /**
+     * @brief Check whether the given CSV log is valid.
+     *
+     * @param filename  The log file.
+     * @param start_t  Expected first time index in the log.
+     * @param end_t  Expected last time index in the log.
+     * @param use_gzip  If true, assume the file is gzip-compressed.
+     */
+    void check_csv_log(const std::string &filename,
+                       uint32_t start_t,
+                       uint32_t end_t,
+                       bool use_gzip)
+    {
+        std::string line;
+
+        // open file, potentially with gzip decompression
+        std::ifstream infile_raw(filename);
+        boost::iostreams::filtering_istream infile;
+        if (use_gzip)
+        {
+            infile.push(boost::iostreams::gzip_decompressor());
+        }
+        infile.push(infile_raw);
+
+        // check header
+        {
+            ASSERT_TRUE(std::getline(infile, line))
+                << "Failed to read header line";
+
+            // remove trailing whitespaces
+            line.erase(line.find_last_not_of(" \n") + 1);
+
+            ASSERT_EQ(
+                line,
+                "#time_index timestamp status_action_repetitions "
+                "status_error_status observation_values_0 observation_values_1 "
+                "applied_action_values_0 applied_action_values_1 "
+                "desired_action_values_0 desired_action_values_1");
+        }
+
+        // check data
+        for (uint32_t i = start_t; i < end_t; i++)
+        {
+            int time_index;
+            double time_stamp, action_repetitions, error_status, obs_0, obs_1,
+                applied_0, applied_1, desired_0, desired_1;
+
+            ASSERT_TRUE(std::getline(infile, line))
+                << "Failed to read line " << i;
+            std::istringstream iss(line);
+
+            ASSERT_TRUE(iss >> time_index >> time_stamp >> action_repetitions >>
+                        error_status >> obs_0 >> obs_1 >> applied_0 >>
+                        applied_1 >> desired_0 >> desired_1);
+
+            // check some of the values
+            ASSERT_EQ(time_index, i);
+            ASSERT_EQ(desired_0, i);
+            ASSERT_EQ(desired_1, 42);
+        }
+    }
 };
 
-TEST_F(TestRobotLogger, write_current_buffer_binary)
+TEST_F(TestRobotLogger, write_current_buffer)
 {
+    Logger logger(data, 0);
+
     backend->initialize();
 
     Action action;
@@ -80,17 +149,174 @@ TEST_F(TestRobotLogger, write_current_buffer_binary)
     {
         action.values[0] = i;
         t = frontend->append_desired_action(action);
-        frontend->get_observation(t);
+        frontend->wait_until_timeindex(t);
     }
-    logger->write_current_buffer_binary(logfile);
+
+    // TODO: Why is the sleep needed here?
+    // wait a moment to give the logger time to catch up
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    logger.write_current_buffer(logfile);
+
+    check_csv_log(logfile, 0, max_number_of_actions, false);
+}
+
+TEST_F(TestRobotLogger, write_current_buffer_binary)
+{
+    Logger logger(data, 0);
+
+    backend->initialize();
+
+    Action action;
+    action.values[0] = 42;
+    action.values[1] = 42;
+
+    robot_interfaces::TimeIndex t;
+    for (uint32_t i = 0; i < max_number_of_actions; i++)
+    {
+        action.values[0] = i;
+        t = frontend->append_desired_action(action);
+        frontend->wait_until_timeindex(t);
+    }
+    logger.write_current_buffer_binary(logfile);
 
     // read the log for verification
     BinaryLogReader log(logfile);
-    // TODO: why is this failing? (last step is missing in log)
-    // ASSERT_EQ(log.data.size(), max_number_of_actions);
+    ASSERT_EQ(log.data.size(), max_number_of_actions);
     for (uint32_t i = 0; i < log.data.size(); i++)
     {
         ASSERT_EQ(log.data[i].desired_action.values[0], i);
         ASSERT_EQ(log.data[i].desired_action.values[1], 42);
     }
 }
+
+// TODO add another test where time series is smaller than the log
+TEST_F(TestRobotLogger, start_stop_binary)
+{
+    // make sure the logger buffer is large enough
+    uint32_t logger_buffer_limit = 2 * max_number_of_actions;
+    Logger logger(data, logger_buffer_limit);
+
+    backend->initialize();
+
+    Action action;
+    action.values[0] = 42;
+    action.values[1] = 42;
+
+    logger.start();
+
+    robot_interfaces::TimeIndex t;
+    for (uint32_t i = 0; i < max_number_of_actions; i++)
+    {
+        action.values[0] = i;
+        t = frontend->append_desired_action(action);
+        frontend->wait_until_timeindex(t);
+    }
+
+    // wait a moment to give the logger time to catch up
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    logger.stop_and_save(logfile, Logger::Format::BINARY);
+
+    // read the log for verification
+    BinaryLogReader log(logfile);
+    ASSERT_EQ(log.data.size(), max_number_of_actions);
+    for (uint32_t i = 0; i < log.data.size(); i++)
+    {
+        ASSERT_EQ(log.data[i].desired_action.values[0], i);
+        ASSERT_EQ(log.data[i].desired_action.values[1], 42);
+    }
+}
+
+TEST_F(TestRobotLogger, start_stop_csv)
+{
+    // make sure the logger buffer is large enough
+    uint32_t logger_buffer_limit = 2 * max_number_of_actions;
+    Logger logger(data, logger_buffer_limit);
+
+    backend->initialize();
+
+    Action action;
+    action.values[0] = 42;
+    action.values[1] = 42;
+
+    logger.start();
+
+    robot_interfaces::TimeIndex t;
+    for (uint32_t i = 0; i < max_number_of_actions; i++)
+    {
+        action.values[0] = i;
+        t = frontend->append_desired_action(action);
+        frontend->wait_until_timeindex(t);
+    }
+
+    // wait a moment to give the logger time to catch up
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    logger.stop_and_save(logfile, Logger::Format::CSV);
+
+    check_csv_log(logfile, 0, max_number_of_actions, false);
+}
+
+TEST_F(TestRobotLogger, start_stop_csv_gzip)
+{
+    // make sure the logger buffer is large enough
+    uint32_t logger_buffer_limit = 2 * max_number_of_actions;
+    Logger logger(data, logger_buffer_limit);
+
+    backend->initialize();
+
+    Action action;
+    action.values[0] = 42;
+    action.values[1] = 42;
+
+    logger.start();
+
+    robot_interfaces::TimeIndex t;
+    for (uint32_t i = 0; i < max_number_of_actions; i++)
+    {
+        action.values[0] = i;
+        t = frontend->append_desired_action(action);
+        frontend->wait_until_timeindex(t);
+    }
+
+    // wait a moment to give the logger time to catch up
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    logger.stop_and_save(logfile, Logger::Format::CSV_GZIP);
+
+    check_csv_log(logfile, 0, max_number_of_actions, true);
+}
+
+TEST_F(TestRobotLogger, start_stop_continuous)
+{
+    // make sure the logger buffer is large enough
+    uint32_t logger_buffer_limit = 2 * max_number_of_actions;
+    // set a block-size that is smaller than the time series
+    uint32_t block_size = 3;
+    Logger logger(data, logger_buffer_limit, block_size);
+
+    backend->initialize();
+
+    Action action;
+    action.values[0] = 42;
+    action.values[1] = 42;
+
+    logger.start_continous_writing(logfile);
+
+    robot_interfaces::TimeIndex t;
+    for (uint32_t i = 0; i < max_number_of_actions; i++)
+    {
+        action.values[0] = i;
+        t = frontend->append_desired_action(action);
+        frontend->wait_until_timeindex(t);
+    }
+
+    // wait a moment to give the logger time to catch up
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    logger.stop_continous_writing();
+
+    check_csv_log(logfile, 0, max_number_of_actions, false);
+}
+
