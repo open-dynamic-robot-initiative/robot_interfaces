@@ -34,8 +34,10 @@ find_package(serialization_utils REQUIRED)
 find_package(Threads)
 find_package(rt)
 
-# export de dependencies
-ament_export_dependencies(pybind11 Eigen3 real_time_tools time_series
+include(cmake/find_boost_components.cmake)
+
+# export the dependencies
+ament_export_dependencies(pybind11 Eigen3 Boost real_time_tools time_series
                           signal_handler serialization_utils)
 
 ament_python_install_package(${PROJECT_NAME} PACKAGE_DIR python/${PROJECT_NAME})
@@ -62,8 +64,9 @@ target_link_libraries(${PROJECT_NAME} INTERFACE signal_handler::signal_handler)
 target_link_libraries(${PROJECT_NAME} INTERFACE serialization_utils::serialization_utils)
 target_link_libraries(${PROJECT_NAME} INTERFACE Threads::Threads)
 target_link_libraries(${PROJECT_NAME} INTERFACE pybind11::embed)
+target_link_libraries(${PROJECT_NAME} INTERFACE Boost::iostreams)
 # Export the target.
-ament_export_interfaces(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 list(APPEND all_targets ${PROJECT_NAME})
 list(APPEND all_target_exports export_${PROJECT_NAME})
 
@@ -127,4 +130,6 @@ install(
 #
 # Export the package as ament
 #
-ament_package()
+ament_package(
+    CONFIG_EXTRAS cmake/find_boost_components.cmake
+)

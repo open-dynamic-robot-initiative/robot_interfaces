@@ -9,6 +9,9 @@
 #include <fstream>
 #include <vector>
 
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+
 #include <cereal/archives/binary.hpp>
 #include <cereal/types/tuple.hpp>
 #include <cereal/types/vector.hpp>
@@ -52,7 +55,12 @@ public:
             throw std::runtime_error("Failed to open file " + filename);
         }
 
-        cereal::BinaryInputArchive archive(infile);
+        // wrap the file stream with a gzip decompressor
+        boost::iostreams::filtering_istream infile_compressed;
+        infile_compressed.push(boost::iostreams::gzip_decompressor()); 
+        infile_compressed.push(infile);
+
+        cereal::BinaryInputArchive archive(infile_compressed);
 
         std::uint32_t format_version;
         archive(format_version);

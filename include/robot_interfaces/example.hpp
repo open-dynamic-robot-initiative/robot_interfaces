@@ -8,7 +8,9 @@
 
 #include <unistd.h>
 #include <iostream>
+#include <vector>
 #include <robot_interfaces/robot_driver.hpp>
+#include <robot_interfaces/loggable.hpp>
 
 namespace robot_interfaces
 {
@@ -19,7 +21,7 @@ namespace example
  *
  * An action simply encapsulate two desired position value, one for each DOF.
  */
-class Action
+class Action: public Loggable
 {
 public:
     int values[2];
@@ -32,6 +34,24 @@ public:
             std::cout << "\n";
         }
     }
+
+    // the following methods are only needed when you want to use RobotLogger
+
+    template <class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(values[0], values[1]);
+    }
+
+    virtual std::vector<std::string> get_name()
+    {
+        return {"values"};
+    }
+
+    virtual std::vector<std::vector<double>> get_data()
+    {
+        return {{static_cast<double>(values[0]), static_cast<double>(values[1])}};
+    }
 };
 
 /**
@@ -39,7 +59,7 @@ public:
  *
  * An observation is the current position for each DOF.
  */
-class Observation
+class Observation: public Loggable
 {
 public:
     int values[2];
@@ -51,6 +71,22 @@ public:
         {
             std::cout << "\n";
         }
+    }
+
+    template <class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(values[0], values[1]);
+    }
+
+    virtual std::vector<std::string> get_name()
+    {
+        return {"values"};
+    }
+
+    virtual std::vector<std::vector<double>> get_data()
+    {
+        return {{static_cast<double>(values[0]), static_cast<double>(values[1])}};
     }
 };
 
