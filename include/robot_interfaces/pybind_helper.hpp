@@ -250,6 +250,10 @@ void create_python_bindings(pybind11::module &m)
              pybind11::arg("block_size") = 100)
         .def("start", &Types::Logger::start)
         .def("stop", &Types::Logger::stop)
+        .def("stop_and_save", &Types::Logger::stop)
+        .def("reset", &Types::Logger::stop)
+        .def("start_continous_writing", &Types::Logger::start)
+        .def("stop_continous_writing", &Types::Logger::stop)
         .def("write_current_buffer",
              &Types::Logger::write_current_buffer,
              pybind11::arg("filename"),

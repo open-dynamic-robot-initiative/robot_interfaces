@@ -12,6 +12,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <limits>
 #include <thread>
 
@@ -36,24 +37,29 @@ namespace robot_interfaces
  * line per time step with values separated by spaces.  This format can easily
  * be read e.g. with NumPy or Pandas.
  *
- * There are two different ways of using the logger:
+ * There are different ways of using the logger:
  *
- *  1. Write all the data from the time series to the file in one function call.
- *     Use this if the time series buffer is big enough to cover the whole time
- *     span that you want to log.  This way all the data is written to the file
- *     in the end, when the robot is not moving anymore.  This way it will not
- *     interfere with the running robot but there is the risk of losing all data
- *     in case the software crashes before writing the log.
- *     Use the method `write_current_buffer()` for this.
- *  2. Run the logger in the background and write blocks of data to the log file
- *     while the robot is running.  This has the advantage that arbitrary time
- *     spans can be logged independent of the buffer size of the time series.
- *     Further in case of a software crash not all data will be lost but only
- *     the data since the last block was written.  However, it has the huge
- *     disadvantage that writing to the file may cause delays in the real-time
- *     critical robot code, thus causing the robot to shut down if timing
- *     constraints are violated.
- *     Use the `start()` and `stop()` methods for this.
+ *  1. Using @ref start() and @ref stop_and_save():  The logger runs a thread in
+ *     which it copies all data to an internal buffer while the robot is
+ *     running.  When calling @ref stop_and_save() the content of the buffer is
+ *     stored to a file (either binary or text).
+ *     This is the recommended method for most applications.
+ *  2. Using @ref write_current_buffer() or @ref write_current_buffer_binary():
+ *     Call this to log data that is currently held in the robot data time
+ *     series.  For this method, the logger doesn't use an own buffer, so no
+ *     data is copied while the robot is running.  However, the possible time
+ *     span for logging is limited by the size of the robot data time series.
+ *  3. Using @ref start_continous_writing() and @ref stop_continous_writing():
+ *     Run the logger in the background and write blocks of data directly to the
+ *     log file while the robot is running (i.e. no buffering in memory is
+ *     needed).  This has the advantage that arbitrary time spans can be logged
+ *     independent of the buffer size of the time series.  Further in case of a
+ *     software crash not all data will be lost but only the data since the last
+ *     block was written.  However, the permanent writing to a file puts some
+ *     load on the system and may cause delays in the real-time critical robot
+ *     code, thus causing the robot to shut down if timing constraints are
+ *     violated.
+ *     This method only supports uncompressed CSV as logfile format.
  *
  * @tparam Action  Type of the robot action.  Must derive from Loggable.
  * @tparam Observation  Type of the robot observation.  Must derive from
@@ -73,6 +79,14 @@ public:
 
     typedef RobotLogEntry<Action, Observation> LogEntry;
 
+    //! @brief Enumeration of possible log file formats.
+    enum class Format
+    {
+        BINARY,
+        CSV,
+        CSV_GZIP
+    };
+
     /**
      * @brief Initialize logger.
      *
@@ -83,18 +97,93 @@ public:
     RobotLogger(
         std::shared_ptr<robot_interfaces::RobotData<Action, Observation>>
             robot_data,
+        size_t buffer_limit,
         int block_size = 100)
         : logger_data_(robot_data),
+          buffer_limit_(buffer_limit),
           block_size_(block_size),
           stop_was_called_(false),
-          is_running_(false)
+          enabled_(false)
     {
+        // directly reserve the memory for the full buffer so it does not need
+        // to move data around during run time
+        buffer_.reserve(buffer_limit);
     }
+
+    // reinstate the implicit move constructor
+    // See https://stackoverflow.com/a/27474070
+    RobotLogger(RobotLogger &&) = default;
 
     virtual ~RobotLogger()
     {
         stop();
     }
+
+    // ### Methods for logging with the internal buffer
+
+    /**
+     * @brief Start logging using an internal buffer.
+     *
+     * The buffer is limited by the `buffer_limit` argument of the constructor.
+     * If the limit is reached, the logger stops automatically.
+     *
+     * If the logger is already running, this is a noop.
+     */
+    void start()
+    {
+        if (!enabled_)
+        {
+            enabled_ = true;
+            thread_ = std::thread(
+                &RobotLogger<Action, Observation>::buffer_loop, this);
+        }
+    }
+
+    /**
+     * @brief Stop logging.
+     *
+     * If the logger is already stopped, this is a noop.
+     */
+    void stop()
+    {
+        enabled_ = false;
+        if (thread_.joinable())
+        {
+            thread_.join();
+        }
+    }
+
+    //! @brief Clear the log buffer.
+    void reset()
+    {
+        buffer_.clear();
+    }
+
+    /**
+     * @brief Stop logging and save logged messages to a file.
+     *
+     * @param filename Path to the output file.  Existing files will be
+     *     overwritten.
+     */
+    void stop_and_save(const std::string &filename, Format log_format)
+    {
+        stop();
+
+        switch (log_format)
+        {
+            case Format::BINARY:
+                save_buffer_binary(filename);
+                break;
+            case Format::CSV:
+                save_buffer_text(filename, false);
+                break;
+            case Format::CSV_GZIP:
+                save_buffer_text(filename, true);
+                break;
+        }
+    }
+
+    // ### Methods for logging by writing to file continuously
 
     /**
      * @brief Start a thread to continuously log to file in the background.
@@ -103,7 +192,7 @@ public:
      * @param filename The name of the log file.  Existing files will be
      *     overwritten!
      */
-    void start(const std::string &filename)
+    void start_continous_writing(const std::string &filename)
     {
         stop_was_called_ = false;
         output_file_name_ = filename;
@@ -111,16 +200,16 @@ public:
     }
 
     /**
-     * @brief Stop logging that was started with `start()` previously.
+     * @brief Stop logging that was started with `start_continous_writing()`.
      *
      * Does nothing if logger is not currently running.
      */
-    void stop()
+    void stop_continous_writing()
     {
         // This is a bit complicated:  In any case, join the thread if it is
         // joinable.  However, only write the remaining data to file if the
         // logging thread is actually running at the moment stop() is called.
-        bool still_running = is_running_;
+        bool still_running = enabled_;
 
         stop_was_called_ = true;
         if (thread_.joinable())
@@ -133,6 +222,10 @@ public:
             append_robot_data_to_file(output_file_name_, index_, block_size_);
         }
     }
+
+    // ### Methods for directly logging the content of the time series
+
+    // TODO rename "write_current_buffer" methods?
 
     /**
      * @brief Write current content of robot data to log file.
@@ -163,7 +256,7 @@ public:
                               long int start_index = 0,
                               long int end_index = -1)
     {
-        if (is_running_)
+        if (enabled_)
         {
             throw std::runtime_error(
                 "RobotLogger is currently running.  Call stop() first.");
@@ -199,7 +292,7 @@ public:
                                      long int start_index = 0,
                                      long int end_index = -1)
     {
-        if (is_running_)
+        if (enabled_)
         {
             throw std::runtime_error(
                 "RobotLogger is currently running.  Call stop() first.");
@@ -284,11 +377,14 @@ private:
     std::shared_ptr<robot_interfaces::RobotData<Action, Observation>>
         logger_data_;
 
+    std::vector<LogEntry> buffer_;
+    size_t buffer_limit_;
+
     int block_size_;
     long int index_;
 
     std::atomic<bool> stop_was_called_;
-    std::atomic<bool> is_running_;
+    std::atomic<bool> enabled_;
 
     std::string output_file_name_;
 
@@ -298,7 +394,7 @@ private:
      *
      * @return header The title of the log file.
      */
-    std::vector<std::string> construct_header()
+    std::vector<std::string> construct_header() const
     {
         Action action;
         Observation observation;
@@ -342,7 +438,7 @@ private:
         const std::string &identifier,
         const std::vector<std::string> &field_name,
         const std::vector<std::vector<double>> &field_data,
-        std::vector<std::string> &header)
+        std::vector<std::string> &header) const
     {
         for (size_t i = 0; i < field_name.size(); i++)
         {
@@ -364,20 +460,26 @@ private:
     }
 
     /**
-     * @brief Write the header to the log file.  This overwrites existing files!
+     * @brief Write CSV header to the log file.  This overwrites existing files!
      */
-    void write_header_to_file(const std::string &filename)
+    void write_header_to_file(const std::string &filename) const
     {
-        std::ofstream output_file;
-        output_file.open(filename);
-        std::ostream_iterator<std::string> string_iterator(output_file, " ");
+        std::ofstream output_file(filename);
+        write_header_to_stream(output_file);
+        output_file.close();
+    }
+
+    /**
+     * @brief Write CSV header to the output stream.
+     */
+    void write_header_to_stream(std::ostream &output) const
+    {
+        std::ostream_iterator<std::string> string_iterator(output, " ");
 
         std::vector<std::string> header = construct_header();
 
         std::copy(header.begin(), header.end(), string_iterator);
-        output_file << std::endl;
-
-        output_file.close();
+        output << std::endl;
     }
 
     /**
@@ -439,6 +541,30 @@ private:
     }
 
     /**
+     * @brief Appends the logger buffer as plain text (CSV) to an output stream.
+     *
+     * @param output_stream  Output stream to which the log is written.
+     */
+    void append_logger_buffer(std::ostream &output_stream) const
+    {
+        // output_file.open(filename, std::ios_base::app);
+        output_stream.precision(27);
+
+        for (LogEntry entry : buffer_)
+        {
+            output_stream << entry.timeindex << " " << entry.timestamp << " ";
+            append_field_data_to_file(entry.status.get_data(), output_stream);
+            append_field_data_to_file(entry.observation.get_data(),
+                                      output_stream);
+            append_field_data_to_file(entry.applied_action.get_data(),
+                                      output_stream);
+            append_field_data_to_file(entry.desired_action.get_data(),
+                                      output_stream);
+            output_stream << std::endl;
+        }
+    }
+
+    /**
      * @brief Appends the data corresponding to
      * every field at the same time index to the log file.
      *
@@ -446,7 +572,7 @@ private:
      */
     void append_field_data_to_file(
         const std::vector<std::vector<double>> &field_data,
-        std::ostream &output_stream)
+        std::ostream &output_stream) const
     {
         std::ostream_iterator<double> double_iterator(output_stream, " ");
 
@@ -457,6 +583,41 @@ private:
     }
 
     /**
+     * @brief Save content of the internal buffer to a binary file.
+     *
+     * @param filename  Path/name of the output file.
+     */
+    void save_buffer_binary(const std::string &filename) const
+    {
+        std::ofstream outfile(filename, std::ios::binary);
+
+        auto outfile_compressed = serialization_utils::gzip_ostream(outfile);
+        cereal::BinaryOutputArchive archive(*outfile_compressed);
+
+        // add version information to the output file (this can be used while
+        // loading when the data format changes
+        const std::uint32_t format_version = 2;
+
+        archive(format_version, buffer_);
+    }
+
+    /**
+     * @brief Save content of the internal buffer to a CSV file.
+     *
+     * @param filename  Path/name of the output file
+     * @param use_gzip  If true, the output file is gzip-compressed.
+     */
+    void save_buffer_text(const std::string &filename,
+                          bool use_gzip = false) const
+    {
+        std::ofstream output_file(filename);
+        auto output = serialization_utils::gzip_ostream(output_file, use_gzip);
+
+        write_header_to_stream(*output);
+        append_logger_buffer(*output);
+    }
+
+    /**
      * @brief Writes everything to the log file.
      *
      * It dumps all the data corresponding to block_size_ number of time indices
@@ -464,7 +625,7 @@ private:
      */
     void loop()
     {
-        is_running_ = true;
+        enabled_ = true;
 
         write_header_to_file(output_file_name_);
 
@@ -504,7 +665,63 @@ private:
             }
         }
 
-        is_running_ = false;
+        enabled_ = false;
+    }
+
+    //! Get observations from logger_data_ and add them to the buffer.
+    void buffer_loop()
+    {
+        auto t = logger_data_->observation->oldest_timeindex();
+
+        while (enabled_)
+        {
+            // wait for the next time step but check if the logger was stopped
+            // from time to time
+            constexpr double wait_timeout_s = 0.2;
+            while (!logger_data_->applied_action->wait_for_timeindex(
+                t, wait_timeout_s))
+            {
+                if (!enabled_)
+                {
+                    return;
+                }
+            }
+
+            try
+            {
+                LogEntry entry;
+
+                entry.timeindex = t;
+                entry.applied_action = (*logger_data_->applied_action)[t];
+                entry.desired_action = (*logger_data_->desired_action)[t];
+                entry.observation = (*logger_data_->observation)[t];
+                entry.status = (*logger_data_->status)[t];
+                entry.timestamp = logger_data_->observation->timestamp_s(t);
+
+                buffer_.push_back(entry);
+                t++;
+            }
+            catch (const std::invalid_argument &e)
+            {
+                auto t_oldest = logger_data_->observation->oldest_timeindex();
+                auto diff = t_oldest - t;
+
+                std::cerr << "ERROR: While logging time step " << t << ": "
+                          << e.what() << "\nSkip " << diff << " observation(s)."
+                          << std::endl;
+
+                t = t_oldest;
+            }
+
+            // Stop logging if buffer limit is reached
+            if (buffer_.size() >= buffer_limit_)
+            {
+                std::cerr << "WARNING: SensorLogger buffer limit is reached.  "
+                             "Stop logging."
+                          << std::endl;
+                enabled_ = false;
+            }
+        }
     }
 };
 
