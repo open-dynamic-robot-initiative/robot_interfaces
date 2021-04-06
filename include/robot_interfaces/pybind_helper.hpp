@@ -250,10 +250,10 @@ void create_python_bindings(pybind11::module &m)
              pybind11::arg("block_size") = 100)
         .def("start", &Types::Logger::start)
         .def("stop", &Types::Logger::stop)
-        .def("stop_and_save", &Types::Logger::stop)
-        .def("reset", &Types::Logger::stop)
-        .def("start_continous_writing", &Types::Logger::start)
-        .def("stop_continous_writing", &Types::Logger::stop)
+        .def("stop_and_save", &Types::Logger::stop_and_save)
+        .def("reset", &Types::Logger::reset)
+        .def("start_continous_writing", &Types::Logger::start_continous_writing)
+        .def("stop_continous_writing", &Types::Logger::stop_continous_writing)
         .def("save_current_robot_data",
              &Types::Logger::save_current_robot_data,
              pybind11::arg("filename"),
