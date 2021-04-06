@@ -134,7 +134,7 @@ protected:
     }
 };
 
-TEST_F(TestRobotLogger, write_current_buffer)
+TEST_F(TestRobotLogger, save_current_robot_data)
 {
     Logger logger(data, 0);
 
@@ -156,12 +156,12 @@ TEST_F(TestRobotLogger, write_current_buffer)
     // wait a moment to give the logger time to catch up
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-    logger.write_current_buffer(logfile);
+    logger.save_current_robot_data(logfile);
 
     check_csv_log(logfile, 0, max_number_of_actions, false);
 }
 
-TEST_F(TestRobotLogger, write_current_buffer_binary)
+TEST_F(TestRobotLogger, save_current_robot_data_binary)
 {
     Logger logger(data, 0);
 
@@ -178,7 +178,7 @@ TEST_F(TestRobotLogger, write_current_buffer_binary)
         t = frontend->append_desired_action(action);
         frontend->wait_until_timeindex(t);
     }
-    logger.write_current_buffer_binary(logfile);
+    logger.save_current_robot_data_binary(logfile);
 
     // read the log for verification
     BinaryLogReader log(logfile);

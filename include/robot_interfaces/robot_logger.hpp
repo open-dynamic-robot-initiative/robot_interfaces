@@ -225,10 +225,8 @@ public:
 
     // ### Methods for directly logging the content of the time series
 
-    // TODO rename "write_current_buffer" methods?
-
     /**
-     * @brief Write current content of robot data to log file.
+     * @brief Write current content of robot data to CSV log file.
      *
      * Write data of the time steps `[start_index, end_index)` to a log file.
      * This assumes that the specified range is completely included in the
@@ -252,9 +250,9 @@ public:
      *     stopped by calling `stop()` before `write_current_buffer()` can be
      *     used.
      */
-    void write_current_buffer(const std::string filename,
-                              long int start_index = 0,
-                              long int end_index = -1)
+    void save_current_robot_data(const std::string &filename,
+                                 long int start_index = 0,
+                                 long int end_index = -1)
     {
         if (enabled_)
         {
@@ -288,9 +286,10 @@ public:
             filename, start_index, end_index - start_index);
     }
 
-    void write_current_buffer_binary(const std::string filename,
-                                     long int start_index = 0,
-                                     long int end_index = -1)
+    //! @brief Like save_current_robot_data but using binary file format.
+    void save_current_robot_data_binary(const std::string &filename,
+                                        long int start_index = 0,
+                                        long int end_index = -1)
     {
         if (enabled_)
         {
@@ -369,6 +368,22 @@ public:
         const std::uint32_t format_version = 2;
 
         archive(format_version, log_data);
+    }
+
+    [[deprecated("Renamed to write_current_robot_data")]]
+    void write_current_buffer(const std::string &filename,
+                              long int start_index = 0,
+                              long int end_index = -1)
+    {
+        save_current_robot_data(filename, start_index, end_index);
+    }
+
+    [[deprecated("Renamed to write_current_robot_data_binary")]]
+    void write_current_buffer_binary(const std::string &filename,
+                                     long int start_index = 0,
+                                     long int end_index = -1)
+    {
+        save_current_robot_data_binary(filename, start_index, end_index);
     }
 
 private:

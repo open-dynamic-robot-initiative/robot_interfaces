@@ -254,13 +254,46 @@ void create_python_bindings(pybind11::module &m)
         .def("reset", &Types::Logger::stop)
         .def("start_continous_writing", &Types::Logger::start)
         .def("stop_continous_writing", &Types::Logger::stop)
+        .def("save_current_robot_data",
+             &Types::Logger::save_current_robot_data,
+             pybind11::arg("filename"),
+             pybind11::arg("start_index") = 0,
+             pybind11::arg("end_index") = -1)
+        .def("save_current_robot_data_binary",
+             &Types::Logger::save_current_robot_data_binary,
+             pybind11::arg("filename"),
+             pybind11::arg("start_index") = 0,
+             pybind11::arg("end_index") = -1)
+        // raise warining when using deprecated method
         .def("write_current_buffer",
-             &Types::Logger::write_current_buffer,
+             [](pybind11::object &self,
+                const std::string &filename,
+                long int start_index,
+                long int end_index) {
+                 auto warnings = pybind11::module::import("warnings");
+                 warnings.attr("warn")(
+                     "write_current_buffer() is deprecated, use "
+                     "save_current_robot_data() "
+                     "instead.");
+                 return self.attr("save_current_robot_data")(
+                     filename, start_index, end_index);
+             },
              pybind11::arg("filename"),
              pybind11::arg("start_index") = 0,
              pybind11::arg("end_index") = -1)
         .def("write_current_buffer_binary",
-             &Types::Logger::write_current_buffer_binary,
+             [](pybind11::object &self,
+                const std::string &filename,
+                long int start_index,
+                long int end_index) {
+                 auto warnings = pybind11::module::import("warnings");
+                 warnings.attr("warn")(
+                     "write_current_buffer_binary() is deprecated, use "
+                     "save_current_robot_data_binary() "
+                     "instead.");
+                 return self.attr("save_current_robot_data_binary")(
+                     filename, start_index, end_index);
+             },
              pybind11::arg("filename"),
              pybind11::arg("start_index") = 0,
              pybind11::arg("end_index") = -1);
