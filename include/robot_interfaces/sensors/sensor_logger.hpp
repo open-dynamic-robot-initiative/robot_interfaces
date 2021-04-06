@@ -149,6 +149,18 @@ private:
 
         while (enabled_)
         {
+            // wait for the next time step but check if the logger was stopped
+            // from time to time
+            constexpr double wait_timeout_s = 0.2;
+            while (!sensor_data_->observation->wait_for_timeindex(
+                t, wait_timeout_s))
+            {
+                if (!enabled_)
+                {
+                    return;
+                }
+            }
+
             try
             {
                 // FIXME: this will block if the sensor has stopped
