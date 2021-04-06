@@ -50,6 +50,7 @@ namespace robot_interfaces
  *     data is copied while the robot is running.  However, the possible time
  *     span for logging is limited by the size of the robot data time series.
  *  3. Using @ref start_continous_writing() and @ref stop_continous_writing():
+ *     Deprecated!
  *     Run the logger in the background and write blocks of data directly to the
  *     log file while the robot is running (i.e. no buffering in memory is
  *     needed).  This has the advantage that arbitrary time spans can be logged
@@ -188,10 +189,12 @@ public:
     /**
      * @brief Start a thread to continuously log to file in the background.
      *
-     * @see stop()
+     * @deprecated
+     * @see stop_continous_writing()
      * @param filename The name of the log file.  Existing files will be
      *     overwritten!
      */
+    [[deprecated]]
     void start_continous_writing(const std::string &filename)
     {
         stop_was_called_ = false;
@@ -203,7 +206,10 @@ public:
      * @brief Stop logging that was started with `start_continous_writing()`.
      *
      * Does nothing if logger is not currently running.
+     *
+     * @deprecated
      */
+    [[deprecated]]
     void stop_continous_writing()
     {
         // This is a bit complicated:  In any case, join the thread if it is
