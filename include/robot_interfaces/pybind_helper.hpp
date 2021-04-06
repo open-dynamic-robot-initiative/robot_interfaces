@@ -248,22 +248,36 @@ void create_python_bindings(pybind11::module &m)
         .def(pybind11::init<typename Types::BaseDataPtr, int>(),
              pybind11::arg("robot_data"),
              pybind11::arg("block_size") = 100)
-        .def("start", &Types::Logger::start)
-        .def("stop", &Types::Logger::stop)
-        .def("stop_and_save", &Types::Logger::stop_and_save)
-        .def("reset", &Types::Logger::reset)
-        .def("start_continous_writing", &Types::Logger::start_continous_writing)
-        .def("stop_continous_writing", &Types::Logger::stop_continous_writing)
+        .def("start",
+             &Types::Logger::start,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("stop",
+             &Types::Logger::stop,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("stop_and_save",
+             &Types::Logger::stop_and_save,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("reset",
+             &Types::Logger::reset,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("start_continous_writing",
+             &Types::Logger::start_continous_writing,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("stop_continous_writing",
+             &Types::Logger::stop_continous_writing,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("save_current_robot_data",
              &Types::Logger::save_current_robot_data,
              pybind11::arg("filename"),
              pybind11::arg("start_index") = 0,
-             pybind11::arg("end_index") = -1)
+             pybind11::arg("end_index") = -1,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("save_current_robot_data_binary",
              &Types::Logger::save_current_robot_data_binary,
              pybind11::arg("filename"),
              pybind11::arg("start_index") = 0,
-             pybind11::arg("end_index") = -1)
+             pybind11::arg("end_index") = -1,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
         // raise warining when using deprecated method
         .def("write_current_buffer",
              [](pybind11::object &self,
