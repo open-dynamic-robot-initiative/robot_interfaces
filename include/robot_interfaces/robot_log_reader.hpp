@@ -16,6 +16,7 @@
 #include <serialization_utils/gzip_iostream.hpp>
 
 #include <robot_interfaces/robot_log_entry.hpp>
+#include <robot_interfaces/status.hpp>
 
 namespace robot_interfaces
 {
@@ -25,11 +26,11 @@ namespace robot_interfaces
  * The data is read from the specified file and stored to the `data` member
  * where it can be accessed.
  */
-template <typename Action, typename Observation>
+template <typename Action, typename Observation, typename Status_t = Status>
 class RobotBinaryLogReader
 {
 public:
-    typedef RobotLogEntry<Action, Observation> LogEntry;
+    typedef RobotLogEntry<Action, Observation, Status_t> LogEntry;
 
     std::vector<LogEntry> data;
 
