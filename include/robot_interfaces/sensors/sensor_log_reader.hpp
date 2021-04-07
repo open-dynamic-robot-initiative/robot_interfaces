@@ -9,11 +9,10 @@
 #include <fstream>
 #include <vector>
 
-#include <boost/iostreams/filter/gzip.hpp>
-#include <boost/iostreams/filtering_stream.hpp>
-
 #include <cereal/archives/binary.hpp>
 #include <cereal/types/vector.hpp>
+
+#include <serialization_utils/gzip_iostream.hpp>
 
 namespace robot_interfaces
 {
@@ -55,17 +54,14 @@ public:
     void read_file(const std::string &filename)
     {
         std::ifstream infile(filename, std::ios::binary);
+
         if (!infile)
         {
             throw std::runtime_error("Failed to open file " + filename);
         }
 
-        // wrap the file stream with a gzip decompressor
-        boost::iostreams::filtering_istream infile_compressed;
-        infile_compressed.push(boost::iostreams::gzip_decompressor()); 
-        infile_compressed.push(infile);
-
-        cereal::BinaryInputArchive archive(infile_compressed);
+        auto infile_compressed = serialization_utils::gzip_istream(infile);
+        cereal::BinaryInputArchive archive(*infile_compressed);
 
         std::uint32_t format_version;
         archive(format_version);
