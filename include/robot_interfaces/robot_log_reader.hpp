@@ -87,7 +87,7 @@ public:
         {
             throw std::runtime_error("Failed to open file " + filename);
         }
-        auto outfile_compressed = gzip_ostream(outfile);
+        auto outfile_compressed = serialization_utils::gzip_ostream(outfile);
         cereal::BinaryOutputArchive archive(*outfile_compressed);
 
         archive(FORMAT_VERSION, data);
