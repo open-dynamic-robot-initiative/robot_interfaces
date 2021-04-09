@@ -1,23 +1,8 @@
-/*
- * Copyright [2017] Max Planck Society. All rights reserved.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 /**
- * \file
- * \brief Helper functions for creating Python bindings.
+ * @file
+ * @brief Helper functions for creating Python bindings.
+ * @copyright 2019, Max Planck Gesellschaft. All rights reserved.
+ * @license BSD 3-clause
  */
 #include <type_traits>
 
@@ -25,6 +10,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
+
+#include <time_series/pybind11_helper.hpp>
 
 #include <robot_interfaces/robot_frontend.hpp>
 
@@ -86,13 +73,29 @@ void create_python_bindings(pybind11::module &m)
     // nice in the Sphinx documentation.
     options.disable_function_signatures();
 
+    // bindings for the different time series types
+    time_series::create_python_bindings<typename Types::Action>(
+        m, "_ActionTimeSeries");
+    time_series::create_multiprocesses_python_bindings<typename Types::Action>(
+        m, "_ActionMultiProcessTimeSeries");
+    time_series::create_python_bindings<typename Types::Observation>(
+        m, "_ObservationTimeSeries");
+    time_series::create_multiprocesses_python_bindings<
+        typename Types::Observation>(m, "_ObservationMultiProcessTimeSeries");
+
     pybind11::class_<typename Types::BaseData, typename Types::BaseDataPtr>(
         m, "BaseData");
 
     pybind11::class_<typename Types::SingleProcessData,
                      typename Types::SingleProcessDataPtr,
                      typename Types::BaseData>(m, "SingleProcessData")
-        .def(pybind11::init<size_t>(), pybind11::arg("history_size") = 1000);
+        .def(pybind11::init<size_t>(), pybind11::arg("history_size") = 1000)
+        .def_readonly("desired_action",
+                      &Types::SingleProcessData::desired_action)
+        .def_readonly("applied_action",
+                      &Types::SingleProcessData::applied_action)
+        .def_readonly("observation", &Types::SingleProcessData::observation)
+        .def_readonly("status", &Types::SingleProcessData::status);
 
     pybind11::class_<typename Types::MultiProcessData,
                      typename Types::MultiProcessDataPtr,
@@ -100,7 +103,13 @@ void create_python_bindings(pybind11::module &m)
         .def(pybind11::init<std::string, bool, size_t>(),
              pybind11::arg("shared_memory_id_prefix"),
              pybind11::arg("is_master"),
-             pybind11::arg("history_size") = 1000);
+             pybind11::arg("history_size") = 1000)
+        .def_readonly("desired_action",
+                      &Types::MultiProcessData::desired_action)
+        .def_readonly("applied_action",
+                      &Types::MultiProcessData::applied_action)
+        .def_readonly("observation", &Types::MultiProcessData::observation)
+        .def_readonly("status", &Types::MultiProcessData::status);
 
     pybind11::class_<typename Types::Backend, typename Types::BackendPtr>(
         m, "Backend")
