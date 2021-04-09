@@ -1,24 +1,11 @@
-/*
- * Copyright [2017] Max Planck Society. All rights reserved.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 /**
- * \file
- * \brief Create bindings for generic types
+ * @file
+ * @brief Create Python bindings for generic types
+ * @copyright 2019, Max Planck Gesellschaft. All rights reserved.
+ * @license BSD 3-clause
  */
+#include <time_series/pybind11_helper.hpp>
+
 #include <robot_interfaces/pybind_helper.hpp>
 #include <robot_interfaces/status.hpp>
 
@@ -50,4 +37,8 @@ PYBIND11_MODULE(py_generic, m)
             "BACKEND_ERROR",
             Status::ErrorStatus::BACKEND_ERROR,
             "Error from the robot back end (e.g. some communication issue).");
+
+    time_series::create_python_bindings<Status>(m, "_StatusTimeSeries");
+    time_series::create_multiprocesses_python_bindings<Status>(
+        m, "_StatusMultiProcessTimeSeries");
 }
