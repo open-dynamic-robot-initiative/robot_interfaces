@@ -12,9 +12,6 @@ cmake_minimum_required(VERSION 3.10.2)
 project(robot_interfaces)
 
 # Using C++17.
-if(NOT CMAKE_C_STANDARD)
-  set(CMAKE_C_STANDARD 99)
-endif()
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
@@ -33,8 +30,6 @@ find_package(signal_handler REQUIRED)
 find_package(serialization_utils REQUIRED)
 find_package(Threads)
 find_package(rt)
-
-include(cmake/find_boost_components.cmake)
 
 # export the dependencies
 ament_export_dependencies(pybind11 Eigen3 Boost real_time_tools time_series
@@ -62,6 +57,7 @@ target_link_libraries(${PROJECT_NAME} INTERFACE real_time_tools::real_time_tools
 target_link_libraries(${PROJECT_NAME} INTERFACE time_series::time_series)
 target_link_libraries(${PROJECT_NAME} INTERFACE signal_handler::signal_handler)
 target_link_libraries(${PROJECT_NAME} INTERFACE serialization_utils::serialization_utils)
+target_link_libraries(${PROJECT_NAME} INTERFACE serialization_utils::gzip_iostream)
 target_link_libraries(${PROJECT_NAME} INTERFACE Threads::Threads)
 target_link_libraries(${PROJECT_NAME} INTERFACE pybind11::embed)
 target_link_libraries(${PROJECT_NAME} INTERFACE Boost::iostreams)
@@ -130,6 +126,4 @@ install(
 #
 # Export the package as ament
 #
-ament_package(
-    CONFIG_EXTRAS cmake/find_boost_components.cmake
-)
+ament_package()
