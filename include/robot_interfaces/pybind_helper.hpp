@@ -246,8 +246,9 @@ void create_python_bindings(pybind11::module &m)
 
     pybind11::class_<typename Types::Logger> logger(m, "Logger");
     logger
-        .def(pybind11::init<typename Types::BaseDataPtr, int>(),
+        .def(pybind11::init<typename Types::BaseDataPtr, size_t, int>(),
              pybind11::arg("robot_data"),
+             pybind11::arg("buffer_limit"),
              pybind11::arg("block_size") = 100)
         .def("start",
              &Types::Logger::start,
