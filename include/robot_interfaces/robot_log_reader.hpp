@@ -16,6 +16,7 @@
 #include <serialization_utils/gzip_iostream.hpp>
 
 #include <robot_interfaces/robot_log_entry.hpp>
+#include <robot_interfaces/status.hpp>
 
 namespace robot_interfaces
 {
@@ -25,13 +26,19 @@ namespace robot_interfaces
  * The data is read from the specified file and stored to the `data` member
  * where it can be accessed.
  */
-template <typename Action, typename Observation>
+template <typename Action, typename Observation, typename Status_t = Status>
 class RobotBinaryLogReader
 {
 public:
-    typedef RobotLogEntry<Action, Observation> LogEntry;
+    static constexpr uint32_t FORMAT_VERSION = 2;
+
+    typedef RobotLogEntry<Action, Observation, Status_t> LogEntry;
 
     std::vector<LogEntry> data;
+
+    RobotBinaryLogReader()
+    {
+    }
 
     //! @copydoc RobotBinaryLogReader::read_file()
     RobotBinaryLogReader(const std::string &filename)
@@ -60,12 +67,30 @@ public:
         std::uint32_t format_version;
         archive(format_version);
 
-        if (format_version != 2)
+        if (format_version != FORMAT_VERSION)
         {
             throw std::runtime_error("Incompatible log file format.");
         }
 
         archive(data);
+    }
+
+    /**
+     * @brief Write data to the specified file.
+     *
+     * @param filename Path to the output file.
+     */
+    void write_file(const std::string &filename)
+    {
+        std::ofstream outfile(filename, std::ios::binary);
+        if (!outfile)
+        {
+            throw std::runtime_error("Failed to open file " + filename);
+        }
+        auto outfile_compressed = serialization_utils::gzip_ostream(outfile);
+        cereal::BinaryOutputArchive archive(*outfile_compressed);
+
+        archive(FORMAT_VERSION, data);
     }
 };
 

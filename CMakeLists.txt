@@ -66,6 +66,11 @@ ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 list(APPEND all_targets ${PROJECT_NAME})
 list(APPEND all_target_exports export_${PROJECT_NAME})
 
+
+add_executable(convert_old_robot_log src/convert_old_robot_log.cpp)
+target_link_libraries(convert_old_robot_log ${PROJECT_NAME})
+list(APPEND all_targets convert_old_robot_log)
+
 #
 # manage the demos.
 #
