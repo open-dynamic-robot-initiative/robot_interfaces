@@ -244,7 +244,8 @@ void create_python_bindings(pybind11::module &m)
         .def_readwrite("desired_action", &Types::LogEntry::desired_action)
         .def_readwrite("applied_action", &Types::LogEntry::applied_action);
 
-    pybind11::class_<typename Types::Logger>(m, "Logger")
+    pybind11::class_<typename Types::Logger> logger(m, "Logger");
+    logger
         .def(pybind11::init<typename Types::BaseDataPtr, int>(),
              pybind11::arg("robot_data"),
              pybind11::arg("block_size") = 100)
@@ -311,6 +312,11 @@ void create_python_bindings(pybind11::module &m)
              pybind11::arg("filename"),
              pybind11::arg("start_index") = 0,
              pybind11::arg("end_index") = -1);
+
+    pybind11::enum_<typename Types::Logger::Format>(logger, "Format")
+        .value("BINARY", Types::Logger::Format::BINARY)
+        .value("CSV", Types::Logger::Format::CSV)
+        .value("CSV_GZIP", Types::Logger::Format::CSV_GZIP);
 
     pybind11::class_<typename Types::BinaryLogReader,
                      std::shared_ptr<typename Types::BinaryLogReader>>(
