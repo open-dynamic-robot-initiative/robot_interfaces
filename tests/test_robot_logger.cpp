@@ -155,7 +155,7 @@ TEST_F(TestRobotLogger, save_current_robot_data)
 
     // TODO: Why is the sleep needed here?
     // wait a moment to give the logger time to catch up
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     logger.save_current_robot_data(logfile);
 
@@ -217,7 +217,7 @@ TEST_F(TestRobotLogger, start_stop_binary)
     }
 
     // wait a moment to give the logger time to catch up
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     logger.stop_and_save(logfile, Logger::Format::BINARY);
 
@@ -255,7 +255,7 @@ TEST_F(TestRobotLogger, start_stop_csv)
     }
 
     // wait a moment to give the logger time to catch up
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     logger.stop_and_save(logfile, Logger::Format::CSV);
 
@@ -286,7 +286,7 @@ TEST_F(TestRobotLogger, start_stop_csv_gzip)
     }
 
     // wait a moment to give the logger time to catch up
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     logger.stop_and_save(logfile, Logger::Format::CSV_GZIP);
 
@@ -319,7 +319,7 @@ TEST_F(TestRobotLogger, start_stop_continuous)
     }
 
     // wait a moment to give the logger time to catch up
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     logger.stop_continous_writing();
 
