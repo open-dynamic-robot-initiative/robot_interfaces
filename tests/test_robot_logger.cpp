@@ -149,7 +149,8 @@ TEST_F(TestRobotLogger, save_current_robot_data)
     {
         action.values[0] = i;
         t = frontend->append_desired_action(action);
-        frontend->wait_until_timeindex(t);
+        // wait for applied action to ensure all data of that time step is there
+        frontend->get_applied_action(t);
     }
 
     // TODO: Why is the sleep needed here?
@@ -176,7 +177,8 @@ TEST_F(TestRobotLogger, save_current_robot_data_binary)
     {
         action.values[0] = i;
         t = frontend->append_desired_action(action);
-        frontend->wait_until_timeindex(t);
+        // wait for applied action to ensure all data of that time step is there
+        frontend->get_applied_action(t);
     }
     logger.save_current_robot_data_binary(logfile);
 
@@ -210,7 +212,8 @@ TEST_F(TestRobotLogger, start_stop_binary)
     {
         action.values[0] = i;
         t = frontend->append_desired_action(action);
-        frontend->wait_until_timeindex(t);
+        // wait for applied action to ensure all data of that time step is there
+        frontend->get_applied_action(t);
     }
 
     // wait a moment to give the logger time to catch up
@@ -247,7 +250,8 @@ TEST_F(TestRobotLogger, start_stop_csv)
     {
         action.values[0] = i;
         t = frontend->append_desired_action(action);
-        frontend->wait_until_timeindex(t);
+        // wait for applied action to ensure all data of that time step is there
+        frontend->get_applied_action(t);
     }
 
     // wait a moment to give the logger time to catch up
@@ -277,7 +281,8 @@ TEST_F(TestRobotLogger, start_stop_csv_gzip)
     {
         action.values[0] = i;
         t = frontend->append_desired_action(action);
-        frontend->wait_until_timeindex(t);
+        // wait for applied action to ensure all data of that time step is there
+        frontend->get_applied_action(t);
     }
 
     // wait a moment to give the logger time to catch up
@@ -309,7 +314,8 @@ TEST_F(TestRobotLogger, start_stop_continuous)
     {
         action.values[0] = i;
         t = frontend->append_desired_action(action);
-        frontend->wait_until_timeindex(t);
+        // wait for applied action to ensure all data of that time step is there
+        frontend->get_applied_action(t);
     }
 
     // wait a moment to give the logger time to catch up
