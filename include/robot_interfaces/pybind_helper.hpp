@@ -244,22 +244,80 @@ void create_python_bindings(pybind11::module &m)
         .def_readwrite("desired_action", &Types::LogEntry::desired_action)
         .def_readwrite("applied_action", &Types::LogEntry::applied_action);
 
-    pybind11::class_<typename Types::Logger>(m, "Logger")
-        .def(pybind11::init<typename Types::BaseDataPtr, int>(),
+    pybind11::class_<typename Types::Logger> logger(m, "Logger");
+    logger
+        .def(pybind11::init<typename Types::BaseDataPtr, size_t, int>(),
              pybind11::arg("robot_data"),
+             pybind11::arg("buffer_limit"),
              pybind11::arg("block_size") = 100)
-        .def("start", &Types::Logger::start)
-        .def("stop", &Types::Logger::stop)
+        .def("start",
+             &Types::Logger::start,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("stop",
+             &Types::Logger::stop,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("stop_and_save",
+             &Types::Logger::stop_and_save,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("reset",
+             &Types::Logger::reset,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("start_continous_writing",
+             &Types::Logger::start_continous_writing,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("stop_continous_writing",
+             &Types::Logger::stop_continous_writing,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("save_current_robot_data",
+             &Types::Logger::save_current_robot_data,
+             pybind11::arg("filename"),
+             pybind11::arg("start_index") = 0,
+             pybind11::arg("end_index") = -1,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("save_current_robot_data_binary",
+             &Types::Logger::save_current_robot_data_binary,
+             pybind11::arg("filename"),
+             pybind11::arg("start_index") = 0,
+             pybind11::arg("end_index") = -1,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        // raise warining when using deprecated method
         .def("write_current_buffer",
-             &Types::Logger::write_current_buffer,
+             [](pybind11::object &self,
+                const std::string &filename,
+                long int start_index,
+                long int end_index) {
+                 auto warnings = pybind11::module::import("warnings");
+                 warnings.attr("warn")(
+                     "write_current_buffer() is deprecated, use "
+                     "save_current_robot_data() "
+                     "instead.");
+                 return self.attr("save_current_robot_data")(
+                     filename, start_index, end_index);
+             },
              pybind11::arg("filename"),
              pybind11::arg("start_index") = 0,
              pybind11::arg("end_index") = -1)
         .def("write_current_buffer_binary",
-             &Types::Logger::write_current_buffer_binary,
+             [](pybind11::object &self,
+                const std::string &filename,
+                long int start_index,
+                long int end_index) {
+                 auto warnings = pybind11::module::import("warnings");
+                 warnings.attr("warn")(
+                     "write_current_buffer_binary() is deprecated, use "
+                     "save_current_robot_data_binary() "
+                     "instead.");
+                 return self.attr("save_current_robot_data_binary")(
+                     filename, start_index, end_index);
+             },
              pybind11::arg("filename"),
              pybind11::arg("start_index") = 0,
              pybind11::arg("end_index") = -1);
+
+    pybind11::enum_<typename Types::Logger::Format>(logger, "Format")
+        .value("BINARY", Types::Logger::Format::BINARY)
+        .value("CSV", Types::Logger::Format::CSV)
+        .value("CSV_GZIP", Types::Logger::Format::CSV_GZIP);
 
     pybind11::class_<typename Types::BinaryLogReader,
                      std::shared_ptr<typename Types::BinaryLogReader>>(
