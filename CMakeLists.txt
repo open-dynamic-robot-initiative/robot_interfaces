@@ -128,6 +128,13 @@ install(
   INCLUDES
   DESTINATION include)
 
+install_scripts(
+    scripts/plot_trifinger_log.py
+
+    DESTINATION lib/${PROJECT_NAME}
+)
+
+
 #
 # Export the package as ament
 #
