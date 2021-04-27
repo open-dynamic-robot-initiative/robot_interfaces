@@ -293,6 +293,39 @@ TEST_F(TestRobotLogger, start_stop_csv_gzip)
     check_csv_log(logfile, 0, max_number_of_actions, true);
 }
 
+TEST_F(TestRobotLogger, start_stop_empty_binary)
+{
+    Logger logger(data, 10);
+    backend->initialize();
+
+    // start and directly stop again without sending any actions
+    logger.start();
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    logger.stop_and_save(logfile, Logger::Format::BINARY);
+
+    // log should be empty
+    BinaryLogReader log(logfile);
+    ASSERT_TRUE(log.data.empty());
+}
+
+TEST_F(TestRobotLogger, start_stop_empty_csv)
+{
+    Logger logger(data, 10);
+    backend->initialize();
+
+    // start and directly stop again without sending any actions
+    logger.start();
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    logger.stop_and_save(logfile, Logger::Format::BINARY);
+
+    // log should be empty (apart from header line)
+    std::string line;
+    std::ifstream infile(logfile);
+    ASSERT_TRUE(std::getline(infile, line)) << "Failed to read header line";
+    ASSERT_FALSE(std::getline(infile, line))
+        << "Unexpected second line: " << line;
+}
+
 TEST_F(TestRobotLogger, start_stop_continuous)
 {
     // make sure the logger buffer is large enough
