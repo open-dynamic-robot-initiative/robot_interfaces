@@ -145,7 +145,13 @@ private:
     //! Get observations from sensor_data_ and add them to the buffer.
     void loop()
     {
-        auto t = sensor_data_->observation->oldest_timeindex();
+        // Get the oldest available timeindex as starting point of the log.  In
+        // case there is no data yet (t == EMPTY), start with t = 0.
+        auto t = sensor_data_->observation->oldest_timeindex(false);
+        if (t == time_series::EMPTY)
+        {
+            t = 0;
+        }
 
         while (enabled_)
         {
