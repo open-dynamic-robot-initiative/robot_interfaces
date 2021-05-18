@@ -147,7 +147,8 @@ private:
     {
         // Get the oldest available timeindex as starting point of the log.  In
         // case there is no data yet (t == EMPTY), start with t = 0.
-        auto t = sensor_data_->observation->oldest_timeindex(false);
+        time_series::Index t =
+            sensor_data_->observation->oldest_timeindex(false);
         if (t == time_series::EMPTY)
         {
             t = 0;
