@@ -7,6 +7,7 @@
 #include <time_series/pybind11_helper.hpp>
 
 #include <robot_interfaces/pybind_helper.hpp>
+#include <robot_interfaces/robot_backend.hpp>
 #include <robot_interfaces/status.hpp>
 
 using namespace robot_interfaces;
@@ -41,4 +42,17 @@ PYBIND11_MODULE(py_generic, m)
     time_series::create_python_bindings<Status>(m, "_StatusTimeSeries");
     time_series::create_multiprocesses_python_bindings<Status>(
         m, "_StatusMultiProcessTimeSeries");
+
+    pybind11::enum_<RobotBackendTerminationReason>(
+        m, "RobotBackendTerminationReason")
+        .value("NOT_TERMINATED", RobotBackendTerminationReason::NOT_TERMINATED)
+        .value("SHUTDOWN_REQUESTED",
+               RobotBackendTerminationReason::SHUTDOWN_REQUESTED)
+        .value("MAXIMUM_NUMBER_OF_ACTIONS_REACHED",
+               RobotBackendTerminationReason::MAXIMUM_NUMBER_OF_ACTIONS_REACHED)
+        .value("DRIVER_ERROR", RobotBackendTerminationReason::DRIVER_ERROR)
+        .value("FIRST_ACTION_TIMEOUT",
+               RobotBackendTerminationReason::FIRST_ACTION_TIMEOUT)
+        .value("NEXT_ACTION_TIMEOUT",
+               RobotBackendTerminationReason::NEXT_ACTION_TIMEOUT);
 }

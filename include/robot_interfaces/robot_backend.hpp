@@ -28,6 +28,28 @@
 
 namespace robot_interfaces
 {
+//! @brief Possible termination reasons of a @ref RobotBackend.
+enum RobotBackendTerminationReason : int
+{
+    // ## non-failure cases (use positive numbers here)
+
+    //! Backend is still running.
+    NOT_TERMINATED = 0,
+    //! Shutdown requested for non-failure reason (e.g. by SIGINT).
+    SHUTDOWN_REQUESTED = 1,
+    //! Maximum number of actions was reached.
+    MAXIMUM_NUMBER_OF_ACTIONS_REACHED = 2,
+
+    // ## failure cases (use negative numbers here)
+
+    //! Some error in the driver.
+    DRIVER_ERROR = -1,
+    //! First action timeout was triggered.
+    FIRST_ACTION_TIMEOUT = -2,
+    //! Next action timeout was triggered.
+    NEXT_ACTION_TIMEOUT = -3
+};
+
 /**
  * @brief Communication link between RobotDriver and RobotData.
  *
@@ -42,27 +64,6 @@ template <typename Action, typename Observation>
 class RobotBackend
 {
 public:
-    enum TerminationReason : int
-    {
-        // ## non-failure cases (use positive numbers here)
-
-        //! Backend is still running.
-        NOT_TERMINATED = 0,
-        //! Shutdown requested for non-failure reason (e.g. by SIGINT).
-        SHUTDOWN_REQUESTED = 1,
-        //! Maximum number of actions was reached.
-        MAXIMUM_NUMBER_OF_ACTIONS_REACHED = 2,
-
-        // ## failure cases (use negative numbers here)
-
-        //! Some error in the driver.
-        DRIVER_ERROR = -1,
-        //! First action timeout was triggered.
-        FIRST_ACTION_TIMEOUT = -2,
-        //! Next action timeout was triggered.
-        NEXT_ACTION_TIMEOUT = -3
-    };
-
     /**
      * @param robot_driver  Driver instance for the actual robot.
      * @param robot_data  Data is send to/retrieved from here.
@@ -87,7 +88,7 @@ public:
           max_number_of_actions_(max_number_of_actions),
           is_shutdown_requested_(false),
           max_action_repetitions_(0),
-          termination_reason_(TerminationReason::NOT_TERMINATED)
+          termination_reason_(RobotBackendTerminationReason::NOT_TERMINATED)
     {
         signal_handler::SignalHandler::initialize();
 
@@ -175,7 +176,7 @@ public:
 
     /**
      * @brief Wait until the backend loop terminates.
-     * @return Termination code (see @ref TerminationReason).
+     * @return Termination code (see @ref RobotBackendTerminationReason).
      */
     int wait_until_terminated() const
     {
@@ -298,7 +299,8 @@ private:
                 Status status;
                 status.set_error(Status::ErrorStatus::BACKEND_ERROR,
                                  "First action was not provided in time");
-                termination_reason_ = TerminationReason::FIRST_ACTION_TIMEOUT;
+                termination_reason_ =
+                    RobotBackendTerminationReason::FIRST_ACTION_TIMEOUT;
 
                 robot_data_->status->append(status);
 
@@ -321,8 +323,8 @@ private:
                 // TODO this is not really an error
                 status.set_error(Status::ErrorStatus::BACKEND_ERROR,
                                  "Maximum number of actions reached.");
-                termination_reason_ =
-                    TerminationReason::MAXIMUM_NUMBER_OF_ACTIONS_REACHED;
+                termination_reason_ = RobotBackendTerminationReason::
+                    MAXIMUM_NUMBER_OF_ACTIONS_REACHED;
             }
 
             timer_.start();
@@ -361,7 +363,7 @@ private:
                     status.set_error(Status::ErrorStatus::BACKEND_ERROR,
                                      "Next action was not provided in time");
                     termination_reason_ =
-                        TerminationReason::NEXT_ACTION_TIMEOUT;
+                        RobotBackendTerminationReason::NEXT_ACTION_TIMEOUT;
                 }
             }
 
@@ -370,7 +372,8 @@ private:
             {
                 status.set_error(Status::ErrorStatus::DRIVER_ERROR,
                                  driver_error_msg);
-                termination_reason_ = TerminationReason::DRIVER_ERROR;
+                termination_reason_ =
+                    RobotBackendTerminationReason::DRIVER_ERROR;
             }
 
             robot_data_->status->append(status);
@@ -413,9 +416,11 @@ private:
 
         // If no specific termination reason was set, assume that the shutdown
         // was requested from outside.
-        if (termination_reason_ == TerminationReason::NOT_TERMINATED)
+        if (termination_reason_ ==
+            RobotBackendTerminationReason::NOT_TERMINATED)
         {
-            termination_reason_ = TerminationReason::SHUTDOWN_REQUESTED;
+            termination_reason_ =
+                RobotBackendTerminationReason::SHUTDOWN_REQUESTED;
         }
 
         loop_is_running_ = false;
