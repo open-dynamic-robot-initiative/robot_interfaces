@@ -20,8 +20,8 @@ namespace robot_interfaces
 /**
  * @bind Add Python bindings for Types::Observaton::tip_force if it exists.
  *
- * Uses black SFINAE magic to add bindings for "tip_force" if it exists and do
- * nothing if it does not.
+ * Uses black SFINAE magic to add bindings for "tip_force" if it exists.
+ * Further the pickle functions differ due to this, so handle this here as well.
  *
  * Usage:
  *
@@ -33,9 +33,25 @@ namespace robot_interfaces
 template <typename Types, typename = int>
 struct BindTipForceIfExists
 {
-    static void bind(pybind11::class_<typename Types::Observation> &)
+    static void bind(pybind11::class_<typename Types::Observation> &c)
     {
-        // tip_force does not exist, so do nothing
+        c.def(pybind11::pickle(
+            [](const typename Types::Observation &o) {  // __getstate__
+                return pybind11::make_tuple(o.position, o.velocity, o.torque);
+            },
+            [](pybind11::tuple t) {  // __setstate__
+                if (t.size() != 3)
+                {
+                    throw std::runtime_error("Invalid state!");
+                }
+
+                typename Types::Observation obs;
+                obs.position = t[0].cast<typename Types::Observation::Vector>();
+                obs.velocity = t[1].cast<typename Types::Observation::Vector>();
+                obs.torque = t[2].cast<typename Types::Observation::Vector>();
+
+                return obs;
+            }));
     }
 };
 template <typename Types>
@@ -48,6 +64,30 @@ struct BindTipForceIfExists<Types,
                         &Types::Observation::tip_force,
                         "Measurements of the push sensors at the finger tips, "
                         "one per finger. Ranges between 0 and 1.");
+
+        c.def(pybind11::pickle(
+            [](const typename Types::Observation &o) {  // __getstate__
+                return pybind11::make_tuple(
+                    o.position, o.velocity, o.torque, o.tip_force);
+            },
+            [](pybind11::tuple t) {  // __setstate__
+                if (t.size() != 4)
+                {
+                    throw std::runtime_error("Invalid state!");
+                }
+
+                typename Types::Observation obs;
+                obs.position =
+                    t[0].cast<typename Types::Observation::JointVector>();
+                obs.velocity =
+                    t[1].cast<typename Types::Observation::JointVector>();
+                obs.torque =
+                    t[2].cast<typename Types::Observation::JointVector>();
+                obs.tip_force =
+                    t[3].cast<typename Types::Observation::FingerVector>();
+
+                return obs;
+            }));
     }
 };
 
@@ -186,7 +226,28 @@ void create_python_bindings(pybind11::module &m)
              pybind11::arg("torque") = Types::Action::Vector::Zero(),
              pybind11::arg("position") = Types::Action::None(),
              pybind11::arg("position_kp") = Types::Action::None(),
-             pybind11::arg("position_kd") = Types::Action::None());
+             pybind11::arg("position_kd") = Types::Action::None())
+        .def(pybind11::pickle(
+            [](const typename Types::Action &a) {  // __getstate__
+                // Return a tuple that fully encodes the state of the object
+                return pybind11::make_tuple(
+                    a.torque, a.position, a.position_kp, a.position_kd);
+            },
+            [](pybind11::tuple t) {  // __setstate__
+                if (t.size() != 4)
+                {
+                    throw std::runtime_error("Invalid state!");
+                }
+
+                // Create a new C++ instance
+                typename Types::Action action(
+                    t[0].cast<typename Types::Action::Vector>(),
+                    t[1].cast<typename Types::Action::Vector>(),
+                    t[2].cast<typename Types::Action::Vector>(),
+                    t[3].cast<typename Types::Action::Vector>());
+
+                return action;
+            }));
 
     auto obs =
         pybind11::class_<typename Types::Observation>(m, "Observation")
@@ -281,38 +342,40 @@ void create_python_bindings(pybind11::module &m)
              pybind11::arg("end_index") = -1,
              pybind11::call_guard<pybind11::gil_scoped_release>())
         // raise warining when using deprecated method
-        .def("write_current_buffer",
-             [](pybind11::object &self,
-                const std::string &filename,
-                long int start_index,
-                long int end_index) {
-                 auto warnings = pybind11::module::import("warnings");
-                 warnings.attr("warn")(
-                     "write_current_buffer() is deprecated, use "
-                     "save_current_robot_data() "
-                     "instead.");
-                 return self.attr("save_current_robot_data")(
-                     filename, start_index, end_index);
-             },
-             pybind11::arg("filename"),
-             pybind11::arg("start_index") = 0,
-             pybind11::arg("end_index") = -1)
-        .def("write_current_buffer_binary",
-             [](pybind11::object &self,
-                const std::string &filename,
-                long int start_index,
-                long int end_index) {
-                 auto warnings = pybind11::module::import("warnings");
-                 warnings.attr("warn")(
-                     "write_current_buffer_binary() is deprecated, use "
-                     "save_current_robot_data_binary() "
-                     "instead.");
-                 return self.attr("save_current_robot_data_binary")(
-                     filename, start_index, end_index);
-             },
-             pybind11::arg("filename"),
-             pybind11::arg("start_index") = 0,
-             pybind11::arg("end_index") = -1);
+        .def(
+            "write_current_buffer",
+            [](pybind11::object &self,
+               const std::string &filename,
+               long int start_index,
+               long int end_index) {
+                auto warnings = pybind11::module::import("warnings");
+                warnings.attr("warn")(
+                    "write_current_buffer() is deprecated, use "
+                    "save_current_robot_data() "
+                    "instead.");
+                return self.attr("save_current_robot_data")(
+                    filename, start_index, end_index);
+            },
+            pybind11::arg("filename"),
+            pybind11::arg("start_index") = 0,
+            pybind11::arg("end_index") = -1)
+        .def(
+            "write_current_buffer_binary",
+            [](pybind11::object &self,
+               const std::string &filename,
+               long int start_index,
+               long int end_index) {
+                auto warnings = pybind11::module::import("warnings");
+                warnings.attr("warn")(
+                    "write_current_buffer_binary() is deprecated, use "
+                    "save_current_robot_data_binary() "
+                    "instead.");
+                return self.attr("save_current_robot_data_binary")(
+                    filename, start_index, end_index);
+            },
+            pybind11::arg("filename"),
+            pybind11::arg("start_index") = 0,
+            pybind11::arg("end_index") = -1);
 
     pybind11::enum_<typename Types::Logger::Format>(logger, "Format")
         .value("BINARY", Types::Logger::Format::BINARY)

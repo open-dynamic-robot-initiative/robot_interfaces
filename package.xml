@@ -8,7 +8,7 @@
 
     <name>robot_interfaces</name>
     <version>1.0.0</version>
-    
+
     <description>
         This package provides C++ interfaces (purely virtual classes) for
         different robots. The idea is to use this interface both for the real
@@ -36,9 +36,10 @@
     <depend>serialization_utils</depend>
     <depend>Threads</depend>
     <depend>rt</depend>
-    
+
     <!-- Unit tests -->
     <test_depend>ament_cmake_gtest</test_depend>
+    <test_depend>ament_cmake_pytest</test_depend>
     <test_depend>Boost</test_depend>
 
     <export>

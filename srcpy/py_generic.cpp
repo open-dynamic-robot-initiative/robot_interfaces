@@ -24,7 +24,26 @@ PYBIND11_MODULE(py_generic, m)
                       &Status::error_status,
                       "ErrorStatus: Current error status.")
         .def("set_error", &Status::set_error)
-        .def("get_error_message", &Status::get_error_message);
+        .def("get_error_message", &Status::get_error_message)
+        .def(pybind11::pickle(
+            [](const Status &status) {  // __getstate__
+                return pybind11::make_tuple(status.action_repetitions,
+                                            status.error_status,
+                                            status.get_error_message());
+            },
+            [](pybind11::tuple t) {  // __setstate__
+                if (t.size() != 3)
+                {
+                    throw std::runtime_error("Invalid state!");
+                }
+
+                Status status;
+                status.action_repetitions = t[0].cast<int>();
+                status.set_error(t[1].cast<Status::ErrorStatus>(),
+                                 t[2].cast<std::string>());
+
+                return status;
+            }));
 
     pybind11::enum_<Status::ErrorStatus>(pystatus, "ErrorStatus")
         .value("NO_ERROR",
