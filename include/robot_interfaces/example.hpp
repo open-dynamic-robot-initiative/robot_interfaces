@@ -9,8 +9,9 @@
 #include <unistd.h>
 #include <iostream>
 #include <vector>
-#include <robot_interfaces/robot_driver.hpp>
+
 #include <robot_interfaces/loggable.hpp>
+#include <robot_interfaces/robot_driver.hpp>
 
 namespace robot_interfaces
 {
@@ -21,7 +22,7 @@ namespace example
  *
  * An action simply encapsulate two desired position value, one for each DOF.
  */
-class Action: public Loggable
+class Action : public Loggable
 {
 public:
     int values[2];
@@ -50,7 +51,8 @@ public:
 
     virtual std::vector<std::vector<double>> get_data()
     {
-        return {{static_cast<double>(values[0]), static_cast<double>(values[1])}};
+        return {
+            {static_cast<double>(values[0]), static_cast<double>(values[1])}};
     }
 };
 
@@ -59,7 +61,7 @@ public:
  *
  * An observation is the current position for each DOF.
  */
-class Observation: public Loggable
+class Observation : public Loggable
 {
 public:
     int values[2];
@@ -86,7 +88,8 @@ public:
 
     virtual std::vector<std::vector<double>> get_data()
     {
-        return {{static_cast<double>(values[0]), static_cast<double>(values[1])}};
+        return {
+            {static_cast<double>(values[0]), static_cast<double>(values[1])}};
     }
 };
 

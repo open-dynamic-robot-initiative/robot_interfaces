@@ -194,8 +194,7 @@ public:
      * @param filename The name of the log file.  Existing files will be
      *     overwritten!
      */
-    [[deprecated]]
-    void start_continous_writing(const std::string &filename)
+    [[deprecated]] void start_continous_writing(const std::string &filename)
     {
         stop_was_called_ = false;
         output_file_name_ = filename;
@@ -209,8 +208,7 @@ public:
      *
      * @deprecated
      */
-    [[deprecated]]
-    void stop_continous_writing()
+    [[deprecated]] void stop_continous_writing()
     {
         // This is a bit complicated:  In any case, join the thread if it is
         // joinable.  However, only write the remaining data to file if the
@@ -376,18 +374,18 @@ public:
         archive(format_version, log_data);
     }
 
-    [[deprecated("Renamed to write_current_robot_data")]]
-    void write_current_buffer(const std::string &filename,
-                              long int start_index = 0,
-                              long int end_index = -1)
+    [[deprecated("Renamed to write_current_robot_data")]] void
+    write_current_buffer(const std::string &filename,
+                         long int start_index = 0,
+                         long int end_index = -1)
     {
         save_current_robot_data(filename, start_index, end_index);
     }
 
-    [[deprecated("Renamed to write_current_robot_data_binary")]]
-    void write_current_buffer_binary(const std::string &filename,
-                                     long int start_index = 0,
-                                     long int end_index = -1)
+    [[deprecated("Renamed to write_current_robot_data_binary")]] void
+    write_current_buffer_binary(const std::string &filename,
+                                long int start_index = 0,
+                                long int end_index = -1)
     {
         save_current_robot_data_binary(filename, start_index, end_index);
     }
