@@ -358,4 +358,3 @@ TEST_F(TestRobotLogger, start_stop_continuous)
 
     check_csv_log(logfile, 0, max_number_of_actions, false);
 }
-

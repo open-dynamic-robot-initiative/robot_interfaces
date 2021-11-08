@@ -347,7 +347,8 @@ void create_python_bindings(pybind11::module &m)
             [](pybind11::object &self,
                const std::string &filename,
                long int start_index,
-               long int end_index) {
+               long int end_index)
+            {
                 auto warnings = pybind11::module::import("warnings");
                 warnings.attr("warn")(
                     "write_current_buffer() is deprecated, use "
@@ -364,7 +365,8 @@ void create_python_bindings(pybind11::module &m)
             [](pybind11::object &self,
                const std::string &filename,
                long int start_index,
-               long int end_index) {
+               long int end_index)
+            {
                 auto warnings = pybind11::module::import("warnings");
                 warnings.attr("warn")(
                     "write_current_buffer_binary() is deprecated, use "
