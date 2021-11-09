@@ -1,0 +1,13 @@
+name: Formatting
+
+on: pull_request
+
+jobs:
+  format:
+    name: C++ Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Run mpi_cpp_format
+        uses: luator/github_action_mpi_cpp_format@master
