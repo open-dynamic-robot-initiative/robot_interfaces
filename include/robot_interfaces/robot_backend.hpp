@@ -12,6 +12,7 @@
 #include <atomic>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 
 #include <pybind11/embed.h>
 
@@ -312,8 +313,11 @@ private:
             }
         }
 
+        real_time_tools::Timer frequency_timer;
         for (long int t = 0; !has_shutdown_request(); t++)
         {
+            frequency_timer.tac_tic();
+
             // TODO: figure out latency stuff!!
 
             Status status;
@@ -413,6 +417,16 @@ private:
         }
 
         robot_driver_->shutdown();
+
+        // print frequency statistics and dump full log if environment variable
+        // ROBOT_BACKEND_TIME_LOG_FILE is set
+        frequency_timer.print_statistics();
+        const char *time_log_file = std::getenv("ROBOT_BACKEND_TIME_LOG_FILE");
+        if (time_log_file != nullptr and time_log_file[0] != '\0')
+        {
+            std::cout << "Write time log to " << time_log_file << std::endl;
+            frequency_timer.dump_measurements(time_log_file);
+        }
 
         // If no specific termination reason was set, assume that the shutdown
         // was requested from outside.
