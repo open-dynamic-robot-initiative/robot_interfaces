@@ -93,6 +93,11 @@ public:
     {
         signal_handler::SignalHandler::initialize();
 
+        if (max_number_of_actions_ > 0)
+        {
+            frequency_timer_.set_memory_size(max_number_of_actions_);
+        }
+
         loop_is_running_ = true;
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
         thread_->create_realtime_thread(&RobotBackend::loop, this);
@@ -259,6 +264,10 @@ private:
 
     real_time_tools::CheckpointTimer<6, false> timer_;
 
+    //! @brief Measure the duration of the control loop (for analysing time
+    //!        consistency).
+    real_time_tools::Timer frequency_timer_;
+
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 
     std::atomic<int> termination_reason_;
@@ -313,10 +322,9 @@ private:
             }
         }
 
-        real_time_tools::Timer frequency_timer;
         for (long int t = 0; !has_shutdown_request(); t++)
         {
-            frequency_timer.tac_tic();
+            frequency_timer_.tac_tic();
 
             // TODO: figure out latency stuff!!
 
@@ -420,12 +428,12 @@ private:
 
         // print frequency statistics and dump full log if environment variable
         // ROBOT_BACKEND_TIME_LOG_FILE is set
-        frequency_timer.print_statistics();
+        frequency_timer_.print_statistics();
         const char *time_log_file = std::getenv("ROBOT_BACKEND_TIME_LOG_FILE");
         if (time_log_file != nullptr and time_log_file[0] != '\0')
         {
             std::cout << "Write time log to " << time_log_file << std::endl;
-            frequency_timer.dump_measurements(time_log_file);
+            frequency_timer_.dump_measurements(time_log_file);
         }
 
         // If no specific termination reason was set, assume that the shutdown
