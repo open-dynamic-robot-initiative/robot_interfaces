@@ -14,5 +14,5 @@ There is no changelog for this or earlier versions.
 
 
 [Unreleased]: https://github.com/open-dynamic-robot-initiative/robot_interfaces/compare/v1.2.0...HEAD
-[1.2.0]: https://github.com/open-dynamic-robot-initiative/robot_interfaces/compare/v1.1.0...1.2.0
+[1.2.0]: https://github.com/open-dynamic-robot-initiative/robot_interfaces/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/open-dynamic-robot-initiative/robot_interfaces/releases/tag/v1.1.0
