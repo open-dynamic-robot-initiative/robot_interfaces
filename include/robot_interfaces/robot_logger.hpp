@@ -741,7 +741,7 @@ private:
             // Stop logging if buffer limit is reached
             if (buffer_.size() >= buffer_limit_)
             {
-                std::cerr << "WARNING: SensorLogger buffer limit is reached.  "
+                std::cerr << "WARNING: RobotLogger buffer limit is reached.  "
                              "Stop logging."
                           << std::endl;
                 enabled_ = false;

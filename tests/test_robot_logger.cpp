@@ -326,6 +326,10 @@ TEST_F(TestRobotLogger, start_stop_empty_csv)
         << "Unexpected second line: " << line;
 }
 
+// start/stop_continous_writing are deprecated but we still want to have the
+// unit test as long as they are there, so suppress the warning locally
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(TestRobotLogger, start_stop_continuous)
 {
     // make sure the logger buffer is large enough
@@ -358,3 +362,4 @@ TEST_F(TestRobotLogger, start_stop_continuous)
 
     check_csv_log(logfile, 0, max_number_of_actions, false);
 }
+#pragma GCC diagnostic pop
