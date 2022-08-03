@@ -37,9 +37,6 @@ the end)::
 Configuration to use this kernel by default works the same as for the PREEMPT_RT
 kernel, see :ref:`boot_rt_kernel`.
 
-Note that with this kernel you need to explicitly build the package with
-real-time support, as it is not auto-detected (see below).
-
 
 System Configuration
 ====================
@@ -105,15 +102,13 @@ Building robot_interfaces for the Real-Time System
 
 To be able to run the robot backend in a real-time thread, some options need to
 be set at build time.  This is automatically done when building on a system that
-is running the PREEMPT_RT kernel.  However, if you previously built while
-running a different kernel, you'll need to rebuild.
+is running the PREEMPT_RT or lowlatency kernel.  However, if you previously
+built while running a different kernel, you'll need to rebuild.
 
-You can also explicity build with real-time settings on any kernel with the
+You can also explicitly build with real-time settings on any kernel with the
 following command::
 
     colcon build --cmake-args -DOS_VERSION=preempt-rt
-
-This is needed when using the lowlatency kernel!
 
 
 .. note::
