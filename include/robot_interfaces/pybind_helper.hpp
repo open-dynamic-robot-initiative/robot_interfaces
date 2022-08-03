@@ -323,12 +323,6 @@ void create_python_bindings(pybind11::module &m)
         .def("reset",
              &Types::Logger::reset,
              pybind11::call_guard<pybind11::gil_scoped_release>())
-        .def("start_continous_writing",
-             &Types::Logger::start_continous_writing,
-             pybind11::call_guard<pybind11::gil_scoped_release>())
-        .def("stop_continous_writing",
-             &Types::Logger::stop_continous_writing,
-             pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("save_current_robot_data",
              &Types::Logger::save_current_robot_data,
              pybind11::arg("filename"),
@@ -378,6 +372,19 @@ void create_python_bindings(pybind11::module &m)
             pybind11::arg("filename"),
             pybind11::arg("start_index") = 0,
             pybind11::arg("end_index") = -1);
+
+// start/stop_continous_writing are deprecated but we still want to have the
+// bindings as long as they are there, so suppress the warning locally.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    logger
+        .def("start_continous_writing",
+             &Types::Logger::start_continous_writing,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("stop_continous_writing",
+             &Types::Logger::stop_continous_writing,
+             pybind11::call_guard<pybind11::gil_scoped_release>());
+#pragma GCC diagnostic pop
 
     pybind11::enum_<typename Types::Logger::Format>(logger, "Format")
         .value("BINARY", Types::Logger::Format::BINARY)
