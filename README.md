@@ -4,7 +4,7 @@ Generic interface for a controlling a real-time-critical robot from a
 non-real-time process.
 
 For more information see the
-[documentation](http://people.tuebingen.mpg.de/mpi-is-software/robotfingers/docs/robot_interfaces/).
+[documentation](https://open-dynamic-robot-initiative.github.io/robot_interfaces/).
 
 
 ## Authors
@@ -17,4 +17,4 @@ For more information see the
 
 BSD 3-Clause License
 
-Copyright(c) 2018-2020 Max Planck Gesellschaft
+Copyright(c) 2018 Max Planck Gesellschaft
