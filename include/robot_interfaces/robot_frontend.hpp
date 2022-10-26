@@ -36,6 +36,8 @@ template <typename Action, typename Observation>
 class RobotFrontend
 {
 public:
+    typedef std::shared_ptr<RobotFrontend<Action, Observation>> Ptr;
+    typedef std::shared_ptr<const RobotFrontend<Action, Observation>> ConstPtr;
     typedef time_series::Timestamp TimeStamp;
 
     RobotFrontend(std::shared_ptr<RobotData<Action, Observation>> robot_data)

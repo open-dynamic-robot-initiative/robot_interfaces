@@ -65,6 +65,9 @@ template <typename Action, typename Observation>
 class RobotBackend
 {
 public:
+    typedef std::shared_ptr<RobotBackend<Action, Observation>> Ptr;
+    typedef std::shared_ptr<const RobotBackend<Action, Observation>> ConstPtr;
+
     /**
      * @param robot_driver  Driver instance for the actual robot.
      * @param robot_data  Data is send to/retrieved from here.
