@@ -4,6 +4,15 @@
 ### Added
 - Add `Ptr` and `ConstPtr` typedefs in classes for more conveniently defining
   shared pointers.
+- Function `create_interface_python_bindings()` to create Python bindings for
+  the interface classes (but not the robot-specific action and observation
+  classes).
+
+### Changed
+- The `create_python_bindings()` function (which includes the N-joint
+  action/observation) is moved to `pybind_finger.hpp` and renamed to
+  `create_blmc_can_robot_python_bindings()`.
+
 
 ## [1.2.0] - 2022-06-28
 ### Added
