@@ -27,6 +27,9 @@ template <typename Observation>
 class SensorData
 {
 public:
+    typedef std::shared_ptr<SensorData<Observation>> Ptr;
+    typedef std::shared_ptr<const SensorData<Observation>> ConstPtr;
+
     //! @brief Time series of the sensor observations.
     std::shared_ptr<time_series::TimeSeriesInterface<Observation>> observation;
 

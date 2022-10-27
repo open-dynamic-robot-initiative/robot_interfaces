@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- Add `Ptr` and `ConstPtr` typedefs in classes for more conveniently defining
+  shared pointers.
 
 ## [1.2.0] - 2022-06-28
 ### Added

@@ -50,6 +50,9 @@ template <typename Action, typename Observation>
 class RobotData
 {
 public:
+    typedef std::shared_ptr<RobotData<Action, Observation>> Ptr;
+    typedef std::shared_ptr<const RobotData<Action, Observation>> ConstPtr;
+
     //! @brief Time series of the desired actions.
     std::shared_ptr<time_series::TimeSeriesInterface<Action>> desired_action;
     //! @brief Time series of the actually applied actions (due to safety

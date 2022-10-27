@@ -32,6 +32,9 @@ class SensorFrontend
 public:
     template <typename Type>
     using Timeseries = time_series::TimeSeries<Type>;
+
+    typedef std::shared_ptr<SensorFrontend<ObservationType>> Ptr;
+    typedef std::shared_ptr<const SensorFrontend<ObservationType>> ConstPtr;
     typedef time_series::Timestamp TimeStamp;
     typedef time_series::Index TimeIndex;
 

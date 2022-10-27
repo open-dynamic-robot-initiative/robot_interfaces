@@ -31,6 +31,9 @@ template <typename ObservationType>
 class SensorBackend
 {
 public:
+    typedef std::shared_ptr<SensorBackend<ObservationType>> Ptr;
+    typedef std::shared_ptr<const SensorBackend<ObservationType>> ConstPtr;
+
     /**
      * @param sensor_driver  Driver instance for the sensor.
      * @param sensor_data  Data is sent to/retrieved from here.
