@@ -20,11 +20,11 @@
  * \brief Create bindings for One-Joint robot types
  */
 #include <robot_interfaces/n_joint_robot_types.hpp>
-#include <robot_interfaces/pybind_helper.hpp>
+#include <robot_interfaces/pybind_finger.hpp>
 
 using namespace robot_interfaces;
 
 PYBIND11_MODULE(py_one_joint_types, m)
 {
-    create_python_bindings<SimpleNJointRobotTypes<1>>(m);
+    create_blmc_can_robot_python_bindings<SimpleNJointRobotTypes<1>>(m);
 }
