@@ -77,6 +77,23 @@ public:
      * down, e.g. to move it to a defined rest position.
      */
     virtual void shutdown() = 0;
+
+    /**
+     * @brief Return action that is safe to apply while the robot is idle.
+     *
+     * Typically this can be an action applying zero torque to all joints but it
+     * might be more involved depending on the robot (it could, for example,
+     * also be an action to hold the joints in place).
+     *
+     * The default implementation simply uses the default constructor of Action,
+     * assuming that this is safe to use.
+     */
+    virtual Action get_idle_action()
+    {
+        // by default, assume that the default constructor of Action provides a
+        // suitable action.
+        return Action();
+    }
 };
 
 }  // namespace robot_interfaces
