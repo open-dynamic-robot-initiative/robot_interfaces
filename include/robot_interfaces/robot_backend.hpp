@@ -91,6 +91,8 @@ public:
           first_action_timeout_(first_action_timeout),
           max_number_of_actions_(max_number_of_actions),
           is_shutdown_requested_(false),
+          loop_is_running_(false),
+          is_initialized_(false),
           max_action_repetitions_(0),
           termination_reason_(RobotBackendTerminationReason::NOT_TERMINATED)
     {
@@ -101,8 +103,8 @@ public:
             frequency_timer_.set_memory_size(max_number_of_actions_);
         }
 
-        loop_is_running_ = true;
         thread_ = std::make_shared<real_time_tools::RealTimeThread>();
+        loop_is_running_ = true;
         thread_->create_realtime_thread(&RobotBackend::loop, this);
     }
 
@@ -159,6 +161,7 @@ public:
     void initialize()
     {
         robot_driver_->initialize();
+        is_initialized_ = true;
     }
 
     /**
@@ -259,6 +262,9 @@ private:
     //! @brief Indicates if the background loop is still running.
     std::atomic<bool> loop_is_running_;
 
+    //! @brief Indicates if initialize() has been executed
+    std::atomic<bool> is_initialized_;
+
     /**
      * @brief Number of times the previous action is repeated if no new one
      *        is provided.
@@ -301,10 +307,15 @@ private:
         const double start_time =
             real_time_tools::Timer::get_current_time_sec();
 
+        while (!has_shutdown_request() && !is_initialized_)
+        {
+            real_time_tools::Timer::sleep_ms(0.1);
+        }
+
         // wait until first desired_action was received
         // ----------------------------
         while (!has_shutdown_request() &&
-               !robot_data_->desired_action->wait_for_timeindex(0, 0.1))
+               robot_data_->desired_action->is_empty())
         {
             const double now = real_time_tools::Timer::get_current_time_sec();
             if (now - start_time > first_action_timeout_)
@@ -323,6 +334,10 @@ private:
                 request_shutdown();
                 break;
             }
+
+            // apply 'idle action' while waiting
+            Action idle_action = robot_driver_->get_idle_action();
+            robot_driver_->apply_action(idle_action);
         }
 
         for (long int t = 0; !has_shutdown_request(); t++)
