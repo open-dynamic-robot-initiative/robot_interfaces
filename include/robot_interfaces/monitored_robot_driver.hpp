@@ -110,8 +110,8 @@ public:
      * @return  The action that is actually applied on the robot (may differ
      *     from desired action due to safety limitations).
      */
-    virtual typename Driver::Action apply_action(
-        const typename Driver::Action &desired_action) final
+    typename Driver::Action apply_action(
+        const typename Driver::Action &desired_action) final override
     {
         if (is_shutdown_)
         {
@@ -126,17 +126,17 @@ public:
         return applied_action;
     }
 
-    virtual void initialize()
+    void initialize() override
     {
         robot_driver_->initialize();
     }
 
-    virtual typename Driver::Observation get_latest_observation()
+    typename Driver::Observation get_latest_observation() override
     {
         return robot_driver_->get_latest_observation();
     }
 
-    virtual std::string get_error()
+    std::string get_error() override
     {
         const std::string driver_error = robot_driver_->get_error();
         if (driver_error.empty())
@@ -154,7 +154,7 @@ public:
      *
      * After shutdown, actions sent by the user are ignored.
      */
-    virtual void shutdown() final
+    void shutdown() final override
     {
         if (!is_shutdown_)
         {
