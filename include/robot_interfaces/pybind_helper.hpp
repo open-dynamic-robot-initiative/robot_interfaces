@@ -199,8 +199,7 @@ void create_robot_logger_python_bindings(pybind11::module &m)
             [](pybind11::object &self,
                const std::string &filename,
                long int start_index,
-               long int end_index)
-            {
+               long int end_index) {
                 auto warnings = pybind11::module::import("warnings");
                 warnings.attr("warn")(
                     "write_current_buffer() is deprecated, use "
@@ -217,8 +216,7 @@ void create_robot_logger_python_bindings(pybind11::module &m)
             [](pybind11::object &self,
                const std::string &filename,
                long int start_index,
-               long int end_index)
-            {
+               long int end_index) {
                 auto warnings = pybind11::module::import("warnings");
                 warnings.attr("warn")(
                     "write_current_buffer_binary() is deprecated, use "
@@ -241,8 +239,7 @@ void create_robot_logger_python_bindings(pybind11::module &m)
              pybind11::call_guard<pybind11::gil_scoped_release>())
         .def(
             "start_continous_writing",
-            [](pybind11::object &self, const std::string &filename)
-            {
+            [](pybind11::object &self, const std::string &filename) {
                 auto warnings = pybind11::module::import("warnings");
                 warnings.attr("warn")(
                     "start_continous_writing() is deprecated and will be"
@@ -253,15 +250,13 @@ void create_robot_logger_python_bindings(pybind11::module &m)
         .def("_stop_continous_writing",
              &Types::Logger::stop_continous_writing,
              pybind11::call_guard<pybind11::gil_scoped_release>())
-        .def("stop_continous_writing",
-             [](pybind11::object &self)
-             {
-                 auto warnings = pybind11::module::import("warnings");
-                 warnings.attr("warn")(
-                     "stop_continous_writing() is deprecated and will be"
-                     " removed in a future version.");
-                 return self.attr("_stop_continous_writing")();
-             });
+        .def("stop_continous_writing", [](pybind11::object &self) {
+            auto warnings = pybind11::module::import("warnings");
+            warnings.attr("warn")(
+                "stop_continous_writing() is deprecated and will be"
+                " removed in a future version.");
+            return self.attr("_stop_continous_writing")();
+        });
 #pragma GCC diagnostic pop
 
     pybind11::enum_<typename Types::Logger::Format>(logger, "Format")
