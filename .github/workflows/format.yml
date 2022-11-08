@@ -3,11 +3,12 @@ name: Formatting
 on: pull_request
 
 jobs:
-  format:
+  clang-format:
     name: C++ Formatting
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
-      - name: checkout
-        uses: actions/checkout@v2
-      - name: Run mpi_cpp_format
-        uses: luator/github_action_mpi_cpp_format@master
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: wget https://raw.githubusercontent.com/machines-in-motion/mpi_cmake_modules/master/scripts/run-clang-format
+      - run: wget https://raw.githubusercontent.com/machines-in-motion/mpi_cmake_modules/master/resources/_clang-format
+      - run: python ./run-clang-format -r .
