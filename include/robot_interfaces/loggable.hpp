@@ -18,6 +18,11 @@ namespace robot_interfaces
 class Loggable
 {
 public:
+    // virtual destructor is needed for class with virtual methods
+    virtual ~Loggable()
+    {
+    }
+
     /*
      * @brief Return the names of the fields in the structure.
      * Current restriction: a returned name should not have spaces between

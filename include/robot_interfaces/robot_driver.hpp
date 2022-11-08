@@ -34,6 +34,11 @@ public:
     typedef TAction Action;
     typedef TObservation Observation;
 
+    // virtual destructor is needed for class with virtual methods
+    virtual ~RobotDriver()
+    {
+    }
+
     /**
      * @brief Initialize the robot.
      *

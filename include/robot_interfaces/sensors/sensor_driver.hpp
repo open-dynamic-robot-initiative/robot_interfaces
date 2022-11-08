@@ -22,6 +22,11 @@ template <typename ObservationType>
 class SensorDriver
 {
 public:
+    // virtual destructor is needed for class with virtual methods
+    virtual ~SensorDriver()
+    {
+    }
+
     /**
      * @brief return the observation
      * @return depends on the observation structure
