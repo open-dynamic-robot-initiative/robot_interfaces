@@ -127,8 +127,8 @@ protected:
                         applied_1 >> desired_0 >> desired_1);
 
             // check some of the values
-            ASSERT_EQ(time_index, i);
-            ASSERT_EQ(desired_0, i);
+            ASSERT_EQ(time_index, static_cast<int>(i));
+            ASSERT_EQ(desired_0, static_cast<int>(i));
             ASSERT_EQ(desired_1, 42);
         }
     }
@@ -187,7 +187,7 @@ TEST_F(TestRobotLogger, save_current_robot_data_binary)
     ASSERT_EQ(log.data.size(), max_number_of_actions);
     for (uint32_t i = 0; i < log.data.size(); i++)
     {
-        ASSERT_EQ(log.data[i].desired_action.values[0], i);
+        ASSERT_EQ(log.data[i].desired_action.values[0], static_cast<int>(i));
         ASSERT_EQ(log.data[i].desired_action.values[1], 42);
     }
 }
@@ -226,7 +226,7 @@ TEST_F(TestRobotLogger, start_stop_binary)
     ASSERT_EQ(log.data.size(), max_number_of_actions);
     for (uint32_t i = 0; i < log.data.size(); i++)
     {
-        ASSERT_EQ(log.data[i].desired_action.values[0], i);
+        ASSERT_EQ(log.data[i].desired_action.values[0], static_cast<int>(i));
         ASSERT_EQ(log.data[i].desired_action.values[1], 42);
     }
 }
