@@ -131,6 +131,11 @@ public:
         robot_driver_->initialize();
     }
 
+    typename Driver::Action get_idle_action() override
+    {
+        return robot_driver_->get_idle_action();
+    }
+
     typename Driver::Observation get_latest_observation() override
     {
         return robot_driver_->get_latest_observation();
