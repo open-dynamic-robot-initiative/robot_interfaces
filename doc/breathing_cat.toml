@@ -1,0 +1,7 @@
+[intersphinx.mapping]
+robot_fingers = "https://open-dynamic-robot-initiative.github.io/robot_fingers"
+robot_interfaces_solo = "https://open-dynamic-robot-initiative.github.io/robot_interfaces_solo"
+
+[mainpage]
+title = "Robot Interfaces Documentation"
+auto_general_docs = false
