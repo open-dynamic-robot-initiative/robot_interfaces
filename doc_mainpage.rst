@@ -1,7 +1,3 @@
-Robot Interfaces Documentation
-==============================
-
-
 This is the documentation of the **robot_interfaces** package.
 
 The source code is hosted on GitHub_.  Please also use the issue system there if
@@ -11,25 +7,29 @@ For more information, on the general architecture of the software, see also our
 paper_ on the open-source version of the TriFinger robot.
 
 
-Content
--------
+.. toctree::
+   :caption: General Documentation
+   :hidden:
 
-- :doc:`installation`
-- :doc:`quick_start_example`
-- :doc:`timeseries`
-- :doc:`robot_data`
-- :doc:`custom_driver`
+   doc/installation.rst
+   doc/real_time.rst
+   doc/quick_start_example.rst
+   doc/timeseries.rst
+   doc/robot_data.rst
+   doc/desired_vs_applied_action.rst
+   doc/custom_driver.rst
+
 
 Links
 -----
 
-- GitHub_
+- Code on GitHub_
 - `Bug Tracker`_
 - The implementation of the TriFinger robot driver can be found in the
-  robot_fingers_ package.
+  :doc:`robot_fingers <robot_fingers:index>` package.  For Solo12 see
+  :doc:`robot_interfaces_solo <robot_interfaces_solo:index>`.
 
 
 .. _GitHub: https://github.com/open-dynamic-robot-initiative/robot_interfaces
 .. _Bug Tracker: https://github.com/open-dynamic-robot-initiative/robot_interfaces/issues
-.. _robot_fingers: http://people.tuebingen.mpg.de/mpi-is-software/robotfingers/docs/robot_fingers/
 .. _paper: https://arxiv.org/abs/2008.03596
