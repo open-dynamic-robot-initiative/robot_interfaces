@@ -23,6 +23,9 @@
   have nicer behaviour of the robot after initialisation (e.g. by holding the
   joints in place).
 
+### Fixed
+- pybind11 build error on Ubuntu 22.04
+
 
 ## [1.2.0] - 2022-06-28
 ### Added
