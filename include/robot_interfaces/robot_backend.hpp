@@ -304,6 +304,15 @@ private:
      */
     void loop()
     {
+        //
+        // IMPORTANT: This method is run in a real-time thread.  This means no
+        // dynamic memory allocation should happen after the initialisation
+        // phase.  This also means not to use dynamic std containers like
+        // std::vector or std::string!
+        // Also no IO operations should be done here (except in error cases when
+        // the loop is aborted anyway).
+        //
+
         const double start_time =
             real_time_tools::Timer::get_current_time_sec();
 
@@ -397,6 +406,7 @@ private:
                 }
             }
 
+            // FIXME don't use std::string in real-time critical code!
             std::string driver_error_msg = robot_driver_->get_error();
             if (!driver_error_msg.empty())
             {

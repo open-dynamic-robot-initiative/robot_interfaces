@@ -73,6 +73,9 @@ public:
      *
      * @return Returns an error message or an empty string if there is no error.
      */
+    // FIXME: don't use std::string for real-time critical code!
+    // Easy fix: use std::optional<std::string>?  This way the string is only
+    // needed in the error case, which anyway leads to a halt.
     virtual std::string get_error() = 0;
 
     /**

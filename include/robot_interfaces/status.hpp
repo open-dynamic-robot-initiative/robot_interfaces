@@ -29,6 +29,7 @@ namespace robot_interfaces
 struct Status : public Loggable
 {
     //! Maximum length of error messages (including terminating \0)
+    // FIXME this is too short!
     static constexpr unsigned int ERROR_MESSAGE_LENGTH = 64;
 
     //! @brief Different types of errors that can occur in the backend.
@@ -91,6 +92,7 @@ struct Status : public Loggable
      * @param message  Error message.  Will be shortened if it exceeds @ref
      *      ERROR_MESSAGE_LENGTH.
      */
+    // FIXME don't use std::string for real-time critical code
     void set_error(ErrorStatus error_type, const std::string& message)
     {
         // do not overwrite existing errors
