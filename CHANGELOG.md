@@ -22,6 +22,8 @@
   This change is to prevent hardware timeout issues but can also be useful to
   have nicer behaviour of the robot after initialisation (e.g. by holding the
   joints in place).
+- If an error message given to `Status::set_error()` is cut due to being too
+  long, this is now indicated by setting '~' as last character.
 
 ### Fixed
 - pybind11 build error on Ubuntu 22.04
