@@ -28,6 +28,7 @@ namespace robot_interfaces
  */
 struct Status : public Loggable
 {
+    //! Maximum length of error messages (including terminating \0)
     static constexpr unsigned int ERROR_MESSAGE_LENGTH = 64;
 
     //! @brief Different types of errors that can occur in the backend.
@@ -87,7 +88,8 @@ struct Status : public Loggable
      * ignored.
      *
      * @param error_type  The type of the error.
-     * @param message  Error message.
+     * @param message  Error message.  Will be shortened if it exceeds @ref
+     *      ERROR_MESSAGE_LENGTH.
      */
     void set_error(ErrorStatus error_type, const std::string& message)
     {
@@ -98,6 +100,12 @@ struct Status : public Loggable
 
             std::strncpy(
                 this->error_message, message.c_str(), ERROR_MESSAGE_LENGTH - 1);
+            // in case message is too long and needs to be cut, indicate this by
+            // setting ~ as last character
+            if (message.size() > ERROR_MESSAGE_LENGTH - 1)
+            {
+                this->error_message[ERROR_MESSAGE_LENGTH - 2] = '~';
+            }
             // make sure it is terminated
             this->error_message[ERROR_MESSAGE_LENGTH - 1] = '\0';
         }
