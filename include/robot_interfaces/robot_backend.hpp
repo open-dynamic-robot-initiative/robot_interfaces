@@ -13,6 +13,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <optional>
 
 #include <pybind11/embed.h>
 
@@ -397,11 +398,12 @@ private:
                 }
             }
 
-            std::string driver_error_msg = robot_driver_->get_error();
-            if (!driver_error_msg.empty())
+            std::optional<std::string> driver_error_msg =
+                robot_driver_->get_error();
+            if (driver_error_msg)
             {
                 status.set_error(Status::ErrorStatus::DRIVER_ERROR,
-                                 driver_error_msg);
+                                 *driver_error_msg);
                 termination_reason_ =
                     RobotBackendTerminationReason::DRIVER_ERROR;
             }

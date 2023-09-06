@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <optional>
 #include <string>
 
 namespace robot_interfaces
@@ -71,9 +72,14 @@ public:
     /**
      * @brief Get error message if there is any error.
      *
-     * @return Returns an error message or an empty string if there is no error.
+     * Uses std::optional for the return type, so an actual string only needs to
+     * be created if there is an error.  This is relevant as std::string is in
+     * general not real-time safe and should thus be avoided.  In case of an
+     * error this does not matter, as the control loop will be stopped anyway.
+     *
+     * @return Returns an error message or std::nullopt if there is no error.
      */
-    virtual std::string get_error() = 0;
+    virtual std::optional<std::string> get_error() = 0;
 
     /**
      * @brief Shut down the robot safely.

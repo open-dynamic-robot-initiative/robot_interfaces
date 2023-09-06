@@ -11,6 +11,7 @@
 #include <atomic>
 #include <cmath>
 #include <iostream>
+#include <optional>
 
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
@@ -141,7 +142,7 @@ public:
         return robot_driver_->get_latest_observation();
     }
 
-    std::string get_error() override
+    std::optional<std::string> get_error() override
     {
         auto driver_error = robot_driver_->get_error();
         if (driver_error)
@@ -160,7 +161,7 @@ public:
                 break;
         }
 
-        return "";
+        return std::nullopt;
     }
 
     /**

@@ -11,6 +11,10 @@
   that is safe to apply while the robot is idle.
 
 ### Changed
+- The return type of `RobotDriver::get_error()` is changed to
+  `std::optional<std::string>`.  This way instantiation of an actual string
+  (which can involve dynamic memory allocation) is only needed if there actually
+  is an error.
 - The `create_python_bindings()` function (which includes the N-joint
   action/observation) is moved to `pybind_finger.hpp` and renamed to
   `create_blmc_can_robot_python_bindings()`.
