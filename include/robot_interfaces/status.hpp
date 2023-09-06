@@ -95,6 +95,9 @@ struct Status : public Loggable
     // FIXME don't use std::string for real-time critical code
     void set_error(ErrorStatus error_type, const std::string& message)
     {
+        // TODO: some kind of warning if length of message exceeds
+        // ERROR_MESSAGE_LENGTH
+
         // do not overwrite existing errors
         if (!has_error())
         {
