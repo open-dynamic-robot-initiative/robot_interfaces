@@ -44,23 +44,12 @@ namespace robot_interfaces
  *     running.  When calling @ref stop_and_save() the content of the buffer is
  *     stored to a file (either binary or text).
  *     This is the recommended method for most applications.
- *  2. Using @ref write_current_buffer() or @ref write_current_buffer_binary():
+ *  2. Using @ref save_current_robot_data() or
+ *     @ref save_current_robot_data_binary():
  *     Call this to log data that is currently held in the robot data time
  *     series.  For this method, the logger doesn't use an own buffer, so no
  *     data is copied while the robot is running.  However, the possible time
  *     span for logging is limited by the size of the robot data time series.
- *  3. Using @ref start_continous_writing() and @ref stop_continous_writing():
- *     Deprecated!
- *     Run the logger in the background and write blocks of data directly to the
- *     log file while the robot is running (i.e. no buffering in memory is
- *     needed).  This has the advantage that arbitrary time spans can be logged
- *     independent of the buffer size of the time series.  Further in case of a
- *     software crash not all data will be lost but only the data since the last
- *     block was written.  However, the permanent writing to a file puts some
- *     load on the system and may cause delays in the real-time critical robot
- *     code, thus causing the robot to shut down if timing constraints are
- *     violated.
- *     This method only supports uncompressed CSV as logfile format.
  *
  * @tparam Action  Type of the robot action.  Must derive from Loggable.
  * @tparam Observation  Type of the robot observation.  Must derive from
@@ -184,49 +173,6 @@ public:
         }
     }
 
-    // ### Methods for logging by writing to file continuously
-
-    /**
-     * @brief Start a thread to continuously log to file in the background.
-     *
-     * @deprecated
-     * @see stop_continous_writing()
-     * @param filename The name of the log file.  Existing files will be
-     *     overwritten!
-     */
-    [[deprecated]] void start_continous_writing(const std::string &filename)
-    {
-        stop_was_called_ = false;
-        output_file_name_ = filename;
-        thread_ = std::thread(&RobotLogger<Action, Observation>::loop, this);
-    }
-
-    /**
-     * @brief Stop logging that was started with `start_continous_writing()`.
-     *
-     * Does nothing if logger is not currently running.
-     *
-     * @deprecated
-     */
-    [[deprecated]] void stop_continous_writing()
-    {
-        // This is a bit complicated:  In any case, join the thread if it is
-        // joinable.  However, only write the remaining data to file if the
-        // logging thread is actually running at the moment stop() is called.
-        bool still_running = enabled_;
-
-        stop_was_called_ = true;
-        if (thread_.joinable())
-        {
-            thread_.join();
-        }
-
-        if (still_running)
-        {
-            append_robot_data_to_file(output_file_name_, index_, block_size_);
-        }
-    }
-
     // ### Methods for directly logging the content of the time series
 
     /**
@@ -251,7 +197,7 @@ public:
      *     (see @ref newest_timeindex()).
      * @throw std::runtime_error If called while the logger thread is running.
      *     In case the logger thread was started via `start()`, it needs to be
-     *     stopped by calling `stop()` before `write_current_buffer()` can be
+     *     stopped by calling `stop()` before `save_current_robot_data()` can be
      *     used.
      */
     void save_current_robot_data(const std::string &filename,
@@ -372,22 +318,6 @@ public:
         const std::uint32_t format_version = 2;
 
         archive(format_version, log_data);
-    }
-
-    [[deprecated("Renamed to write_current_robot_data")]] void
-    write_current_buffer(const std::string &filename,
-                         long int start_index = 0,
-                         long int end_index = -1)
-    {
-        save_current_robot_data(filename, start_index, end_index);
-    }
-
-    [[deprecated("Renamed to write_current_robot_data_binary")]] void
-    write_current_buffer_binary(const std::string &filename,
-                                long int start_index = 0,
-                                long int end_index = -1)
-    {
-        save_current_robot_data_binary(filename, start_index, end_index);
     }
 
 private:

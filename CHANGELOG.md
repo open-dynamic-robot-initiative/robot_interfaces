@@ -28,6 +28,12 @@
 ### Fixed
 - pybind11 build error on Ubuntu 22.04
 
+### Removed
+- Removed deprecated methods of RobotLogger:
+  - `start_continous_writing` and `stop_continous_writing` are removed.
+  - `write_current_buffer` and `write_current_buffer_binary` are replaced with
+    `save_current_robot_data[_binary]`.
+
 
 ## [1.2.0] - 2022-06-28
 ### Added
