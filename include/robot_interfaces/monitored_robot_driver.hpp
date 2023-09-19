@@ -11,6 +11,7 @@
 #include <atomic>
 #include <cmath>
 #include <iostream>
+#include <optional>
 
 #include <real_time_tools/process_manager.hpp>
 #include <real_time_tools/thread.hpp>
@@ -141,17 +142,26 @@ public:
         return robot_driver_->get_latest_observation();
     }
 
-    std::string get_error() override
+    std::optional<std::string> get_error() override
     {
-        const std::string driver_error = robot_driver_->get_error();
-        if (driver_error.empty())
-        {
-            return error_message_.get();
-        }
-        else
+        auto driver_error = robot_driver_->get_error();
+        if (driver_error)
         {
             return driver_error;
         }
+
+        switch (error_)
+        {
+            case ErrorType::ACTION_START_TIMEOUT:
+                return "Action did not start on time, shutting down.";
+            case ErrorType::ACTION_END_TIMEOUT:
+                return "Action did not end on time, shutting down.";
+            case ErrorType::NONE:
+            default:
+                break;
+        }
+
+        return std::nullopt;
     }
 
     /**
@@ -169,6 +179,13 @@ public:
     }
 
 private:
+    enum class ErrorType
+    {
+        NONE,
+        ACTION_START_TIMEOUT,
+        ACTION_END_TIMEOUT
+    };
+
     //! \brief The actual robot driver.
     RobotDriverPtr robot_driver_;
     //! \brief Max. time for executing an action.
@@ -184,7 +201,7 @@ private:
 
     std::shared_ptr<real_time_tools::RealTimeThread> thread_;
 
-    real_time_tools::SingletypeThreadsafeObject<std::string, 1> error_message_;
+    std::atomic<ErrorType> error_ = ErrorType::NONE;
 
     /**
      * @brief Monitor the timing of action execution.
@@ -208,18 +225,17 @@ private:
                                                       max_action_duration_s_);
             if (!action_has_ended_on_time)
             {
-                error_message_.set(
-                    "Action did not end on time, shutting down.");
+                error_ = ErrorType::ACTION_END_TIMEOUT;
                 shutdown();
                 return;
             }
+
             bool action_has_started_on_time =
                 action_start_logger_.wait_for_timeindex(
                     t + 1, max_inter_action_duration_s_);
             if (!action_has_started_on_time)
             {
-                error_message_.set(
-                    "Action did not start on time, shutting down.");
+                error_ = ErrorType::ACTION_START_TIMEOUT;
                 shutdown();
                 return;
             }

@@ -79,9 +79,9 @@ public:
         return observation;
     }
 
-    std::string get_error()
+    std::optional<std::string> get_error()
     {
-        return "";  // no error
+        return std::nullopt;  // no error
     }
 
     void shutdown()
