@@ -1,14 +1,15 @@
 Build Instructions
 ==================
 
-
-.. note::
+.. important::
 
     If you intend to use this interface to control your own robot, this package
     (and its dependencies) is enough, and you can follow the instructions below.
-    If you are looking for the interface of the TriFinger robot interface, see
-    the installation instructions of the robot_fingers_ package instead (this
-    also includes ``robot_interfaces``).
+
+    However, if you are looking for the interface of the TriFinger robot, see
+    the installation instructions in the :ref:`TriFinger documentation
+    <trifinger_docs:install_software>` instead (this includes
+    ``robot_interfaces`` and the TriFinger-specific packages).
 
 
 Dependencies
@@ -25,7 +26,8 @@ but are not officially supported.
 
     We provide a Singularity image with all dependencies for the TriFinger robot
     which also covers everything needed for ``robot_interfaces``.  See the
-    documentation of the robot_fingers_ package for more information.
+    documentation of the :ref:`TriFinger documentation
+    <trifinger_docs:about_apptainer>` for more information.
 
 
 Get the Source
@@ -95,7 +97,6 @@ To build, cd into the ``workspace`` directory and call
 to build the whole workspace.
 
 
-.. _robot_fingers: http://people.tuebingen.mpg.de/mpi-is-software/robotfingers/docs/robot_fingers/
 .. _colcon: https://colcon.readthedocs.io/en/released/index.html
 .. _ROS: https://www.ros.org
 .. _treep: https://pypi.org/project/treep/
