@@ -18,6 +18,7 @@ paper_ on the open-source version of the TriFinger robot.
    doc/robot_data.rst
    doc/desired_vs_applied_action.rst
    doc/custom_driver.rst
+   doc/about_architecture.rst
 
 
 Links
