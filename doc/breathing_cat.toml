@@ -2,6 +2,7 @@
 trifinger_docs = "https://open-dynamic-robot-initiative.github.io/trifinger_docs"
 robot_fingers = "https://open-dynamic-robot-initiative.github.io/robot_fingers"
 robot_interfaces_solo = "https://open-dynamic-robot-initiative.github.io/robot_interfaces_solo"
+robot_interfaces_bolt = "https://open-dynamic-robot-initiative.github.io/robot_interfaces_bolt"
 
 [mainpage]
 title = "Robot Interfaces Documentation"

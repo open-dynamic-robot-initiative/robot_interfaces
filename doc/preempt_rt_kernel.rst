@@ -1,3 +1,5 @@
+:orphan:
+
 ***********************
 PREEMPT_RT Linux Kernel
 ***********************
@@ -28,8 +30,8 @@ with other recent versions.
 Before running the script, you may want to modify it a bit, though:
 
 - The ``VERSION_`` variables at the top refer to the kernel version that will be
-  installed.  Usually you can leave the default values.  See reempt_rt_versions_
-  for available versions in case you want to change it.
+  installed.  Usually you can leave the default values.  See
+  preempt_rt_versions_ for available versions in case you want to change it.
 
 Then simply execute the script in a terminal.  Internally, sudo is used in some
 steps, so the user executing it needs to have sudo-permission.
