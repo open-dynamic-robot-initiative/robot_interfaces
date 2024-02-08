@@ -81,17 +81,15 @@ public:
      * @brief Initialize logger.
      *
      * @param robot_data  Pointer to the robot data instance.
-     * @param block_size  Block size for writing data to the file when running
-     *     the logger in the background.
+     * @param buffer_limit  Max. size of the log buffer (in timesteps).  If the
+     *     buffer is full, old time steps will be dropped as new ones are added.
      */
     RobotLogger(
         std::shared_ptr<robot_interfaces::RobotData<Action, Observation>>
             robot_data,
-        size_t buffer_limit,
-        int block_size = 100)
+        size_t buffer_limit)
         : logger_data_(robot_data),
           buffer_limit_(buffer_limit),
-          block_size_(block_size),
           stop_was_called_(false),
           enabled_(false)
     {
@@ -329,7 +327,6 @@ private:
     std::vector<LogEntry> buffer_;
     size_t buffer_limit_;
 
-    int block_size_;
     long int index_;
 
     std::atomic<bool> stop_was_called_;
@@ -564,57 +561,6 @@ private:
 
         write_header_to_stream(*output);
         append_logger_buffer(*output);
-    }
-
-    /**
-     * @brief Writes everything to the log file.
-     *
-     * It dumps all the data corresponding to block_size_ number of time indices
-     * at one go.
-     */
-    void loop()
-    {
-        enabled_ = true;
-
-        write_header_to_file(output_file_name_);
-
-        while (!stop_was_called_ &&
-               !(logger_data_->desired_action->length() > 0))
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
-
-        index_ = logger_data_->observation->newest_timeindex();
-
-        while (!stop_was_called_)
-        {
-            if (index_ + block_size_ <=
-                logger_data_->observation->newest_timeindex())
-            {
-#ifdef VERBOSE
-                auto t1 = std::chrono::high_resolution_clock::now();
-#endif
-
-                append_robot_data_to_file(
-                    output_file_name_, index_, block_size_);
-
-                index_ += block_size_;
-
-#ifdef VERBOSE
-                auto t2 = std::chrono::high_resolution_clock::now();
-                auto duration =
-                    std::chrono::duration_cast<std::chrono::microseconds>(t2 -
-                                                                          t1)
-                        .count();
-
-                // to print the time taken for one block of data to be logged.
-                std::cout << "Time taken for one block of data to be logged: "
-                          << duration << std::endl;
-#endif
-            }
-        }
-
-        enabled_ = false;
     }
 
     //! Get observations from logger_data_ and add them to the buffer.
