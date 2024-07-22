@@ -1,4 +1,4 @@
-.. _architecture::
+.. _architecture:
 
 About the Software Architecture
 ===============================
