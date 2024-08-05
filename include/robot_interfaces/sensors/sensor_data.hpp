@@ -19,7 +19,6 @@
 
 namespace robot_interfaces
 {
-
 /**
  * @brief Contains the data coming from the sensors.
  *
@@ -29,8 +28,8 @@ template <typename Observation, typename Info = None>
 class SensorData
 {
 public:
-    typedef std::shared_ptr<SensorData<Observation>> Ptr;
-    typedef std::shared_ptr<const SensorData<Observation>> ConstPtr;
+    typedef std::shared_ptr<SensorData<Observation, Info>> Ptr;
+    typedef std::shared_ptr<const SensorData<Observation, Info>> ConstPtr;
 
     /**
      * @brief Static information about the sensor
@@ -93,29 +92,36 @@ public:
                            bool is_master,
                            size_t history_length = 1000)
     {
+        // each time series needs its own shared memory ID, so add unique
+        // suffixes to the given ID.
+        const std::string shm_id_info = shared_memory_id + "_info";
+        const std::string shm_id_observation =
+            shared_memory_id + "_observation";
+
         if (is_master)
         {
             // the master instance is in charge of cleaning the memory
-            time_series::clear_memory(shared_memory_id);
+            time_series::clear_memory(shm_id_info);
+            time_series::clear_memory(shm_id_observation);
 
             // sensor_info only contains a single static element, so length is
             // set to 1
             this->sensor_info =
                 time_series::MultiprocessTimeSeries<Info>::create_leader_ptr(
-                    shared_memory_id, 1);
+                    shm_id_info, 1);
 
             this->observation = time_series::MultiprocessTimeSeries<
-                Observation>::create_leader_ptr(shared_memory_id,
+                Observation>::create_leader_ptr(shm_id_observation,
                                                 history_length);
         }
         else
         {
             this->sensor_info =
                 time_series::MultiprocessTimeSeries<Info>::create_follower_ptr(
-                    shared_memory_id);
+                    shm_id_info);
 
             this->observation = time_series::MultiprocessTimeSeries<
-                Observation>::create_follower_ptr(shared_memory_id);
+                Observation>::create_follower_ptr(shm_id_observation);
         }
     }
 };

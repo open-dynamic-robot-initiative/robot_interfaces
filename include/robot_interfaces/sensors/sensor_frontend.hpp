@@ -14,8 +14,8 @@
 
 #include <time_series/time_series.hpp>
 
-#include <robot_interfaces/utils.hpp>
 #include <robot_interfaces/sensors/sensor_data.hpp>
+#include <robot_interfaces/utils.hpp>
 
 namespace robot_interfaces
 {
@@ -34,12 +34,13 @@ public:
     template <typename Type>
     using Timeseries = time_series::TimeSeries<Type>;
 
-    typedef std::shared_ptr<SensorFrontend<ObservationType>> Ptr;
-    typedef std::shared_ptr<const SensorFrontend<ObservationType>> ConstPtr;
+    typedef std::shared_ptr<SensorFrontend<ObservationType, InfoType>> Ptr;
+    typedef std::shared_ptr<const SensorFrontend<ObservationType, InfoType>>
+        ConstPtr;
     typedef time_series::Timestamp TimeStamp;
     typedef time_series::Index TimeIndex;
 
-    SensorFrontend(std::shared_ptr<SensorData<ObservationType>> sensor_data)
+    SensorFrontend(std::shared_ptr<SensorData<ObservationType, InfoType>> sensor_data)
         : sensor_data_(sensor_data)
     {
     }
@@ -69,7 +70,7 @@ public:
     }
 
 private:
-    std::shared_ptr<SensorData<ObservationType>> sensor_data_;
+    std::shared_ptr<SensorData<ObservationType, InfoType>> sensor_data_;
 };
 
 }  // namespace robot_interfaces

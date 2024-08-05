@@ -6,15 +6,20 @@
  */
 #pragma once
 
+#include <cstdint>
+
 namespace robot_interfaces
 {
 //! @brief Empty struct that can be used as placeholder.
 struct None
 {
     template <class Archive>
-    void serialize(Archive&)
+    void serialize(Archive& archive)
     {
-        // nothing to do here
+        // need to serialize some dummy value here, as an actual empty type will
+        // cause trouble for our shared_memory implementation
+        uint8_t dummy = 0;
+        archive(dummy);
     }
 };
 }  // namespace robot_interfaces
