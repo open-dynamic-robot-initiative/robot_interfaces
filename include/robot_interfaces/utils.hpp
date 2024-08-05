@@ -12,9 +12,9 @@ namespace robot_interfaces
 struct None
 {
     template <class Archive>
-    void serialize(Archive& archive)
+    void serialize(Archive&)
     {
-        archive();
+        // nothing to do here
     }
 };
 }  // namespace robot_interfaces

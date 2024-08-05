@@ -39,6 +39,9 @@ void create_sensor_bindings(pybind11::module& m)
     typedef SensorLogger<ObservationType> Logger;
     typedef SensorLogReader<ObservationType> LogReader;
 
+
+    pybind11::class_<None, std::shared_ptr<None>>(m, "None", pybind11::module_local());
+
     pybind11::class_<BaseData, std::shared_ptr<BaseData>>(m, "BaseData");
 
     pybind11::class_<SingleProcData, std::shared_ptr<SingleProcData>, BaseData>(
@@ -66,6 +69,9 @@ void create_sensor_bindings(pybind11::module& m)
 
     pybind11::class_<SensorFrontend<ObservationType>>(m, "Frontend")
         .def(pybind11::init<typename std::shared_ptr<BaseData>>())
+        .def("get_sensor_info",
+             &SensorFrontend<ObservationType>::get_sensor_info,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("get_latest_observation",
              &SensorFrontend<ObservationType>::get_latest_observation,
              pybind11::call_guard<pybind11::gil_scoped_release>())
