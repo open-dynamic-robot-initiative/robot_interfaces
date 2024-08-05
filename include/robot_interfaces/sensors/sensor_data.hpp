@@ -1,4 +1,3 @@
-
 /**
  * @file
  * @brief To store all the data from all the sensors in use
@@ -16,19 +15,31 @@
 #include <time_series/multiprocess_time_series.hpp>
 #include <time_series/time_series.hpp>
 
+#include <robot_interfaces/utils.hpp>
+
 namespace robot_interfaces
 {
+
 /**
  * @brief Contains the data coming from the sensors.
  *
  * @tparam Observation  Type of the sensor observation.
  */
-template <typename Observation>
+template <typename Observation, typename Info = None>
 class SensorData
 {
 public:
     typedef std::shared_ptr<SensorData<Observation>> Ptr;
     typedef std::shared_ptr<const SensorData<Observation>> ConstPtr;
+
+    /**
+     * @brief Static information about the sensor
+     *
+     * Note: A time series is used here for convenience to handle the shared
+     * memory aspect.  However, this is intended to only hold one element that
+     * doesn't change over time.
+     */
+    std::shared_ptr<time_series::TimeSeriesInterface<Info>> sensor_info;
 
     //! @brief Time series of the sensor observations.
     std::shared_ptr<time_series::TimeSeriesInterface<Observation>> observation;
@@ -48,12 +59,15 @@ protected:
  * @copydoc SensorData
  * @see MultiProcessSensorData
  */
-template <typename Observation>
-class SingleProcessSensorData : public SensorData<Observation>
+template <typename Observation, typename Info = None>
+class SingleProcessSensorData : public SensorData<Observation, Info>
 {
 public:
     SingleProcessSensorData(size_t history_length = 1000)
     {
+        // sensor_info only contains a single static element, so length is set
+        // to 1
+        this->sensor_info = std::make_shared<time_series::TimeSeries<Info>>(1);
         this->observation =
             std::make_shared<time_series::TimeSeries<Observation>>(
                 history_length);
@@ -71,8 +85,8 @@ public:
  * @copydoc SensorData
  * @see SingleProcessSensorData
  */
-template <typename Observation>
-class MultiProcessSensorData : public SensorData<Observation>
+template <typename Observation, typename Info = None>
+class MultiProcessSensorData : public SensorData<Observation, Info>
 {
 public:
     MultiProcessSensorData(const std::string &shared_memory_id,
@@ -84,12 +98,22 @@ public:
             // the master instance is in charge of cleaning the memory
             time_series::clear_memory(shared_memory_id);
 
+            // sensor_info only contains a single static element, so length is
+            // set to 1
+            this->sensor_info =
+                time_series::MultiprocessTimeSeries<Info>::create_leader_ptr(
+                    shared_memory_id, 1);
+
             this->observation = time_series::MultiprocessTimeSeries<
                 Observation>::create_leader_ptr(shared_memory_id,
                                                 history_length);
         }
         else
         {
+            this->sensor_info =
+                time_series::MultiprocessTimeSeries<Info>::create_follower_ptr(
+                    shared_memory_id);
+
             this->observation = time_series::MultiprocessTimeSeries<
                 Observation>::create_follower_ptr(shared_memory_id);
         }

@@ -9,6 +9,10 @@
   classes).
 - Method `RobotDriver::get_idle_action()` that is expected to return an action
   that is safe to apply while the robot is idle.
+- Option to provide static information about a sensor (e.g. camera calibration
+  coefficients, frame rate, etc.).  For this, a method `get_sensor_info()` is added to
+  `SensorFrontend`.  It defaults to an empty struct for backward compatibility.  To use
+  it, implement the method with the same name in `SensorDriver`.
 
 ### Changed
 - The return type of `RobotDriver::get_error()` is changed to

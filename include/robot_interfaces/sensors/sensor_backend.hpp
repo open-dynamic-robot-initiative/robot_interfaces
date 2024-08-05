@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <thread>
 
+#include <robot_interfaces/utils.hpp>
 #include <robot_interfaces/sensors/sensor_data.hpp>
 #include <robot_interfaces/sensors/sensor_driver.hpp>
 
@@ -27,7 +28,7 @@ namespace robot_interfaces
  *
  * @tparam ObservationType
  */
-template <typename ObservationType>
+template <typename ObservationType, typename InfoType = None>
 class SensorBackend
 {
 public:
@@ -44,6 +45,9 @@ public:
           sensor_data_(sensor_data),
           shutdown_requested_(false)
     {
+        // populate the sensor information field
+        sensor_data_->sensor_info->append(sensor_driver_->get_sensor_info());
+
         thread_ = std::thread(&SensorBackend<ObservationType>::loop, this);
     }
 

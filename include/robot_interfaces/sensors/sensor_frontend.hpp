@@ -14,6 +14,7 @@
 
 #include <time_series/time_series.hpp>
 
+#include <robot_interfaces/utils.hpp>
 #include <robot_interfaces/sensors/sensor_data.hpp>
 
 namespace robot_interfaces
@@ -26,7 +27,7 @@ namespace robot_interfaces
  *
  * @tparam ObservationType
  */
-template <typename ObservationType>
+template <typename ObservationType, typename InfoType = None>
 class SensorFrontend
 {
 public:
@@ -41,6 +42,11 @@ public:
     SensorFrontend(std::shared_ptr<SensorData<ObservationType>> sensor_data)
         : sensor_data_(sensor_data)
     {
+    }
+
+    InfoType get_sensor_info() const
+    {
+        return sensor_data_->sensor_info->newest_element();
     }
 
     ObservationType get_observation(const TimeIndex t) const
