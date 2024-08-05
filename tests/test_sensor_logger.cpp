@@ -12,6 +12,7 @@
 #include <robot_interfaces/sensors/sensor_frontend.hpp>
 #include <robot_interfaces/sensors/sensor_log_reader.hpp>
 #include <robot_interfaces/sensors/sensor_logger.hpp>
+#include <robot_interfaces/utils.hpp>
 
 #include "dummy_sensor_driver.hpp"
 
@@ -50,7 +51,7 @@ TEST_F(TestSensorLogger, write_and_read_log)
         auto driver =
             std::make_shared<robot_interfaces::testing::DummySensorDriver>();
         auto frontend = SensorFrontend<int>(data);
-        auto logger = SensorLogger<int>(data, BUFFER_LIMIT);
+        auto logger = SensorLogger<int, None>(data, BUFFER_LIMIT);
         logger.start();
 
         // create backend last to ensure no message is missed
@@ -90,7 +91,7 @@ TEST_F(TestSensorLogger, buffer_limit)
         auto frontend = SensorFrontend<int>(data);
 
         // set buffer
-        auto logger = SensorLogger<int>(data, BUFFER_LIMIT);
+        auto logger = SensorLogger<int, None>(data, BUFFER_LIMIT);
         logger.start();
 
         // create backend last to ensure no message is missed

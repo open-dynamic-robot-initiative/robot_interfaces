@@ -10,6 +10,8 @@
 
 #include <iostream>
 
+#include <robot_interfaces/utils.hpp>
+
 namespace robot_interfaces
 {
 /**
@@ -18,13 +20,24 @@ namespace robot_interfaces
  *
  * @tparam ObservationType
  */
-template <typename ObservationType>
+template <typename ObservationType, typename InfoType = None>
 class SensorDriver
 {
 public:
     // virtual destructor is needed for class with virtual methods
     virtual ~SensorDriver()
     {
+    }
+
+    /**
+     * @brief Return static information about the sensor.
+     *
+     * This information is expected to be constructed during initialization and
+     * to not change later on.
+     */
+    virtual InfoType get_sensor_info()
+    {
+        return InfoType();
     }
 
     /**
