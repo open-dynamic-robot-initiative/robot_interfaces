@@ -15,6 +15,7 @@ paper_ on the open-source version of the TriFinger robot.
    doc/real_time.rst
    doc/quick_start_example.rst
    doc/custom_driver.rst
+   doc/custom_sensor.rst
 
 .. toctree::
    :caption: Topic Guides

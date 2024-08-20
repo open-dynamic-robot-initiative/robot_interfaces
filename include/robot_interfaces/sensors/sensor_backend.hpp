@@ -15,6 +15,7 @@
 
 #include <robot_interfaces/sensors/sensor_data.hpp>
 #include <robot_interfaces/sensors/sensor_driver.hpp>
+#include <robot_interfaces/utils.hpp>
 
 namespace robot_interfaces
 {
@@ -27,24 +28,31 @@ namespace robot_interfaces
  *
  * @tparam ObservationType
  */
-template <typename ObservationType>
+template <typename ObservationType, typename InfoType = None>
 class SensorBackend
 {
 public:
-    typedef std::shared_ptr<SensorBackend<ObservationType>> Ptr;
-    typedef std::shared_ptr<const SensorBackend<ObservationType>> ConstPtr;
+    typedef std::shared_ptr<SensorBackend<ObservationType, InfoType>> Ptr;
+    typedef std::shared_ptr<const SensorBackend<ObservationType, InfoType>>
+        ConstPtr;
 
     /**
      * @param sensor_driver  Driver instance for the sensor.
      * @param sensor_data  Data is sent to/retrieved from here.
      */
-    SensorBackend(std::shared_ptr<SensorDriver<ObservationType>> sensor_driver,
-                  std::shared_ptr<SensorData<ObservationType>> sensor_data)
+    SensorBackend(
+        std::shared_ptr<SensorDriver<ObservationType, InfoType>> sensor_driver,
+        std::shared_ptr<SensorData<ObservationType, InfoType>> sensor_data)
         : sensor_driver_(sensor_driver),
           sensor_data_(sensor_data),
           shutdown_requested_(false)
     {
-        thread_ = std::thread(&SensorBackend<ObservationType>::loop, this);
+        // populate the sensor information field
+        InfoType info = sensor_driver_->get_sensor_info();
+        sensor_data_->sensor_info->append(info);
+
+        thread_ =
+            std::thread(&SensorBackend<ObservationType, InfoType>::loop, this);
     }
 
     // reinstate the implicit move constructor
@@ -67,8 +75,8 @@ public:
     }
 
 private:
-    std::shared_ptr<SensorDriver<ObservationType>> sensor_driver_;
-    std::shared_ptr<SensorData<ObservationType>> sensor_data_;
+    std::shared_ptr<SensorDriver<ObservationType, InfoType>> sensor_driver_;
+    std::shared_ptr<SensorData<ObservationType, InfoType>> sensor_data_;
 
     bool shutdown_requested_;
 

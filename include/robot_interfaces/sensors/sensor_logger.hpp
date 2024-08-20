@@ -43,11 +43,11 @@ namespace robot_interfaces
  *
  * @tparam Observation Typ of the observation that is recorded.
  */
-template <typename Observation>
+template <typename Observation, typename InfoType = None>
 class SensorLogger
 {
 public:
-    typedef std::shared_ptr<SensorData<Observation>> DataPtr;
+    typedef std::shared_ptr<SensorData<Observation, InfoType>> DataPtr;
     typedef typename std::tuple<double, Observation> StampedObservation;
 
     /**
@@ -89,7 +89,7 @@ public:
         {
             enabled_ = true;
             buffer_thread_ =
-                std::thread(&SensorLogger<Observation>::loop, this);
+                std::thread(&SensorLogger<Observation, InfoType>::loop, this);
         }
     }
 

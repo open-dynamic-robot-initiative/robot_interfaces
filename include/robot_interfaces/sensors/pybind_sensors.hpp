@@ -16,6 +16,7 @@
 #include <robot_interfaces/sensors/sensor_frontend.hpp>
 #include <robot_interfaces/sensors/sensor_log_reader.hpp>
 #include <robot_interfaces/sensors/sensor_logger.hpp>
+#include <robot_interfaces/utils.hpp>
 
 namespace robot_interfaces
 {
@@ -24,7 +25,7 @@ namespace robot_interfaces
  *
  * @tparam The ObservationType
  */
-template <typename ObservationType>
+template <typename ObservationType, typename InfoType = None>
 void create_sensor_bindings(pybind11::module& m)
 {
     pybind11::options options;
@@ -33,11 +34,14 @@ void create_sensor_bindings(pybind11::module& m)
     options.disable_function_signatures();
 
     // some typedefs to keep code below shorter
-    typedef SensorData<ObservationType> BaseData;
-    typedef SingleProcessSensorData<ObservationType> SingleProcData;
-    typedef MultiProcessSensorData<ObservationType> MultiProcData;
-    typedef SensorLogger<ObservationType> Logger;
+    typedef SensorData<ObservationType, InfoType> BaseData;
+    typedef SingleProcessSensorData<ObservationType, InfoType> SingleProcData;
+    typedef MultiProcessSensorData<ObservationType, InfoType> MultiProcData;
+    typedef SensorLogger<ObservationType, InfoType> Logger;
     typedef SensorLogReader<ObservationType> LogReader;
+
+    pybind11::class_<None, std::shared_ptr<None>>(
+        m, "None", pybind11::module_local());
 
     pybind11::class_<BaseData, std::shared_ptr<BaseData>>(m, "BaseData");
 
@@ -52,31 +56,34 @@ void create_sensor_bindings(pybind11::module& m)
              pybind11::arg("is_master"),
              pybind11::arg("history_size") = 1000);
 
-    pybind11::class_<SensorDriver<ObservationType>,
-                     std::shared_ptr<SensorDriver<ObservationType>>>(m,
-                                                                     "Driver");
+    pybind11::class_<SensorDriver<ObservationType, InfoType>,
+                     std::shared_ptr<SensorDriver<ObservationType, InfoType>>>(
+        m, "Driver");
 
-    pybind11::class_<SensorBackend<ObservationType>>(m, "Backend")
+    pybind11::class_<SensorBackend<ObservationType, InfoType>>(m, "Backend")
         .def(pybind11::init<
-             typename std::shared_ptr<SensorDriver<ObservationType>>,
+             typename std::shared_ptr<SensorDriver<ObservationType, InfoType>>,
              typename std::shared_ptr<BaseData>>())
         .def("shutdown",
-             &SensorBackend<ObservationType>::shutdown,
+             &SensorBackend<ObservationType, InfoType>::shutdown,
              pybind11::call_guard<pybind11::gil_scoped_release>());
 
-    pybind11::class_<SensorFrontend<ObservationType>>(m, "Frontend")
+    pybind11::class_<SensorFrontend<ObservationType, InfoType>>(m, "Frontend")
         .def(pybind11::init<typename std::shared_ptr<BaseData>>())
+        .def("get_sensor_info",
+             &SensorFrontend<ObservationType, InfoType>::get_sensor_info,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("get_latest_observation",
-             &SensorFrontend<ObservationType>::get_latest_observation,
+             &SensorFrontend<ObservationType, InfoType>::get_latest_observation,
              pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("get_observation",
-             &SensorFrontend<ObservationType>::get_observation,
+             &SensorFrontend<ObservationType, InfoType>::get_observation,
              pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("get_timestamp_ms",
-             &SensorFrontend<ObservationType>::get_timestamp_ms,
+             &SensorFrontend<ObservationType, InfoType>::get_timestamp_ms,
              pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("get_current_timeindex",
-             &SensorFrontend<ObservationType>::get_current_timeindex,
+             &SensorFrontend<ObservationType, InfoType>::get_current_timeindex,
              pybind11::call_guard<pybind11::gil_scoped_release>());
 
     pybind11::class_<Logger, std::shared_ptr<Logger>>(m, "Logger")
