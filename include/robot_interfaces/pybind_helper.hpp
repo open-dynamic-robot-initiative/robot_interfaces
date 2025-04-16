@@ -177,6 +177,9 @@ void create_robot_logger_python_bindings(pybind11::module &m)
         .def("stop_and_save",
              &Types::Logger::stop_and_save,
              pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("is_running",
+             &Types::Logger::is_running,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("reset",
              &Types::Logger::reset,
              pybind11::call_guard<pybind11::gil_scoped_release>())
