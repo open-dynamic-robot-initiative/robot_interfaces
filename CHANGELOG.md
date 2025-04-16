@@ -13,6 +13,8 @@
   coefficients, frame rate, etc.).  For this, a method `get_sensor_info()` is added to
   `SensorFrontend`.  It defaults to an empty struct for backward compatibility.  To use
   it, implement the method with the same name in `SensorDriver`.
+- Add `is_running()` to `RobotLogger` and `SensorLogger`.  Can, for example, be used to
+  detect if the buffer is full (in which case the logger stops automatically).
 
 ### Changed
 - The return type of `RobotDriver::get_error()` is changed to

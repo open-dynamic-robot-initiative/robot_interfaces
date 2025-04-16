@@ -141,6 +141,17 @@ public:
         }
     }
 
+    /**
+     * @brief Check if the logger is currently running.
+     *
+     * After calling @ref start(), the logger is running until @ref stop() is
+     * called or the buffer is full (in which case it will stop automatically).
+     */
+    bool is_running() const
+    {
+        return enabled_;
+    }
+
     //! @brief Clear the log buffer.
     void reset()
     {

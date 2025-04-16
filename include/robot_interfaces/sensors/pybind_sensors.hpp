@@ -94,6 +94,9 @@ void create_sensor_bindings(pybind11::module& m)
         .def("stop",
              &Logger::stop,
              pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("is_running",
+             &Logger::is_running,
+             pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("reset",
              &Logger::reset,
              pybind11::call_guard<pybind11::gil_scoped_release>())
