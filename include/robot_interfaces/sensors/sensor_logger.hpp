@@ -146,9 +146,11 @@ public:
         archive(format_version, buffer_);
     }
 
-private:
+protected:
     DataPtr sensor_data_;
     std::vector<StampedObservation> buffer_;
+
+private:
     size_t buffer_limit_;
     std::thread buffer_thread_;
     bool enabled_;
