@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include <algorithm>
 #include <cmath>
-#include <cstdint>
 #include <thread>
+
+#include <real_time_tools/thread.hpp>
 
 #include <robot_interfaces/sensors/sensor_data.hpp>
 #include <robot_interfaces/sensors/sensor_driver.hpp>
@@ -45,14 +45,16 @@ public:
         std::shared_ptr<SensorData<ObservationType, InfoType>> sensor_data)
         : sensor_driver_(sensor_driver),
           sensor_data_(sensor_data),
+          loop_is_running_(false),
           shutdown_requested_(false)
     {
         // populate the sensor information field
         InfoType info = sensor_driver_->get_sensor_info();
         sensor_data_->sensor_info->append(info);
 
-        thread_ =
-            std::thread(&SensorBackend<ObservationType, InfoType>::loop, this);
+        thread_ = std::make_shared<real_time_tools::RealTimeThread>();
+        loop_is_running_ = true;
+        thread_->create_realtime_thread(&SensorBackend::loop, this);
     }
 
     // reinstate the implicit move constructor
@@ -63,9 +65,10 @@ public:
     void shutdown()
     {
         shutdown_requested_ = true;
-        if (thread_.joinable())
+
+        while (loop_is_running_)
         {
-            thread_.join();
+            real_time_tools::Timer::sleep_microseconds(100000);
         }
     }
 
@@ -78,9 +81,18 @@ private:
     std::shared_ptr<SensorDriver<ObservationType, InfoType>> sensor_driver_;
     std::shared_ptr<SensorData<ObservationType, InfoType>> sensor_data_;
 
+    //! @brief Indicates if the background loop is still running.
+    std::atomic<bool> loop_is_running_;
+
     bool shutdown_requested_;
 
-    std::thread thread_;
+    std::shared_ptr<real_time_tools::RealTimeThread> thread_;
+
+    static void *loop(void *instance_pointer)
+    {
+        ((SensorBackend *)(instance_pointer))->loop();
+        return nullptr;
+    }
 
     /**
      * @brief Main loop.
@@ -100,6 +112,8 @@ private:
             }
             sensor_data_->observation->append(sensor_observation);
         }
+
+        loop_is_running_ = false;
     }
 };
 

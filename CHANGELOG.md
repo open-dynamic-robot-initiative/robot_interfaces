@@ -34,6 +34,8 @@
   joints in place).
 - If an error message given to `Status::set_error()` is cut due to being too
   long, this is now indicated by setting '~' as last character.
+- `SensorBackend` now uses a real-time thread like `RobotBackend` (previously it was
+  using a "normal" one).
 
 ### Fixed
 - pybind11 build error on Ubuntu 22.04
